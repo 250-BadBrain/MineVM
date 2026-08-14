@@ -80,9 +80,9 @@ public final class ComputerBiosActions {
                     if (isRunningOrStarting(state)) {
                         send(server, player, "Computer " + computerId + " | Already running | State: " + state);
                     } else if (state == VirtualMachineState.NOT_CREATED) {
-                        createThenStart(server, player, pos, descriptor, VirtualMachineBootRequest.systemDisc(computerId, isoPath), "Booting from " + guestOperatingSystem + " disc");
+                        createThenStart(server, player, pos, descriptor, guestOperatingSystem, VirtualMachineBootRequest.systemDisc(computerId, isoPath), "Booting from " + guestOperatingSystem + " disc");
                     } else if (state == VirtualMachineState.STOPPED) {
-                        start(server, player, pos, VirtualMachineBootRequest.systemDisc(computerId, isoPath), "Booting from inserted disc");
+                        start(server, player, pos, guestOperatingSystem, VirtualMachineBootRequest.systemDisc(computerId, isoPath), "Booting from inserted disc");
                     } else {
                         send(server, player, "Computer " + computerId + " | VM busy | State: " + state);
                     }
@@ -96,7 +96,8 @@ public final class ComputerBiosActions {
         }
 
         String computerId = computer.getComputerId();
-        VirtualMachineDescriptor descriptor = ComputerRuntimeConfig.descriptorFor(computer);
+        GuestOperatingSystem guestOperatingSystem = computer.activeGuestOperatingSystem();
+        VirtualMachineDescriptor descriptor = ComputerRuntimeConfig.descriptorFor(computer, guestOperatingSystem);
         ensureRegistered(computer)
                 .thenCompose(ignored -> ComputerInMinecraft.VM_MANAGER.getState(computerId))
                 .whenComplete((state, throwable) -> {
@@ -110,11 +111,11 @@ public final class ComputerBiosActions {
                             send(server, player, "Computer " + computerId + " | VM disk is not created. Boot from a system disc first.");
                             return;
                         }
-                        createThenStart(server, player, pos, descriptor, VirtualMachineBootRequest.vmDisk(computerId), "Booting from VM disk");
+                        createThenStart(server, player, pos, descriptor, guestOperatingSystem, VirtualMachineBootRequest.vmDisk(computerId), "Booting from VM disk");
                     } else if (state == VirtualMachineState.STOPPED) {
-                        start(server, player, pos, computerId, "Booting from VM disk");
+                        start(server, player, pos, guestOperatingSystem, computerId, "Booting from VM disk");
                     } else if (state == VirtualMachineState.ERROR && ComputerRuntimeConfig.vmDiskExists(computer)) {
-                        createThenStart(server, player, pos, descriptor, VirtualMachineBootRequest.vmDisk(computerId), "Recovering and booting from VM disk");
+                        createThenStart(server, player, pos, descriptor, guestOperatingSystem, VirtualMachineBootRequest.vmDisk(computerId), "Recovering and booting from VM disk");
                     } else if (isRunningOrStarting(state)) {
                         send(server, player, "Computer " + computerId + " | Already running | State: " + state);
                     } else {
@@ -132,7 +133,7 @@ public final class ComputerBiosActions {
         ComputerPowerActions.powerOff(server, player, pos, computer);
     }
 
-    private static void createThenStart(MinecraftServer server, ServerPlayer player, BlockPos pos, VirtualMachineDescriptor descriptor, VirtualMachineBootRequest bootRequest, String actionLabel) {
+    private static void createThenStart(MinecraftServer server, ServerPlayer player, BlockPos pos, VirtualMachineDescriptor descriptor, GuestOperatingSystem guestOperatingSystem, VirtualMachineBootRequest bootRequest, String actionLabel) {
         ComputerInMinecraft.VM_MANAGER.create(descriptor)
                 .thenCompose(handle -> ComputerInMinecraft.VM_MANAGER.start(bootRequest))
                 .whenComplete((handle, throwable) -> server.execute(() -> {
@@ -141,29 +142,29 @@ public final class ComputerBiosActions {
                         player.sendSystemMessage(Component.literal("Computer " + descriptor.computerId() + " | " + actionLabel + " failed: " + rootMessage(throwable)));
                         return;
                     }
-                    setComputerVmDisplay(player, pos, true);
+                    setComputerVmDisplay(player, pos, true, guestOperatingSystem);
                     ModNetwork.updateScreenControlMode(player, handle.computerId(), true);
                     player.sendSystemMessage(Component.literal("Computer " + handle.computerId() + " | " + actionLabel + " | State: " + handle.state()));
                 }));
     }
 
-    private static void start(MinecraftServer server, ServerPlayer player, BlockPos pos, String computerId, String actionLabel) {
+    private static void start(MinecraftServer server, ServerPlayer player, BlockPos pos, GuestOperatingSystem guestOperatingSystem, String computerId, String actionLabel) {
         ComputerInMinecraft.VM_MANAGER.start(computerId)
-                .whenComplete((handle, throwable) -> sendHandle(server, player, pos, computerId, actionLabel, handle, throwable, true));
+                .whenComplete((handle, throwable) -> sendHandle(server, player, pos, computerId, guestOperatingSystem, actionLabel, handle, throwable, true));
     }
 
-    private static void start(MinecraftServer server, ServerPlayer player, BlockPos pos, VirtualMachineBootRequest bootRequest, String actionLabel) {
+    private static void start(MinecraftServer server, ServerPlayer player, BlockPos pos, GuestOperatingSystem guestOperatingSystem, VirtualMachineBootRequest bootRequest, String actionLabel) {
         ComputerInMinecraft.VM_MANAGER.start(bootRequest)
-                .whenComplete((handle, throwable) -> sendHandle(server, player, pos, bootRequest.computerId(), actionLabel, handle, throwable, true));
+                .whenComplete((handle, throwable) -> sendHandle(server, player, pos, bootRequest.computerId(), guestOperatingSystem, actionLabel, handle, throwable, true));
     }
 
-    private static void sendHandle(MinecraftServer server, ServerPlayer player, BlockPos pos, String computerId, String actionLabel, VirtualMachineHandle handle, Throwable throwable, boolean vmDisplayActive) {
+    private static void sendHandle(MinecraftServer server, ServerPlayer player, BlockPos pos, String computerId, GuestOperatingSystem guestOperatingSystem, String actionLabel, VirtualMachineHandle handle, Throwable throwable, boolean vmDisplayActive) {
         server.execute(() -> {
             if (throwable != null) {
                 player.sendSystemMessage(Component.literal("Computer " + computerId + " | " + actionLabel + " failed: " + rootMessage(throwable)));
                 return;
             }
-            setComputerVmDisplay(player, pos, vmDisplayActive);
+            setComputerVmDisplay(player, pos, vmDisplayActive, guestOperatingSystem);
             if (vmDisplayActive) {
                 ModNetwork.updateScreenControlMode(player, handle.computerId(), true);
             }
@@ -174,6 +175,14 @@ public final class ComputerBiosActions {
     private static void setComputerVmDisplay(ServerPlayer player, BlockPos pos, boolean active) {
         BlockEntity blockEntity = player.level().getBlockEntity(pos);
         if (blockEntity instanceof ComputerBlockEntity computer) {
+            computer.setVmDisplayActive(active);
+        }
+    }
+
+    private static void setComputerVmDisplay(ServerPlayer player, BlockPos pos, boolean active, GuestOperatingSystem guestOperatingSystem) {
+        BlockEntity blockEntity = player.level().getBlockEntity(pos);
+        if (blockEntity instanceof ComputerBlockEntity computer) {
+            computer.setActiveGuestOperatingSystem(guestOperatingSystem);
             computer.setVmDisplayActive(active);
         }
     }

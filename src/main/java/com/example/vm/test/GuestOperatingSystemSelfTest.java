@@ -14,6 +14,8 @@ public final class GuestOperatingSystemSelfTest {
         assertEquals(GuestOperatingSystem.parse("UBUNTU_DESKTOP"), GuestOperatingSystem.UBUNTU_DESKTOP);
         assertEquals(GuestOperatingSystem.parse("WINDOWS_10"), GuestOperatingSystem.WINDOWS_10);
         assertEquals(GuestOperatingSystem.parse("bad-value"), GuestOperatingSystem.UBUNTU_SERVER);
+        assertEquals(GuestOperatingSystem.UBUNTU_SERVER.usesGraphicalPointer(), false);
+        assertEquals(GuestOperatingSystem.UBUNTU_DESKTOP.usesGraphicalPointer(), true);
 
         FirmwareConfiguration ubuntuDesktop = FirmwareConfiguration.forGuest(GuestOperatingSystem.UBUNTU_DESKTOP);
         assertFalse(ubuntuDesktop.requiresUefi());

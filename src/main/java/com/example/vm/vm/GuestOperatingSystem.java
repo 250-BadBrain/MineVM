@@ -9,6 +9,13 @@ public enum GuestOperatingSystem {
     WINDOWS_10,
     WINDOWS_11;
 
+    public boolean usesGraphicalPointer() {
+        return switch (this) {
+            case UBUNTU_DESKTOP, WINDOWS_10, WINDOWS_11 -> true;
+            case UBUNTU_SERVER, LINUX -> false;
+        };
+    }
+
     public static GuestOperatingSystem parse(String value) {
         if (value == null || value.isBlank()) {
             return UBUNTU_SERVER;

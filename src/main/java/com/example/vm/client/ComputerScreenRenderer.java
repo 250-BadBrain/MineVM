@@ -34,6 +34,7 @@ public class ComputerScreenRenderer implements BlockEntityRenderer<ComputerBlock
                     SCREEN_Z,
                     SCREEN_SCALE,
                     computer.getComputerId(),
+                    computer.activeGuestOperatingSystem().usesGraphicalPointer(),
                     ComputerInMinecraft.SCREEN_SERVICE.latestFrameSnapshot(computer.getComputerId()),
                     packedLight
             );

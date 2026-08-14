@@ -72,15 +72,15 @@ public final class ScreenSurfaceRenderer {
         poseStack.popPose();
     }
 
-    public static void renderVmDisplay(PoseStack poseStack, MultiBufferSource buffer, BlockState state, float y, float zOffset, float scale, String computerId, Optional<ScreenFrame> latestFrame, int packedLight) {
-        renderVmDisplay(poseStack, buffer, state, y, zOffset, scale, VM_SCREEN_WIDTH, VM_SCREEN_HEIGHT, computerId, latestFrame, packedLight);
+    public static void renderVmDisplay(PoseStack poseStack, MultiBufferSource buffer, BlockState state, float y, float zOffset, float scale, String computerId, boolean renderPointer, Optional<ScreenFrame> latestFrame, int packedLight) {
+        renderVmDisplay(poseStack, buffer, state, y, zOffset, scale, VM_SCREEN_WIDTH, VM_SCREEN_HEIGHT, computerId, renderPointer, latestFrame, packedLight);
     }
 
-    public static void renderLaptopVmDisplay(PoseStack poseStack, MultiBufferSource buffer, BlockState state, float y, float zOffset, float scale, String computerId, Optional<ScreenFrame> latestFrame, int packedLight) {
-        renderVmDisplay(poseStack, buffer, state, y, zOffset, scale, LAPTOP_VM_SCREEN_WIDTH, LAPTOP_VM_SCREEN_HEIGHT, computerId, latestFrame, packedLight);
+    public static void renderLaptopVmDisplay(PoseStack poseStack, MultiBufferSource buffer, BlockState state, float y, float zOffset, float scale, String computerId, boolean renderPointer, Optional<ScreenFrame> latestFrame, int packedLight) {
+        renderVmDisplay(poseStack, buffer, state, y, zOffset, scale, LAPTOP_VM_SCREEN_WIDTH, LAPTOP_VM_SCREEN_HEIGHT, computerId, renderPointer, latestFrame, packedLight);
     }
 
-    private static void renderVmDisplay(PoseStack poseStack, MultiBufferSource buffer, BlockState state, float y, float zOffset, float scale, float screenWidth, float screenHeight, String computerId, Optional<ScreenFrame> latestFrame, int packedLight) {
+    private static void renderVmDisplay(PoseStack poseStack, MultiBufferSource buffer, BlockState state, float y, float zOffset, float scale, float screenWidth, float screenHeight, String computerId, boolean renderPointer, Optional<ScreenFrame> latestFrame, int packedLight) {
         Direction facing = state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)
                 ? state.getValue(BlockStateProperties.HORIZONTAL_FACING)
                 : Direction.NORTH;
@@ -98,7 +98,7 @@ public final class ScreenSurfaceRenderer {
             Optional<ResourceLocation> texture = ScreenFrameTextureCache.updateAndGet(computerId, frame);
             float[] fitted = fitToScreen(frame.width(), frame.height(), screenWidth, screenHeight);
             texture.ifPresent(resourceLocation -> drawTextureQuad(matrix, buffer, resourceLocation, -fitted[0] / 2.0F, -fitted[1] / 2.0F, fitted[0], fitted[1], packedLight));
-            if (ImmersiveControlClient.shouldRenderVmPointer(computerId)) {
+            if (renderPointer && ImmersiveControlClient.shouldRenderVmPointer(computerId)) {
                 float[] cursor = cursorPosition(
                         ImmersiveControlClient.vmPointerX(),
                         ImmersiveControlClient.vmPointerY(),
