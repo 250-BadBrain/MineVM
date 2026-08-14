@@ -2,10 +2,12 @@ package com.example.vm.client;
 
 import com.example.vm.ComputerInMinecraft;
 import com.example.vm.block.ComputerOccupancyBlock;
+import com.example.vm.registry.ModBlocks;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.MovementInputUpdateEvent;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.event.RenderHighlightEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
@@ -13,6 +15,7 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -178,6 +181,18 @@ public final class ClientForgeEvents {
     }
 
     @SubscribeEvent
+    public static void onRenderBlockHighlight(RenderHighlightEvent.Block event) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.level == null) {
+            return;
+        }
+        BlockPos pos = event.getTarget().getBlockPos();
+        if (isLaptopSelectionTarget(minecraft, pos)) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
     public static void onClientLogout(ClientPlayerNetworkEvent.LoggingOut event) {
         ScreenFrameTextureCache.clearAll();
         ImmersiveControlClient.stop();
@@ -187,5 +202,21 @@ public final class ClientForgeEvents {
         if (event.isCancelable()) {
             event.setCanceled(true);
         }
+    }
+
+    private static boolean isLaptopSelectionTarget(Minecraft minecraft, BlockPos pos) {
+        BlockState state = minecraft.level.getBlockState(pos);
+        if (state.getBlock() == ModBlocks.LAPTOP_COMPUTER.get()) {
+            return true;
+        }
+        if (!(state.getBlock() instanceof ComputerOccupancyBlock)) {
+            return false;
+        }
+        BlockPos origin = ComputerOccupancyBlock.origin(minecraft.level, pos);
+        if (origin == null) {
+            return false;
+        }
+        BlockState originState = minecraft.level.getBlockState(origin);
+        return originState.getBlock() == ModBlocks.LAPTOP_COMPUTER.get();
     }
 }

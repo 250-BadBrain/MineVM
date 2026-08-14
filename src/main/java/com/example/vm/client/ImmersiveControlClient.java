@@ -28,6 +28,7 @@ public final class ImmersiveControlClient {
     private static int selectedActionIndex;
     private static boolean vmInputMode;
     private static int capturedHotbarSlot = -1;
+    private static boolean capturedHideGui;
     private static int lastMouseX = -1;
     private static int lastMouseY = -1;
 
@@ -42,6 +43,8 @@ public final class ImmersiveControlClient {
         selectedActionIndex = 0;
         vmInputMode = packet.vmDisplayActive();
         capturedHotbarSlot = Minecraft.getInstance().player == null ? 0 : Minecraft.getInstance().player.getInventory().selected;
+        capturedHideGui = Minecraft.getInstance().options.hideGui;
+        Minecraft.getInstance().options.hideGui = true;
         lastMouseX = VM_POINTER_WIDTH / 2;
         lastMouseY = VM_POINTER_HEIGHT / 2;
         releaseMouseForScreenControl();
@@ -69,6 +72,9 @@ public final class ImmersiveControlClient {
         capturedHotbarSlot = -1;
         lastMouseX = -1;
         lastMouseY = -1;
+        if (wasActive) {
+            Minecraft.getInstance().options.hideGui = capturedHideGui;
+        }
         showCursorAfterScreenControl();
         grabMouseAfterScreenControl();
         if (wasActive && Minecraft.getInstance().player != null) {

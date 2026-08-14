@@ -153,6 +153,7 @@ public class ComputerBlockEntity extends BlockEntity {
         }
 
         insertedDisc = guestOperatingSystem;
+        activeGuestOperatingSystem = guestOperatingSystem;
         markUpdated();
         return true;
     }
