@@ -97,6 +97,17 @@ public final class ScreenSurfaceRenderer {
             Optional<ResourceLocation> texture = ScreenFrameTextureCache.updateAndGet(computerId, frame);
             float[] fitted = fitToScreen(frame.width(), frame.height(), screenWidth, screenHeight);
             texture.ifPresent(resourceLocation -> drawTextureQuad(matrix, buffer, resourceLocation, -fitted[0] / 2.0F, -fitted[1] / 2.0F, fitted[0], fitted[1], packedLight));
+            if (ImmersiveControlClient.shouldRenderVmPointer(computerId)) {
+                float[] cursor = cursorPosition(
+                        ImmersiveControlClient.vmPointerX(),
+                        ImmersiveControlClient.vmPointerY(),
+                        ImmersiveControlClient.vmPointerWidth(),
+                        ImmersiveControlClient.vmPointerHeight(),
+                        fitted[0],
+                        fitted[1]
+                );
+                drawCursor(matrix, buffer, -fitted[0] / 2.0F + cursor[0], -fitted[1] / 2.0F + cursor[1]);
+            }
         } else {
             drawCentered(font, matrix, buffer, "VM RUNNING", -26.0F, 0x66FF99, packedLight);
             drawCentered(font, matrix, buffer, "VNC " + VncEndpoint.forComputer(computerId).toDisplayAddress(), -9.0F, 0xD7E8FF, packedLight);
@@ -127,6 +138,29 @@ public final class ScreenSurfaceRenderer {
         return new float[] {maxHeight * sourceAspect, maxHeight};
     }
 
+    static float[] cursorPosition(int pointerX, int pointerY, int pointerWidth, int pointerHeight, float fittedWidth, float fittedHeight) {
+        float x = fittedWidth * clamp(pointerX, 0, pointerWidth - 1) / Math.max(1, pointerWidth - 1);
+        float y = fittedHeight * clamp(pointerY, 0, pointerHeight - 1) / Math.max(1, pointerHeight - 1);
+        return new float[] {x, y};
+    }
+
+    private static void drawCursor(Matrix4f matrix, MultiBufferSource buffer, float x, float y) {
+        drawCursorBlock(matrix, buffer, x + 1.0F, y + 1.0F, 1.5F, 12.0F, 0, 0, 0, 180);
+        drawCursorBlock(matrix, buffer, x + 1.0F, y + 1.0F, 9.0F, 1.5F, 0, 0, 0, 180);
+        drawCursorBlock(matrix, buffer, x + 1.0F, y + 9.0F, 6.0F, 1.5F, 0, 0, 0, 180);
+        drawCursorBlock(matrix, buffer, x, y, 1.5F, 12.0F, 255, 255, 255, 255);
+        drawCursorBlock(matrix, buffer, x, y, 9.0F, 1.5F, 255, 255, 255, 255);
+        drawCursorBlock(matrix, buffer, x, y + 8.0F, 6.0F, 1.5F, 255, 255, 255, 255);
+    }
+
+    private static void drawCursorBlock(Matrix4f matrix, MultiBufferSource buffer, float x, float y, float width, float height, int red, int green, int blue, int alpha) {
+        VertexConsumer vertexConsumer = buffer.getBuffer(RenderType.gui());
+        vertexConsumer.vertex(matrix, x, y + height, 0.02F).color(red, green, blue, alpha).endVertex();
+        vertexConsumer.vertex(matrix, x + width, y + height, 0.02F).color(red, green, blue, alpha).endVertex();
+        vertexConsumer.vertex(matrix, x + width, y, 0.02F).color(red, green, blue, alpha).endVertex();
+        vertexConsumer.vertex(matrix, x, y, 0.02F).color(red, green, blue, alpha).endVertex();
+    }
+
     private static String optionLabel(ComputerBiosAction action, String label) {
         boolean selected = ImmersiveControlClient.active()
                 ? ImmersiveControlClient.selectedAction() == action
@@ -152,5 +186,9 @@ public final class ScreenSurfaceRenderer {
             case EAST -> 270.0F;
             default -> 0.0F;
         };
+    }
+
+    private static int clamp(int value, int minimum, int maximum) {
+        return Math.max(minimum, Math.min(maximum, value));
     }
 }

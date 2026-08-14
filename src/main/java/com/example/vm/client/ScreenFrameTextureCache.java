@@ -13,7 +13,7 @@ import java.util.Optional;
 
 public final class ScreenFrameTextureCache {
     static final int MAX_TEXTURE_WIDTH = 1280;
-    static final long MIN_UPLOAD_INTERVAL_NANOS = 33_000_000L;
+    static final long MIN_UPLOAD_INTERVAL_NANOS = 16_000_000L;
     private static final Map<String, CachedScreenTexture> TEXTURES = new HashMap<>();
 
     private ScreenFrameTextureCache() {

@@ -42,8 +42,8 @@ public final class ImmersiveControlClient {
         selectedActionIndex = 0;
         vmInputMode = packet.vmDisplayActive();
         capturedHotbarSlot = Minecraft.getInstance().player == null ? 0 : Minecraft.getInstance().player.getInventory().selected;
-        lastMouseX = -1;
-        lastMouseY = -1;
+        lastMouseX = VM_POINTER_WIDTH / 2;
+        lastMouseY = VM_POINTER_HEIGHT / 2;
         releaseMouseForScreenControl();
         suppressMinecraftBindings();
         hideCursorForScreenControl();
@@ -94,6 +94,26 @@ public final class ImmersiveControlClient {
 
     public static String activeComputerId() {
         return activeComputerId;
+    }
+
+    public static int vmPointerX() {
+        return lastMouseX;
+    }
+
+    public static int vmPointerY() {
+        return lastMouseY;
+    }
+
+    public static int vmPointerWidth() {
+        return VM_POINTER_WIDTH;
+    }
+
+    public static int vmPointerHeight() {
+        return VM_POINTER_HEIGHT;
+    }
+
+    public static boolean shouldRenderVmPointer(String computerId) {
+        return controllingVmDisplay() && activeComputerId.equals(computerId) && lastMouseX >= 0 && lastMouseY >= 0;
     }
 
     public static boolean controllingVmDisplay() {

@@ -162,7 +162,7 @@ public final class VncFrameReceiver {
             }
             frameConsumer.accept(new ScreenFrame(currentFramebuffer.width(), currentFramebuffer.height(), x, y, width, height, pixels));
         }
-        requestFramebufferUpdate(output, currentFramebuffer.width(), currentFramebuffer.height(), false);
+        requestFramebufferUpdate(output, currentFramebuffer.width(), currentFramebuffer.height(), true);
         return currentFramebuffer;
     }
 

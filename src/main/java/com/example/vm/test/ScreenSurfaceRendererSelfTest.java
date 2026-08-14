@@ -19,6 +19,15 @@ public final class ScreenSurfaceRendererSelfTest {
         assertClose((float) heightField.get(null), 107.0F);
         assertClose((float) laptopWidthField.get(null), 210.0F);
         assertClose((float) laptopHeightField.get(null), 110.0F);
+
+        java.lang.reflect.Method cursorPosition = renderer.getDeclaredMethod("cursorPosition", int.class, int.class, int.class, int.class, float.class, float.class);
+        cursorPosition.setAccessible(true);
+        float[] topLeft = (float[]) cursorPosition.invoke(null, 0, 0, 1280, 800, 200.0F, 125.0F);
+        assertClose(topLeft[0], 0.0F);
+        assertClose(topLeft[1], 0.0F);
+        float[] bottomRight = (float[]) cursorPosition.invoke(null, 1279, 799, 1280, 800, 200.0F, 125.0F);
+        assertClose(bottomRight[0], 200.0F);
+        assertClose(bottomRight[1], 125.0F);
     }
 
     private static void assertClose(float actual, float expected) {

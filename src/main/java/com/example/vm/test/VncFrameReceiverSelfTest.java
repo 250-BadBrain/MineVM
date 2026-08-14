@@ -94,7 +94,10 @@ public final class VncFrameReceiverSelfTest {
 
             input.readNBytes(20);
             input.readNBytes(12);
-            input.readNBytes(10);
+            FramebufferUpdateRequest initialRequest = readFramebufferUpdateRequest(input);
+            if (initialRequest.incremental()) {
+                throw new AssertionError("Initial framebuffer update request must be full-frame");
+            }
 
             output.writeByte(0);
             output.writeByte(0);
@@ -111,7 +114,10 @@ public final class VncFrameReceiverSelfTest {
             output.writeInt(0);
             output.write(new byte[] {(byte) 0x99, 0x66, 0x33, 0});
             output.flush();
-            input.readNBytes(10);
+            FramebufferUpdateRequest followupRequest = readFramebufferUpdateRequest(input);
+            if (!followupRequest.incremental()) {
+                throw new AssertionError("Follow-up framebuffer update request must be incremental");
+            }
 
             output.writeByte(0);
             output.writeByte(0);
@@ -127,5 +133,21 @@ public final class VncFrameReceiverSelfTest {
         } catch (Exception exception) {
             throw new AssertionError("Fake VNC server failed", exception);
         }
+    }
+
+    private static FramebufferUpdateRequest readFramebufferUpdateRequest(DataInputStream input) throws java.io.IOException {
+        int messageType = input.readUnsignedByte();
+        boolean incremental = input.readUnsignedByte() != 0;
+        int x = input.readUnsignedShort();
+        int y = input.readUnsignedShort();
+        int width = input.readUnsignedShort();
+        int height = input.readUnsignedShort();
+        if (messageType != 3 || x != 0 || y != 0 || width <= 0 || height <= 0) {
+            throw new AssertionError("Unexpected framebuffer update request");
+        }
+        return new FramebufferUpdateRequest(incremental);
+    }
+
+    private record FramebufferUpdateRequest(boolean incremental) {
     }
 }
