@@ -1,0 +1,77 @@
+package com.example.vm.registry;
+
+import com.example.vm.ComputerInMinecraft;
+import com.example.vm.item.HdmiCableItem;
+import com.example.vm.item.SystemDiscItem;
+import com.example.vm.item.UsbCableItem;
+import com.example.vm.vm.GuestOperatingSystem;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+
+public final class ModItems {
+    private static final DeferredRegister<Item> ITEMS =
+            DeferredRegister.create(ForgeRegistries.ITEMS, ComputerInMinecraft.MOD_ID);
+
+    public static final RegistryObject<Item> COMPUTER_BLOCK_ITEM =
+            ITEMS.register("computer_block", () -> new BlockItem(ModBlocks.COMPUTER_BLOCK.get(), new Item.Properties()));
+
+    public static final RegistryObject<Item> DESKTOP_COMPUTER =
+            ITEMS.register("desktop_computer", () -> new BlockItem(ModBlocks.DESKTOP_COMPUTER.get(), new Item.Properties()));
+
+    public static final RegistryObject<Item> LAPTOP_COMPUTER =
+            ITEMS.register("laptop_computer", () -> new BlockItem(ModBlocks.LAPTOP_COMPUTER.get(), new Item.Properties()));
+
+    public static final RegistryObject<Item> COMPUTER_MONITOR =
+            ITEMS.register("computer_monitor", () -> new BlockItem(ModBlocks.COMPUTER_MONITOR.get(), new Item.Properties()));
+
+    public static final RegistryObject<Item> HDMI_CABLE =
+            ITEMS.register("hdmi_cable", () -> new HdmiCableItem(new Item.Properties().stacksTo(16)));
+
+    public static final RegistryObject<Item> USB_CABLE =
+            ITEMS.register("usb_cable", () -> new UsbCableItem(new Item.Properties().stacksTo(16)));
+
+    public static final RegistryObject<Item> KEYBOARD =
+            ITEMS.register("keyboard", () -> new BlockItem(ModBlocks.KEYBOARD.get(), new Item.Properties().stacksTo(1)));
+
+    public static final RegistryObject<Item> MOUSE =
+            ITEMS.register("mouse", () -> new BlockItem(ModBlocks.MOUSE.get(), new Item.Properties().stacksTo(1)));
+
+    public static final RegistryObject<Item> UBUNTU_SERVER_DISC =
+            ITEMS.register("ubuntu_server_disc", () -> new SystemDiscItem(
+                    GuestOperatingSystem.UBUNTU_SERVER,
+                    "item.computer_in_minecraft.ubuntu_server_disc",
+                    new Item.Properties().stacksTo(1)
+            ));
+
+    public static final RegistryObject<Item> UBUNTU_DESKTOP_DISC =
+            ITEMS.register("ubuntu_desktop_disc", () -> new SystemDiscItem(
+                    GuestOperatingSystem.UBUNTU_DESKTOP,
+                    "item.computer_in_minecraft.ubuntu_desktop_disc",
+                    new Item.Properties().stacksTo(1)
+            ));
+
+    public static final RegistryObject<Item> WINDOWS_10_DISC =
+            ITEMS.register("windows_10_disc", () -> new SystemDiscItem(
+                    GuestOperatingSystem.WINDOWS_10,
+                    "item.computer_in_minecraft.windows_10_disc",
+                    new Item.Properties().stacksTo(1)
+            ));
+
+    public static final RegistryObject<Item> WINDOWS_11_DISC =
+            ITEMS.register("windows_11_disc", () -> new SystemDiscItem(
+                    GuestOperatingSystem.WINDOWS_11,
+                    "item.computer_in_minecraft.windows_11_disc",
+                    new Item.Properties().stacksTo(1)
+            ));
+
+    private ModItems() {
+    }
+
+    public static void register(IEventBus modEventBus) {
+        ITEMS.register(modEventBus);
+    }
+}

@@ -1,0 +1,16 @@
+package com.example.vm.vm;
+
+public record FirmwareConfiguration(
+        boolean requiresUefi,
+        boolean requiresSecureBoot,
+        boolean requiresTpm,
+        boolean prefersVirtio
+) {
+    public static FirmwareConfiguration forGuest(GuestOperatingSystem guestOperatingSystem) {
+        return switch (guestOperatingSystem) {
+            case WINDOWS_10 -> new FirmwareConfiguration(true, false, false, true);
+            case WINDOWS_11 -> new FirmwareConfiguration(true, true, true, true);
+            case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> new FirmwareConfiguration(false, false, false, true);
+        };
+    }
+}

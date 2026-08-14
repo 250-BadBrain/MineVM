@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "computer_in_minecraft:block/desktop_computer"
+    },
+    "facing=east": {
+      "model": "computer_in_minecraft:block/desktop_computer",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "computer_in_minecraft:block/desktop_computer",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "computer_in_minecraft:block/desktop_computer",
+      "y": 270
+    }
+  }
+}

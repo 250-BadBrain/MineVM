@@ -1,0 +1,6 @@
+{
+  "id": "computer001",
+  "cpu": 4,
+  "memory": 4096,
+  "disk": "computer001.qcow2"
+}

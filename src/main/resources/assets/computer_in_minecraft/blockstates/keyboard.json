@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "computer_in_minecraft:block/keyboard",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "computer_in_minecraft:block/keyboard",
+      "y": 270
+    },
+    "facing=south": {
+      "model": "computer_in_minecraft:block/keyboard"
+    },
+    "facing=west": {
+      "model": "computer_in_minecraft:block/keyboard",
+      "y": 90
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "body": "minecraft:block/white_concrete",
+    "line": "minecraft:block/black_concrete",
+    "particle": "minecraft:block/white_concrete"
+  },
+  "elements": [
+    {
+      "from": [5, 0, 4],
+      "to": [11, 2, 12],
+      "faces": {
+        "north": {"texture": "#body"},
+        "south": {"texture": "#body"},
+        "east": {"texture": "#body"},
+        "west": {"texture": "#body"},
+        "up": {"texture": "#body"},
+        "down": {"texture": "#body"}
+      }
+    },
+    {
+      "from": [7.5, 2, 4.5],
+      "to": [8.5, 2.3, 8],
+      "faces": {
+        "up": {"texture": "#line"}
+      }
+    }
+  ]
+}
