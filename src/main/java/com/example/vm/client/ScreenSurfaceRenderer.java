@@ -23,6 +23,7 @@ public final class ScreenSurfaceRenderer {
     private static final float VM_SCREEN_HEIGHT = 107.0F;
     private static final float LAPTOP_VM_SCREEN_WIDTH = 210.0F;
     private static final float LAPTOP_VM_SCREEN_HEIGHT = 110.0F;
+    static final float CURSOR_SURFACE_Z = -0.03F;
 
     private ScreenSurfaceRenderer() {
     }
@@ -155,10 +156,10 @@ public final class ScreenSurfaceRenderer {
 
     private static void drawCursorBlock(Matrix4f matrix, MultiBufferSource buffer, float x, float y, float width, float height, int red, int green, int blue, int alpha) {
         VertexConsumer vertexConsumer = buffer.getBuffer(RenderType.gui());
-        vertexConsumer.vertex(matrix, x, y + height, 0.02F).color(red, green, blue, alpha).endVertex();
-        vertexConsumer.vertex(matrix, x + width, y + height, 0.02F).color(red, green, blue, alpha).endVertex();
-        vertexConsumer.vertex(matrix, x + width, y, 0.02F).color(red, green, blue, alpha).endVertex();
-        vertexConsumer.vertex(matrix, x, y, 0.02F).color(red, green, blue, alpha).endVertex();
+        vertexConsumer.vertex(matrix, x, y + height, CURSOR_SURFACE_Z).color(red, green, blue, alpha).endVertex();
+        vertexConsumer.vertex(matrix, x + width, y + height, CURSOR_SURFACE_Z).color(red, green, blue, alpha).endVertex();
+        vertexConsumer.vertex(matrix, x + width, y, CURSOR_SURFACE_Z).color(red, green, blue, alpha).endVertex();
+        vertexConsumer.vertex(matrix, x, y, CURSOR_SURFACE_Z).color(red, green, blue, alpha).endVertex();
     }
 
     private static String optionLabel(ComputerBiosAction action, String label) {
