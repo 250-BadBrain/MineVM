@@ -20,7 +20,7 @@ import java.util.Optional;
 
 public final class ScreenSurfaceRenderer {
     private static final float VM_SCREEN_WIDTH = 258.0F;
-    private static final float VM_SCREEN_HEIGHT = 136.0F;
+    private static final float VM_SCREEN_HEIGHT = 130.0F;
     private static final float LAPTOP_VM_SCREEN_WIDTH = 287.0F;
     private static final float LAPTOP_VM_SCREEN_HEIGHT = 156.0F;
     static final float CURSOR_SURFACE_Z = -0.03F;

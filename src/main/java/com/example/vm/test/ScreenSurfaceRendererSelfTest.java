@@ -18,7 +18,7 @@ public final class ScreenSurfaceRendererSelfTest {
         cursorSurfaceZField.setAccessible(true);
 
         assertClose((float) widthField.get(null), 258.0F);
-        assertClose((float) heightField.get(null), 136.0F);
+        assertClose((float) heightField.get(null), 130.0F);
         assertClose((float) laptopWidthField.get(null), 287.0F);
         assertClose((float) laptopHeightField.get(null), 156.0F);
         if ((float) cursorSurfaceZField.get(null) >= -0.01F) {

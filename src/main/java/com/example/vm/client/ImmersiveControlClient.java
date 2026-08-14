@@ -22,6 +22,19 @@ public final class ImmersiveControlClient {
     };
     private static final int VM_POINTER_WIDTH = 1280;
     private static final int VM_POINTER_HEIGHT = 800;
+    private static final int[] VM_MOUSE_BUTTONS = {
+            GLFW.GLFW_MOUSE_BUTTON_LEFT,
+            GLFW.GLFW_MOUSE_BUTTON_MIDDLE,
+            GLFW.GLFW_MOUSE_BUTTON_RIGHT
+    };
+    private static final String[] VM_MODIFIER_KEYS = {
+            "ctrl",
+            "ctrl_r",
+            "alt",
+            "alt_r",
+            "shift",
+            "shift_r"
+    };
     private static ScreenControlSession activeSession;
     private static BlockPos activeComputerPos;
     private static String activeComputerId = "";
@@ -51,6 +64,7 @@ public final class ImmersiveControlClient {
         suppressMinecraftBindings();
         hideCursorForScreenControl();
         syncVmMousePosition(true);
+        releaseVmInputState();
         if (Minecraft.getInstance().player != null) {
             Minecraft.getInstance().player.displayClientMessage(
                     Component.literal("Screen control active: " + activeComputerId + " | Press " + RELEASE_HINT + " to release."),
@@ -63,6 +77,7 @@ public final class ImmersiveControlClient {
         boolean wasActive = active();
         if (wasActive) {
             suppressMinecraftBindings();
+            releaseVmInputState();
         }
         activeSession = null;
         activeComputerPos = null;
@@ -180,6 +195,24 @@ public final class ImmersiveControlClient {
             ModNetwork.sendKeyboardInput(activeComputerId, qcode, pressed);
         }
         suppressMinecraftBindings();
+    }
+
+    private static void releaseVmInputState() {
+        if (!controllingVmDisplay() || activeComputerId.isBlank()) {
+            return;
+        }
+        for (int button : VM_MOUSE_BUTTONS) {
+            int vmButton = switch (button) {
+                case GLFW.GLFW_MOUSE_BUTTON_LEFT -> 0;
+                case GLFW.GLFW_MOUSE_BUTTON_MIDDLE -> 1;
+                case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> 2;
+                default -> button;
+            };
+            ModNetwork.sendMouseButtonInput(activeComputerId, vmButton, false);
+        }
+        for (String modifierKey : VM_MODIFIER_KEYS) {
+            ModNetwork.sendKeyboardInput(activeComputerId, modifierKey, false);
+        }
     }
 
     public static void handleVmMouseButton(int button, boolean pressed) {
