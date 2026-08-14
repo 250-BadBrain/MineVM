@@ -81,6 +81,8 @@ public final class ScreenFrameTextureCache {
         }
 
         private void apply(ScreenFrame frame) {
+            mergeChangedFrame(frame);
+
             long now = System.nanoTime();
             if (lastUploadNanos != 0L && now - lastUploadNanos < MIN_UPLOAD_INTERVAL_NANOS) {
                 return;
@@ -90,8 +92,6 @@ public final class ScreenFrameTextureCache {
             if (pixels == null) {
                 return;
             }
-
-            mergeChangedFrame(frame);
 
             for (int targetY = 0; targetY < height; targetY++) {
                 int sourceY = clamp(mapFloor(targetY, height, sourceHeight), 0, sourceHeight - 1);

@@ -38,10 +38,10 @@ import org.jetbrains.annotations.Nullable;
 public class ComputerMonitorBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     private static final VoxelShape SHAPE = Shapes.or(
-            Block.box(-16.0D, 8.0D, 3.0D, 32.0D, 32.0D, 7.0D),
+            Block.box(-16.0D, 5.0D, 3.0D, 32.0D, 32.0D, 7.0D),
             Block.box(6.0D, 2.0D, 7.0D, 10.0D, 10.0D, 10.0D),
             Block.box(0.0D, 0.0D, 6.0D, 16.0D, 2.0D, 14.0D),
-            Block.box(-12.0D, 8.2D, 2.5D, -8.0D, 9.6D, 3.3D)
+            Block.box(-12.0D, 5.2D, 2.5D, -8.0D, 6.6D, 3.3D)
     );
 
     public ComputerMonitorBlock() {
@@ -168,7 +168,7 @@ public class ComputerMonitorBlock extends BaseEntityBlock {
             case EAST -> 1.0D - x;
             default -> z;
         };
-        return localZ <= 0.22D && localX >= -0.75D && localX <= -0.50D && y >= 0.51D && y <= 0.60D;
+        return localZ <= 0.22D && localX >= -0.75D && localX <= -0.50D && y >= 0.32D && y <= 0.42D;
     }
 
     @Override

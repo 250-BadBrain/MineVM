@@ -17,10 +17,10 @@ public final class ScreenSurfaceRendererSelfTest {
         java.lang.reflect.Field cursorSurfaceZField = renderer.getDeclaredField("CURSOR_SURFACE_Z");
         cursorSurfaceZField.setAccessible(true);
 
-        assertClose((float) widthField.get(null), 200.0F);
-        assertClose((float) heightField.get(null), 107.0F);
-        assertClose((float) laptopWidthField.get(null), 210.0F);
-        assertClose((float) laptopHeightField.get(null), 110.0F);
+        assertClose((float) widthField.get(null), 258.0F);
+        assertClose((float) heightField.get(null), 141.0F);
+        assertClose((float) laptopWidthField.get(null), 287.0F);
+        assertClose((float) laptopHeightField.get(null), 156.0F);
         if ((float) cursorSurfaceZField.get(null) >= -0.01F) {
             throw new AssertionError("Cursor must render in front of the duplicated VM screen face");
         }

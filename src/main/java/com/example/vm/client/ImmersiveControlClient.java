@@ -47,6 +47,7 @@ public final class ImmersiveControlClient {
         releaseMouseForScreenControl();
         suppressMinecraftBindings();
         hideCursorForScreenControl();
+        syncVmMousePosition(true);
         if (Minecraft.getInstance().player != null) {
             Minecraft.getInstance().player.displayClientMessage(
                     Component.literal("Screen control active: " + activeComputerId + " | Press " + RELEASE_HINT + " to release."),
@@ -310,7 +311,7 @@ public final class ImmersiveControlClient {
         return false;
     }
 
-    private static String qcode(int key, int modifiers) {
+    static String qcode(int key, int modifiers) {
         String base = switch (key) {
             case GLFW.GLFW_KEY_UP -> "up";
             case GLFW.GLFW_KEY_DOWN -> "down";
@@ -334,10 +335,15 @@ public final class ImmersiveControlClient {
             case GLFW.GLFW_KEY_GRAVE_ACCENT -> "grave_accent";
             default -> printableQcode(key);
         };
-        if (base == null || !isShiftDown(modifiers) || isModifierKey(key)) {
+        if (base == null || isModifierKey(key)) {
             return base;
         }
-        return "shift-" + base;
+        StringBuilder qcode = new StringBuilder();
+        appendModifier(qcode, isControlDown(modifiers), "ctrl");
+        appendModifier(qcode, isAltDown(modifiers), "alt");
+        appendModifier(qcode, isShiftDown(modifiers), "shift");
+        qcode.append(base);
+        return qcode.toString();
     }
 
     private static String printableQcode(int key) {
@@ -347,11 +353,28 @@ public final class ImmersiveControlClient {
         if (key >= GLFW.GLFW_KEY_0 && key <= GLFW.GLFW_KEY_9) {
             return String.valueOf((char) ('0' + key - GLFW.GLFW_KEY_0));
         }
+        if (key >= GLFW.GLFW_KEY_F1 && key <= GLFW.GLFW_KEY_F12) {
+            return "f" + (key - GLFW.GLFW_KEY_F1 + 1);
+        }
         return null;
+    }
+
+    private static void appendModifier(StringBuilder qcode, boolean active, String modifier) {
+        if (active) {
+            qcode.append(modifier).append('-');
+        }
     }
 
     private static boolean isShiftDown(int modifiers) {
         return (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
+    }
+
+    private static boolean isControlDown(int modifiers) {
+        return (modifiers & GLFW.GLFW_MOD_CONTROL) != 0;
+    }
+
+    private static boolean isAltDown(int modifiers) {
+        return (modifiers & GLFW.GLFW_MOD_ALT) != 0;
     }
 
     private static boolean isModifierKey(int key) {

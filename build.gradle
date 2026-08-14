@@ -880,10 +880,18 @@ tasks.register('runInputServiceSelfTest', JavaExec) {
     mainClass = 'com.example.vm.test.InputServiceSelfTest'
 }
 
+tasks.register('runImmersiveControlClientSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Verifies immersive VM keyboard shortcut qcode mapping.'
+    dependsOn 'classes'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.example.vm.test.ImmersiveControlClientSelfTest'
+}
+
 tasks.register('verifyPhase8InputSystem') {
     group = 'verification'
     description = 'Verifies async VM input routing and QMP input command wiring.'
-    dependsOn 'classes', 'jar', 'runVirtualMachineInputSelfTest', 'runQmpInputCommandSelfTest', 'runInputServiceSelfTest'
+    dependsOn 'classes', 'jar', 'runVirtualMachineInputSelfTest', 'runQmpInputCommandSelfTest', 'runInputServiceSelfTest', 'runImmersiveControlClientSelfTest'
 
     doLast {
         def requiredFiles = [
@@ -896,12 +904,14 @@ tasks.register('verifyPhase8InputSystem') {
                 'src/main/java/com/example/vm/test/VirtualMachineInputSelfTest.java',
                 'src/main/java/com/example/vm/test/QmpInputCommandSelfTest.java',
                 'src/main/java/com/example/vm/test/InputServiceSelfTest.java',
+                'src/main/java/com/example/vm/test/ImmersiveControlClientSelfTest.java',
                 'build/classes/java/main/com/example/vm/input/VirtualMachineInput.class',
                 'build/classes/java/main/com/example/vm/input/KeyboardInput.class',
                 'build/classes/java/main/com/example/vm/input/MouseButtonInput.class',
                 'build/classes/java/main/com/example/vm/input/MouseMoveInput.class',
                 'build/classes/java/main/com/example/vm/input/InputService.class',
-                'build/classes/java/main/com/example/vm/qmp/QmpInputCommand.class'
+                'build/classes/java/main/com/example/vm/qmp/QmpInputCommand.class',
+                'build/classes/java/main/com/example/vm/test/ImmersiveControlClientSelfTest.class'
         ]
 
         requiredFiles.each { path ->
@@ -1393,7 +1403,7 @@ tasks.register('verifyBiosMenuFoundation') {
         if (!monitorModelText.contains('"button"') || !desktopModelText.contains('"button"') || !laptopModelText.contains('"button"')) {
             throw new GradleException('Monitor, desktop case, and laptop models must expose visible power buttons.')
         }
-        if (!monitorModelText.contains('"from": [-16, 8, 3]') || !monitorModelText.contains('"to": [32, 32, 7]') || !monitorModelText.contains('"display"') || !monitorModelText.contains('"uv"')) {
+        if (!monitorModelText.contains('"from": [-16, 5, 3]') || !monitorModelText.contains('"to": [32, 32, 7]') || !monitorModelText.contains('"display"') || !monitorModelText.contains('"uv"')) {
             throw new GradleException('Monitor model must use the enlarged 3x2x1 visual screen body.')
         }
         if (!laptopModelText.contains('"from": [-16, 0, 2]') || !laptopModelText.contains('"to": [32, 3, 30]') || !laptopModelText.contains('"to": [32, 32, 30]') || !laptopModelText.contains('"display"') || !laptopModelText.contains('"uv"')) {
@@ -1428,7 +1438,7 @@ tasks.register('verifyBiosMenuFoundation') {
         }
         def monitorBlockSourceText = file('src/main/java/com/example/vm/block/ComputerMonitorBlock.java').text
         def peripheralBlockSourceText = file('src/main/java/com/example/vm/block/ComputerPeripheralBlock.java').text
-        if (!monitorBlockSourceText.contains('Block.box(-16.0D, 8.0D, 3.0D, 32.0D, 32.0D, 7.0D)')) {
+        if (!monitorBlockSourceText.contains('Block.box(-16.0D, 5.0D, 3.0D, 32.0D, 32.0D, 7.0D)')) {
             throw new GradleException('Monitor shape must cover the enlarged monitor body without exceeding its 3-block footprint.')
         }
         if (!computerBlockSourceText.contains('Block.box(-16.0D, 0.0D, 2.0D, 32.0D, 3.5D, 30.0D)') || !computerBlockSourceText.contains('Block.box(-16.0D, 3.0D, 26.0D, 32.0D, 32.0D, 30.5D)')) {
