@@ -24,12 +24,20 @@ public final class QmpInputCommandSelfTest {
         );
         assertEquals(
                 QmpInputCommand.toJson(new MouseMoveInput("computer-test", 100, 200, 1024, 768)),
-                "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[{\"type\":\"abs\",\"data\":{\"axis\":\"x\",\"value\":100}},{\"type\":\"abs\",\"data\":{\"axis\":\"y\",\"value\":200}}]}}"
+                "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[{\"type\":\"abs\",\"data\":{\"axis\":\"x\",\"value\":3203}},{\"type\":\"abs\",\"data\":{\"axis\":\"y\",\"value\":8544}}]}}"
         );
+        assertEquals(QmpInputCommand.toAbsolutePointerCoordinate(0, 1280), 0);
+        assertEquals(QmpInputCommand.toAbsolutePointerCoordinate(1279, 1280), 32767);
     }
 
     private static void assertEquals(String actual, String expected) {
         if (!actual.equals(expected)) {
+            throw new AssertionError("Expected " + expected + " but got " + actual);
+        }
+    }
+
+    private static void assertEquals(int actual, int expected) {
+        if (actual != expected) {
             throw new AssertionError("Expected " + expected + " but got " + actual);
         }
     }

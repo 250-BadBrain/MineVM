@@ -179,6 +179,7 @@ public final class ImmersiveControlClient {
         if (!active() || activeComputerId.isBlank()) {
             return;
         }
+        syncVmMousePosition(true);
         int vmButton = switch (button) {
             case GLFW.GLFW_MOUSE_BUTTON_LEFT -> 0;
             case GLFW.GLFW_MOUSE_BUTTON_MIDDLE -> 1;
@@ -190,6 +191,10 @@ public final class ImmersiveControlClient {
     }
 
     public static void syncVmMousePosition() {
+        syncVmMousePosition(false);
+    }
+
+    private static void syncVmMousePosition(boolean force) {
         if (!controllingVmDisplay() || activeComputerId.isBlank()) {
             return;
         }
@@ -198,7 +203,7 @@ public final class ImmersiveControlClient {
         double windowHeight = Math.max(1, minecraft.getWindow().getScreenHeight());
         int x = clamp((int) Math.floor(minecraft.mouseHandler.xpos() * VM_POINTER_WIDTH / windowWidth), 0, VM_POINTER_WIDTH - 1);
         int y = clamp((int) Math.floor(minecraft.mouseHandler.ypos() * VM_POINTER_HEIGHT / windowHeight), 0, VM_POINTER_HEIGHT - 1);
-        if (x == lastMouseX && y == lastMouseY) {
+        if (!force && x == lastMouseX && y == lastMouseY) {
             return;
         }
         lastMouseX = x;

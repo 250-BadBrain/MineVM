@@ -8,6 +8,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 public final class QmpInputCommand {
+    static final int QEMU_ABSOLUTE_POINTER_MAX = 0x7FFF;
+
     private QmpInputCommand() {
     }
 
@@ -62,17 +64,25 @@ public final class QmpInputCommand {
     private static String mouseMoveToJson(MouseMoveInput input) {
         JsonObject eventData = new JsonObject();
         eventData.addProperty("axis", "x");
-        eventData.addProperty("value", input.x());
+        eventData.addProperty("value", toAbsolutePointerCoordinate(input.x(), input.screenWidth()));
 
         JsonObject yEventData = new JsonObject();
         yEventData.addProperty("axis", "y");
-        yEventData.addProperty("value", input.y());
+        yEventData.addProperty("value", toAbsolutePointerCoordinate(input.y(), input.screenHeight()));
 
         JsonObject command = baseInputSendEvent();
         JsonArray events = command.getAsJsonObject("arguments").getAsJsonArray("events");
         events.add(inputEvent("abs", eventData));
         events.add(inputEvent("abs", yEventData));
         return command.toString();
+    }
+
+    public static int toAbsolutePointerCoordinate(int coordinate, int size) {
+        if (size <= 1) {
+            return 0;
+        }
+        int clamped = Math.max(0, Math.min(size - 1, coordinate));
+        return Math.round((float) clamped * QEMU_ABSOLUTE_POINTER_MAX / (size - 1));
     }
 
     private static String inputSendEvent(String type, JsonObject data) {

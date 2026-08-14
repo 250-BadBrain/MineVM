@@ -146,12 +146,10 @@ public final class ScreenSurfaceRenderer {
     }
 
     private static void drawCursor(Matrix4f matrix, MultiBufferSource buffer, float x, float y) {
-        drawCursorBlock(matrix, buffer, x + 1.0F, y + 1.0F, 1.5F, 12.0F, 0, 0, 0, 180);
-        drawCursorBlock(matrix, buffer, x + 1.0F, y + 1.0F, 9.0F, 1.5F, 0, 0, 0, 180);
-        drawCursorBlock(matrix, buffer, x + 1.0F, y + 9.0F, 6.0F, 1.5F, 0, 0, 0, 180);
-        drawCursorBlock(matrix, buffer, x, y, 1.5F, 12.0F, 255, 255, 255, 255);
-        drawCursorBlock(matrix, buffer, x, y, 9.0F, 1.5F, 255, 255, 255, 255);
-        drawCursorBlock(matrix, buffer, x, y + 8.0F, 6.0F, 1.5F, 255, 255, 255, 255);
+        drawCursorBlock(matrix, buffer, x + 0.6F, y + 0.6F, 0.8F, 6.0F, 0, 0, 0, 180);
+        drawCursorBlock(matrix, buffer, x + 0.6F, y + 0.6F, 5.0F, 0.8F, 0, 0, 0, 180);
+        drawCursorBlock(matrix, buffer, x, y, 0.8F, 6.0F, 255, 255, 255, 255);
+        drawCursorBlock(matrix, buffer, x, y, 5.0F, 0.8F, 255, 255, 255, 255);
     }
 
     private static void drawCursorBlock(Matrix4f matrix, MultiBufferSource buffer, float x, float y, float width, float height, int red, int green, int blue, int alpha) {
