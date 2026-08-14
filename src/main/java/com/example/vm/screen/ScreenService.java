@@ -15,7 +15,7 @@ public final class ScreenService implements AutoCloseable {
     private static final int CONNECT_RETRY_COUNT = 20;
     private static final long CONNECT_RETRY_DELAY_MS = 500L;
 
-    private final Map<String, ScreenFrame> latestFrames = new ConcurrentHashMap<>();
+    private final Map<String, ScreenFrameBuffer> frameBuffers = new ConcurrentHashMap<>();
     private final Map<String, Future<?>> receivers = new ConcurrentHashMap<>();
     private final VncFrameReceiver vncFrameReceiver;
     private ExecutorService executor;
@@ -36,15 +36,16 @@ public final class ScreenService implements AutoCloseable {
     }
 
     public CompletableFuture<Void> updateFrame(String computerId, ScreenFrame frame) {
-        return CompletableFuture.runAsync(() -> latestFrames.put(requireComputerId(computerId), frame), executor());
+        return CompletableFuture.runAsync(() -> applyFrame(requireComputerId(computerId), frame), executor());
     }
 
     public CompletableFuture<Optional<ScreenFrame>> getLatestFrame(String computerId) {
-        return CompletableFuture.supplyAsync(() -> Optional.ofNullable(latestFrames.get(requireComputerId(computerId))), executor());
+        return CompletableFuture.supplyAsync(() -> latestFrameSnapshot(computerId), executor());
     }
 
     public Optional<ScreenFrame> latestFrameSnapshot(String computerId) {
-        return Optional.ofNullable(latestFrames.get(requireComputerId(computerId)));
+        ScreenFrameBuffer frameBuffer = frameBuffers.get(requireComputerId(computerId));
+        return frameBuffer == null ? Optional.empty() : frameBuffer.snapshot();
     }
 
     public synchronized void startVncReceiver(String computerId, VncEndpoint endpoint) {
@@ -59,7 +60,7 @@ public final class ScreenService implements AutoCloseable {
         if (receiver != null) {
             receiver.cancel(true);
         }
-        latestFrames.remove(id);
+        frameBuffers.remove(id);
     }
 
     @Override
@@ -68,7 +69,7 @@ public final class ScreenService implements AutoCloseable {
         receivers.clear();
         receiverExecutor.shutdownNow();
         executor.shutdownNow();
-        latestFrames.clear();
+        frameBuffers.clear();
     }
 
     private synchronized ExecutorService receiverExecutor() {
@@ -81,7 +82,7 @@ public final class ScreenService implements AutoCloseable {
     private void receiveWithRetry(String computerId, VncEndpoint endpoint) {
         for (int attempt = 1; attempt <= CONNECT_RETRY_COUNT && !Thread.currentThread().isInterrupted(); attempt++) {
             try {
-                vncFrameReceiver.receive(endpoint, frame -> latestFrames.put(computerId, frame));
+                vncFrameReceiver.receive(endpoint, frame -> applyFrame(computerId, frame));
                 return;
             } catch (IOException exception) {
                 if (attempt == CONNECT_RETRY_COUNT) {
@@ -106,6 +107,10 @@ public final class ScreenService implements AutoCloseable {
             executor = newScreenExecutor();
         }
         return executor;
+    }
+
+    private void applyFrame(String computerId, ScreenFrame frame) {
+        frameBuffers.computeIfAbsent(computerId, ignored -> new ScreenFrameBuffer()).apply(frame);
     }
 
     private static String requireComputerId(String computerId) {
