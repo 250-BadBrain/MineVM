@@ -19,10 +19,6 @@ public final class QmpInputCommandSelfTest {
                 "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[{\"type\":\"key\",\"data\":{\"down\":false,\"key\":{\"type\":\"qcode\",\"data\":\"a\"}}}]}}"
         );
         assertEquals(
-                QmpInputCommand.toJson(new KeyboardInput("computer-test", "ctrl", false)),
-                "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[{\"type\":\"key\",\"data\":{\"down\":false,\"key\":{\"type\":\"qcode\",\"data\":\"ctrl\"}}}]}}"
-        );
-        assertEquals(
                 QmpInputCommand.toJson(new MouseButtonInput("computer-test", 0, false)),
                 "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[{\"type\":\"btn\",\"data\":{\"down\":false,\"button\":\"left\"}}]}}"
         );

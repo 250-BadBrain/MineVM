@@ -22,18 +22,11 @@ public final class ImmersiveControlClient {
     };
     private static final int VM_POINTER_WIDTH = 1280;
     private static final int VM_POINTER_HEIGHT = 800;
+    private static final long VM_MOUSE_MOVE_INTERVAL_NANOS = 33_000_000L;
     private static final int[] VM_MOUSE_BUTTONS = {
             GLFW.GLFW_MOUSE_BUTTON_LEFT,
             GLFW.GLFW_MOUSE_BUTTON_MIDDLE,
             GLFW.GLFW_MOUSE_BUTTON_RIGHT
-    };
-    private static final String[] VM_MODIFIER_KEYS = {
-            "ctrl",
-            "ctrl_r",
-            "alt",
-            "alt_r",
-            "shift",
-            "shift_r"
     };
     private static ScreenControlSession activeSession;
     private static BlockPos activeComputerPos;
@@ -44,6 +37,9 @@ public final class ImmersiveControlClient {
     private static boolean capturedHideGui;
     private static int lastMouseX = -1;
     private static int lastMouseY = -1;
+    private static int lastSentMouseX = -1;
+    private static int lastSentMouseY = -1;
+    private static long lastMouseMoveSentNanos;
 
     private ImmersiveControlClient() {
     }
@@ -58,8 +54,11 @@ public final class ImmersiveControlClient {
         capturedHotbarSlot = Minecraft.getInstance().player == null ? 0 : Minecraft.getInstance().player.getInventory().selected;
         capturedHideGui = Minecraft.getInstance().options.hideGui;
         Minecraft.getInstance().options.hideGui = true;
-        lastMouseX = VM_POINTER_WIDTH / 2;
-        lastMouseY = VM_POINTER_HEIGHT / 2;
+        lastMouseX = -1;
+        lastMouseY = -1;
+        lastSentMouseX = -1;
+        lastSentMouseY = -1;
+        lastMouseMoveSentNanos = 0L;
         releaseMouseForScreenControl();
         suppressMinecraftBindings();
         hideCursorForScreenControl();
@@ -87,6 +86,9 @@ public final class ImmersiveControlClient {
         capturedHotbarSlot = -1;
         lastMouseX = -1;
         lastMouseY = -1;
+        lastSentMouseX = -1;
+        lastSentMouseY = -1;
+        lastMouseMoveSentNanos = 0L;
         if (wasActive) {
             Minecraft.getInstance().options.hideGui = capturedHideGui;
         }
@@ -210,9 +212,6 @@ public final class ImmersiveControlClient {
             };
             ModNetwork.sendMouseButtonInput(activeComputerId, vmButton, false);
         }
-        for (String modifierKey : VM_MODIFIER_KEYS) {
-            ModNetwork.sendKeyboardInput(activeComputerId, modifierKey, false);
-        }
     }
 
     public static void handleVmMouseButton(int button, boolean pressed) {
@@ -243,11 +242,18 @@ public final class ImmersiveControlClient {
         double windowHeight = Math.max(1, minecraft.getWindow().getScreenHeight());
         int x = clamp((int) Math.floor(minecraft.mouseHandler.xpos() * VM_POINTER_WIDTH / windowWidth), 0, VM_POINTER_WIDTH - 1);
         int y = clamp((int) Math.floor(minecraft.mouseHandler.ypos() * VM_POINTER_HEIGHT / windowHeight), 0, VM_POINTER_HEIGHT - 1);
-        if (!force && x == lastMouseX && y == lastMouseY) {
-            return;
-        }
         lastMouseX = x;
         lastMouseY = y;
+        if (!force && x == lastSentMouseX && y == lastSentMouseY) {
+            return;
+        }
+        long now = System.nanoTime();
+        if (!force && lastMouseMoveSentNanos > 0L && now - lastMouseMoveSentNanos < VM_MOUSE_MOVE_INTERVAL_NANOS) {
+            return;
+        }
+        lastSentMouseX = x;
+        lastSentMouseY = y;
+        lastMouseMoveSentNanos = now;
         ModNetwork.sendMouseMoveInput(activeComputerId, x, y, VM_POINTER_WIDTH, VM_POINTER_HEIGHT);
         suppressMinecraftBindings();
     }

@@ -143,6 +143,14 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
     @Override
     public void sendInput(VirtualMachineInput input) {
         requireDescriptor(input.computerId());
+        Process process = processes.get(input.computerId());
+        if (process == null || !process.isAlive()) {
+            if (process != null) {
+                processes.remove(input.computerId(), process);
+            }
+            states.put(input.computerId(), VirtualMachineState.STOPPED);
+            return;
+        }
         trySendQmpJson(input.computerId(), QmpInputCommand.toJson(input));
     }
 

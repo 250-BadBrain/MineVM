@@ -10,7 +10,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 
 public class ComputerScreenRenderer implements BlockEntityRenderer<ComputerBlockEntity> {
     private static final float SCREEN_Y = 1.18F;
-    private static final float SCREEN_Z = 1.120F;
+    private static final float SCREEN_Z = 1.158F;
     private static final float SCREEN_SCALE = 0.0100F;
 
     public ComputerScreenRenderer(BlockEntityRendererProvider.Context context) {
