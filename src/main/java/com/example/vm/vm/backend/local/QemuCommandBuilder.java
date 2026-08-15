@@ -58,6 +58,7 @@ public final class QemuCommandBuilder {
             command.add("-machine");
             command.add("q35");
         }
+        addCpuArgs(command, descriptor);
         command.add("-m");
         command.add(Integer.toString(descriptor.memoryMb()));
         command.add("-smp");
@@ -81,7 +82,7 @@ public final class QemuCommandBuilder {
         command.add("-display");
         command.add("none");
         command.add("-vga");
-        command.add("virtio");
+        command.add(vgaDevice(descriptor));
         command.add("-device");
         command.add("qemu-xhci,id=usb_bus");
         command.add("-device");
@@ -93,6 +94,24 @@ public final class QemuCommandBuilder {
         command.add("-name");
         command.add(descriptor.computerId());
         return List.copyOf(command);
+    }
+
+    private void addCpuArgs(List<String> command, VirtualMachineDescriptor descriptor) {
+        switch (descriptor.guestOperatingSystem()) {
+            case WINDOWS_10, WINDOWS_11 -> {
+                command.add("-cpu");
+                command.add("qemu64");
+            }
+            case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> {
+            }
+        }
+    }
+
+    private String vgaDevice(VirtualMachineDescriptor descriptor) {
+        return switch (descriptor.guestOperatingSystem()) {
+            case WINDOWS_10, WINDOWS_11 -> "std";
+            case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> "virtio";
+        };
     }
 
     private void addDiskArgs(List<String> command, VirtualMachineDescriptor descriptor, VirtualMachineBootDevice bootDevice) {

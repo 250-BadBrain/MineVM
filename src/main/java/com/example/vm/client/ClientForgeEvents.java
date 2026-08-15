@@ -189,7 +189,7 @@ public final class ClientForgeEvents {
             return;
         }
         BlockPos pos = event.getTarget().getBlockPos();
-        if (isLaptopSelectionTarget(minecraft, pos)) {
+        if (isComputerScreenSelectionTarget(minecraft, pos)) {
             event.setCanceled(true);
         }
     }
@@ -206,9 +206,9 @@ public final class ClientForgeEvents {
         }
     }
 
-    private static boolean isLaptopSelectionTarget(Minecraft minecraft, BlockPos pos) {
+    private static boolean isComputerScreenSelectionTarget(Minecraft minecraft, BlockPos pos) {
         BlockState state = minecraft.level.getBlockState(pos);
-        if (state.getBlock() == ModBlocks.LAPTOP_COMPUTER.get()) {
+        if (state.getBlock() == ModBlocks.LAPTOP_COMPUTER.get() || state.getBlock() == ModBlocks.COMPUTER_MONITOR.get()) {
             return true;
         }
         if (!(state.getBlock() instanceof ComputerOccupancyBlock)) {
@@ -219,6 +219,6 @@ public final class ClientForgeEvents {
             return false;
         }
         BlockState originState = minecraft.level.getBlockState(origin);
-        return originState.getBlock() == ModBlocks.LAPTOP_COMPUTER.get();
+        return originState.getBlock() == ModBlocks.LAPTOP_COMPUTER.get() || originState.getBlock() == ModBlocks.COMPUTER_MONITOR.get();
     }
 }

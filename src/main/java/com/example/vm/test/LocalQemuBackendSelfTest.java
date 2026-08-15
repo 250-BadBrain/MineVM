@@ -69,6 +69,7 @@ public final class LocalQemuBackendSelfTest {
         assertContains(command, "none");
         assertContains(command, "-vga");
         assertContains(command, "virtio");
+        assertNotContains(command, "std");
         assertContains(command, "-vnc");
         assertContains(command, VncEndpoint.forComputer("computer-test").toQemuArgument() + ",share=ignore");
         assertContains(command, "-qmp");
@@ -98,6 +99,8 @@ public final class LocalQemuBackendSelfTest {
         assertContains(command, "q35");
         assertContains(command, "if=pflash,format=raw,readonly=on,file=D:\\qemu\\share\\edk2-x86_64-code.fd");
         assertContains(command, "if=pflash,format=raw,file=E:\\MinecraftVMs\\computer-windows-10\\OVMF_VARS.fd");
+        assertContains(command, "-cpu");
+        assertContains(command, "qemu64");
         assertContains(command, "ich9-ahci,id=sata");
         assertContains(command, "if=none,file=E:\\MinecraftVMs\\computer-windows-10\\computer-windows-10.qcow2,format=qcow2,id=vm_disk");
         assertContains(command, "ide-hd,bus=sata.1,drive=vm_disk,bootindex=1");
@@ -106,6 +109,8 @@ public final class LocalQemuBackendSelfTest {
         assertContains(discCommand, "if=none,file=E:\\Downloads\\Win10.iso,media=cdrom,readonly=on,id=system_disc");
         assertContains(discCommand, "ide-cd,bus=sata.0,drive=system_disc,bootindex=1");
         assertContains(discCommand, "ide-hd,bus=sata.1,drive=vm_disk,bootindex=2");
+        assertContains(discCommand, "-vga");
+        assertContains(discCommand, "std");
     }
 
     private static void assertWindows11Command(QemuCommandBuilder builder) {
