@@ -26,12 +26,15 @@ public class ComputerBlockEntity extends BlockEntity {
     private static final String TAG_POWERED_ON = "PoweredOn";
     private static final String TAG_VM_DISPLAY_ACTIVE = "VmDisplayActive";
     private static final String TAG_ACTIVE_GUEST_OPERATING_SYSTEM = "ActiveGuestOperatingSystem";
+    private static final String TAG_DISK_GUEST_OPERATING_SYSTEM = "DiskGuestOperatingSystem";
 
     private String computerId;
     private ComputerHardwareConfiguration hardwareConfiguration;
     private GuestOperatingSystem insertedDisc;
     @Nullable
     private GuestOperatingSystem activeGuestOperatingSystem;
+    @Nullable
+    private GuestOperatingSystem diskGuestOperatingSystem;
     private BlockPos linkedMonitorPos;
     private boolean keyboardConnected;
     private boolean mouseConnected;
@@ -63,7 +66,8 @@ public class ComputerBlockEntity extends BlockEntity {
     }
 
     public Optional<GuestOperatingSystem> selectedGuestOperatingSystem() {
-        return Optional.ofNullable(activeGuestOperatingSystem);
+        return Optional.ofNullable(activeGuestOperatingSystem)
+                .or(() -> Optional.ofNullable(diskGuestOperatingSystem));
     }
 
     public void setActiveGuestOperatingSystem(GuestOperatingSystem guestOperatingSystem) {
@@ -72,6 +76,25 @@ public class ComputerBlockEntity extends BlockEntity {
         }
         activeGuestOperatingSystem = guestOperatingSystem;
         markUpdated();
+    }
+
+    public void rememberDiskGuestOperatingSystem(GuestOperatingSystem guestOperatingSystem) {
+        if (diskGuestOperatingSystem == guestOperatingSystem) {
+            return;
+        }
+        diskGuestOperatingSystem = guestOperatingSystem;
+        markUpdated();
+    }
+
+    @Nullable
+    public GuestOperatingSystem displayGuestOperatingSystem() {
+        if (activeGuestOperatingSystem != null) {
+            return activeGuestOperatingSystem;
+        }
+        if (insertedDisc != null) {
+            return insertedDisc;
+        }
+        return diskGuestOperatingSystem;
     }
 
     public Optional<BlockPos> linkedMonitorPos() {
@@ -158,7 +181,6 @@ public class ComputerBlockEntity extends BlockEntity {
         }
 
         insertedDisc = guestOperatingSystem;
-        activeGuestOperatingSystem = guestOperatingSystem;
         markUpdated();
         return true;
     }
@@ -185,6 +207,9 @@ public class ComputerBlockEntity extends BlockEntity {
         if (activeGuestOperatingSystem != null) {
             tag.putString(TAG_ACTIVE_GUEST_OPERATING_SYSTEM, activeGuestOperatingSystem.name());
         }
+        if (diskGuestOperatingSystem != null) {
+            tag.putString(TAG_DISK_GUEST_OPERATING_SYSTEM, diskGuestOperatingSystem.name());
+        }
         if (linkedMonitorPos != null) {
             tag.putLong(TAG_LINKED_MONITOR_POS, linkedMonitorPos.asLong());
         }
@@ -207,6 +232,7 @@ public class ComputerBlockEntity extends BlockEntity {
         hardwareConfiguration = new ComputerHardwareConfiguration(cpuCores, memoryMb, diskFile);
         insertedDisc = tag.contains(TAG_INSERTED_DISC) ? GuestOperatingSystem.parse(tag.getString(TAG_INSERTED_DISC)) : null;
         activeGuestOperatingSystem = tag.contains(TAG_ACTIVE_GUEST_OPERATING_SYSTEM) ? GuestOperatingSystem.parse(tag.getString(TAG_ACTIVE_GUEST_OPERATING_SYSTEM)) : null;
+        diskGuestOperatingSystem = tag.contains(TAG_DISK_GUEST_OPERATING_SYSTEM) ? GuestOperatingSystem.parse(tag.getString(TAG_DISK_GUEST_OPERATING_SYSTEM)) : null;
         linkedMonitorPos = tag.contains(TAG_LINKED_MONITOR_POS) ? BlockPos.of(tag.getLong(TAG_LINKED_MONITOR_POS)) : null;
         keyboardConnected = tag.getBoolean(TAG_KEYBOARD_CONNECTED);
         mouseConnected = tag.getBoolean(TAG_MOUSE_CONNECTED);

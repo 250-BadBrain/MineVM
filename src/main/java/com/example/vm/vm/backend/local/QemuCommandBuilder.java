@@ -53,7 +53,7 @@ public final class QemuCommandBuilder {
         List<String> command = new ArrayList<>();
         command.add(configuration.qemuSystemPath().toString());
         command.add("-accel");
-        command.add(configuration.accelerator());
+        command.add(accelerator(descriptor));
         if (descriptor.firmwareConfiguration().requiresUefi()) {
             command.add("-machine");
             command.add("q35");
@@ -105,6 +105,13 @@ public final class QemuCommandBuilder {
             case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> {
             }
         }
+    }
+
+    private String accelerator(VirtualMachineDescriptor descriptor) {
+        return switch (descriptor.guestOperatingSystem()) {
+            case WINDOWS_10, WINDOWS_11 -> "tcg,thread=multi";
+            case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> configuration.accelerator();
+        };
     }
 
     private String vgaDevice(VirtualMachineDescriptor descriptor) {

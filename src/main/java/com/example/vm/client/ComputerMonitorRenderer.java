@@ -38,7 +38,7 @@ public class ComputerMonitorRenderer implements BlockEntityRenderer<ComputerMoni
                     return;
                 }
                 if (linkedComputer.vmDisplayActive()) {
-                    GuestOperatingSystem guestOperatingSystem = linkedComputer.activeGuestOperatingSystem();
+                    GuestOperatingSystem guestOperatingSystem = linkedComputer.displayGuestOperatingSystem();
                     ScreenSurfaceRenderer.renderVmDisplay(
                             poseStack,
                             buffer,

@@ -97,6 +97,9 @@ public final class LocalQemuBackendSelfTest {
         List<String> command = builder.startCommand(descriptor);
         assertContains(command, "-machine");
         assertContains(command, "q35");
+        assertContains(command, "-accel");
+        assertContains(command, "tcg,thread=multi");
+        assertNotContains(command, "whpx");
         assertContains(command, "if=pflash,format=raw,readonly=on,file=D:\\qemu\\share\\edk2-x86_64-code.fd");
         assertContains(command, "if=pflash,format=raw,file=E:\\MinecraftVMs\\computer-windows-10\\OVMF_VARS.fd");
         assertContains(command, "-cpu");

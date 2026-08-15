@@ -189,8 +189,7 @@ public final class ComputerRuntimeConfig {
     }
 
     public static GuestOperatingSystem configuredGuestOperatingSystem(ComputerBlockEntity computer) {
-        GuestOperatingSystem guestOperatingSystem = computer.activeGuestOperatingSystem();
-        return guestOperatingSystem == null ? configuredGuestOperatingSystem() : guestOperatingSystem;
+        return computer.selectedGuestOperatingSystem().orElseGet(ComputerRuntimeConfig::configuredGuestOperatingSystem);
     }
 
     public static GuestOperatingSystem configuredGuestOperatingSystem() {

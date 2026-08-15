@@ -27,7 +27,7 @@ public class ComputerScreenRenderer implements BlockEntityRenderer<ComputerBlock
         }
 
         if (computer.vmDisplayActive()) {
-            GuestOperatingSystem guestOperatingSystem = computer.activeGuestOperatingSystem();
+            GuestOperatingSystem guestOperatingSystem = computer.displayGuestOperatingSystem();
             ScreenSurfaceRenderer.renderLaptopVmDisplay(
                     poseStack,
                     buffer,
