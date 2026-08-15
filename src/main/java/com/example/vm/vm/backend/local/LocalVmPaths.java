@@ -37,6 +37,10 @@ public final class LocalVmPaths {
         return vmDirectory(descriptor).resolve("OVMF_VARS.fd").normalize();
     }
 
+    public Path uefiVarsTemplatePath() {
+        return qemuShareDirectory.resolve("edk2-i386-vars.fd").normalize();
+    }
+
     public Path uefiCodePath(boolean secureBoot) {
         String fileName = secureBoot ? "edk2-x86_64-secure-code.fd" : "edk2-x86_64-code.fd";
         return qemuShareDirectory.resolve(fileName).normalize();

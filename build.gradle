@@ -1092,7 +1092,7 @@ tasks.register('verifyPhase10WindowsProfileFoundation') {
 
         def commandBuilderText = file('src/main/java/com/example/vm/vm/backend/local/QemuCommandBuilder.java').text +
                 file('src/main/java/com/example/vm/vm/backend/local/LocalVmPaths.java').text
-        ['edk2-x86_64-code.fd', 'edk2-x86_64-secure-code.fd', 'tpm-tis', '-bios', 'q35', 'ich9-ahci', 'ide-cd', 'ide-hd'].each { fragment ->
+        ['edk2-x86_64-code.fd', 'edk2-x86_64-secure-code.fd', 'edk2-i386-vars.fd', 'tpm-tis', 'if=pflash', 'q35', 'ich9-ahci', 'ide-cd', 'ide-hd'].each { fragment ->
             if (!commandBuilderText.contains(fragment)) {
                 throw new GradleException("Windows QEMU command strategy missing ${fragment}.")
             }

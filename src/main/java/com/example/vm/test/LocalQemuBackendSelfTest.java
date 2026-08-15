@@ -96,8 +96,8 @@ public final class LocalQemuBackendSelfTest {
         List<String> command = builder.startCommand(descriptor);
         assertContains(command, "-machine");
         assertContains(command, "q35");
-        assertContains(command, "-bios");
-        assertContains(command, "D:\\qemu\\share\\edk2-x86_64-code.fd");
+        assertContains(command, "if=pflash,format=raw,readonly=on,file=D:\\qemu\\share\\edk2-x86_64-code.fd");
+        assertContains(command, "if=pflash,format=raw,file=E:\\MinecraftVMs\\computer-windows-10\\OVMF_VARS.fd");
         assertContains(command, "ich9-ahci,id=sata");
         assertContains(command, "if=none,file=E:\\MinecraftVMs\\computer-windows-10\\computer-windows-10.qcow2,format=qcow2,id=vm_disk");
         assertContains(command, "ide-hd,bus=sata.1,drive=vm_disk,bootindex=1");
@@ -119,7 +119,8 @@ public final class LocalQemuBackendSelfTest {
                 FirmwareConfiguration.forGuest(GuestOperatingSystem.WINDOWS_11)
         );
         List<String> command = builder.startCommand(descriptor);
-        assertContains(command, "D:\\qemu\\share\\edk2-x86_64-secure-code.fd");
+        assertContains(command, "if=pflash,format=raw,readonly=on,file=D:\\qemu\\share\\edk2-x86_64-secure-code.fd");
+        assertContains(command, "if=pflash,format=raw,file=E:\\MinecraftVMs\\computer-windows-11\\OVMF_VARS.fd");
         assertContains(command, "-tpmdev");
         assertContains(command, "emulator,id=tpm0,chardev=chrtpm");
         assertContains(command, "-device");

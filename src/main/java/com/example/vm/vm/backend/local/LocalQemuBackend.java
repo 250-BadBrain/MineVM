@@ -60,6 +60,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
         if (!Files.exists(diskPath)) {
             runCreateDiskCommand(descriptor, diskPath);
         }
+        prepareFirmwareFiles(descriptor);
 
         return new VirtualMachineHandle(descriptor.computerId(), VirtualMachineState.STOPPED);
     }
@@ -85,7 +86,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
         try {
             Process process = new ProcessBuilder(commandBuilder.startCommand(descriptor, bootRequest))
                     .redirectOutput(ProcessBuilder.Redirect.DISCARD)
-                    .redirectError(ProcessBuilder.Redirect.DISCARD)
+                    .redirectError(commandBuilder.vmDirectory(descriptor).resolve("qemu-stderr.log").toFile())
                     .start();
             processes.put(bootRequest.computerId(), process);
             registerProcessExitHandler(bootRequest.computerId(), process);
@@ -203,6 +204,24 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
             Thread.currentThread().interrupt();
             states.put(descriptor.computerId(), VirtualMachineState.ERROR);
             throw new IllegalStateException("Interrupted while creating VM disk: " + diskPath, exception);
+        }
+    }
+
+    private void prepareFirmwareFiles(VirtualMachineDescriptor descriptor) {
+        if (!descriptor.firmwareConfiguration().requiresUefi()) {
+            return;
+        }
+
+        Path varsPath = commandBuilder.vmDirectory(descriptor).resolve("OVMF_VARS.fd").normalize();
+        if (Files.exists(varsPath)) {
+            return;
+        }
+
+        try {
+            Files.copy(new LocalVmPaths(configuration).uefiVarsTemplatePath(), varsPath);
+        } catch (IOException exception) {
+            states.put(descriptor.computerId(), VirtualMachineState.ERROR);
+            throw new IllegalStateException("Failed to prepare UEFI variable store for " + descriptor.computerId(), exception);
         }
     }
 

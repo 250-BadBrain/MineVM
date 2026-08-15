@@ -127,8 +127,10 @@ public final class QemuCommandBuilder {
             return;
         }
 
-        command.add("-bios");
-        command.add(paths.uefiCodePath(descriptor.firmwareConfiguration().requiresSecureBoot()).toString());
+        command.add("-drive");
+        command.add("if=pflash,format=raw,readonly=on,file=" + paths.uefiCodePath(descriptor.firmwareConfiguration().requiresSecureBoot()));
+        command.add("-drive");
+        command.add("if=pflash,format=raw,file=" + paths.ovmfVarsPath(descriptor));
 
         if (descriptor.firmwareConfiguration().requiresTpm()) {
             command.add("-chardev");
