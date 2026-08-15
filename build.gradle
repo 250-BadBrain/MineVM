@@ -665,10 +665,18 @@ tasks.register('runQmpCommandSelfTest', JavaExec) {
     mainClass = 'com.example.vm.test.QmpCommandSelfTest'
 }
 
+tasks.register('runQmpClientSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Verifies QMP persistent client connection reuse without launching QEMU.'
+    dependsOn 'classes'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.example.vm.test.QmpClientSelfTest'
+}
+
 tasks.register('verifyPhase6QmpControl') {
     group = 'verification'
     description = 'Verifies QMP control classes and LocalQemuBackend QMP wiring.'
-    dependsOn 'classes', 'jar', 'runQmpCommandSelfTest'
+    dependsOn 'classes', 'jar', 'runQmpCommandSelfTest', 'runQmpClientSelfTest'
 
     doLast {
         def requiredFiles = [
@@ -676,10 +684,12 @@ tasks.register('verifyPhase6QmpControl') {
                 'src/main/java/com/example/vm/qmp/QmpEndpoint.java',
                 'src/main/java/com/example/vm/qmp/QmpClient.java',
                 'src/main/java/com/example/vm/test/QmpCommandSelfTest.java',
+                'src/main/java/com/example/vm/test/QmpClientSelfTest.java',
                 'build/classes/java/main/com/example/vm/qmp/QmpCommand.class',
                 'build/classes/java/main/com/example/vm/qmp/QmpEndpoint.class',
                 'build/classes/java/main/com/example/vm/qmp/QmpClient.class',
-                'build/classes/java/main/com/example/vm/test/QmpCommandSelfTest.class'
+                'build/classes/java/main/com/example/vm/test/QmpCommandSelfTest.class',
+                'build/classes/java/main/com/example/vm/test/QmpClientSelfTest.class'
         ]
 
         requiredFiles.each { path ->

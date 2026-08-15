@@ -99,6 +99,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
         }
 
         ComputerInMinecraft.SCREEN_SERVICE.stopVncReceiver(computerId);
+        qmpClient.close(QmpEndpoint.forComputer(computerId));
         states.put(computerId, VirtualMachineState.STOPPED);
         return new VirtualMachineHandle(computerId, VirtualMachineState.STOPPED);
     }
@@ -159,6 +160,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
         processes.keySet().forEach(ComputerInMinecraft.SCREEN_SERVICE::stopVncReceiver);
         processes.values().forEach(Process::destroy);
         processes.clear();
+        qmpClient.close();
         descriptors.clear();
         states.clear();
     }
@@ -223,6 +225,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
         process.onExit().thenAccept(exitedProcess -> {
             if (processes.remove(computerId, exitedProcess)) {
                 ComputerInMinecraft.SCREEN_SERVICE.stopVncReceiver(computerId);
+                qmpClient.close(QmpEndpoint.forComputer(computerId));
                 states.put(computerId, VirtualMachineState.STOPPED);
             }
         });
