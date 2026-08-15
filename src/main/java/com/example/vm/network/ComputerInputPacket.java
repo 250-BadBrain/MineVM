@@ -4,6 +4,7 @@ import com.example.vm.ComputerInMinecraft;
 import com.example.vm.input.KeyboardInput;
 import com.example.vm.input.MouseButtonInput;
 import com.example.vm.input.MouseMoveInput;
+import com.example.vm.input.MouseWheelInput;
 import com.example.vm.input.VirtualMachineInput;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -15,7 +16,8 @@ public record ComputerInputPacket(String computerId, InputKind kind, String key,
     public enum InputKind {
         KEYBOARD,
         MOUSE_BUTTON,
-        MOUSE_MOVE
+        MOUSE_MOVE,
+        MOUSE_WHEEL
     }
 
     public static ComputerInputPacket keyboard(String computerId, String key, boolean pressed) {
@@ -28,6 +30,10 @@ public record ComputerInputPacket(String computerId, InputKind kind, String key,
 
     public static ComputerInputPacket mouseMove(String computerId, int x, int y, int screenWidth, int screenHeight) {
         return new ComputerInputPacket(computerId, InputKind.MOUSE_MOVE, "", 0, x, y, screenWidth, screenHeight, false);
+    }
+
+    public static ComputerInputPacket mouseWheel(String computerId, int steps) {
+        return new ComputerInputPacket(computerId, InputKind.MOUSE_WHEEL, "", steps, 0, 0, 1, 1, false);
     }
 
     public static void encode(ComputerInputPacket packet, FriendlyByteBuf buffer) {
@@ -57,6 +63,7 @@ public record ComputerInputPacket(String computerId, InputKind kind, String key,
                 case KEYBOARD -> new KeyboardInput(packet.computerId, packet.key, packet.pressed);
                 case MOUSE_BUTTON -> new MouseButtonInput(packet.computerId, packet.button, packet.pressed);
                 case MOUSE_MOVE -> new MouseMoveInput(packet.computerId, packet.x, packet.y, packet.screenWidth, packet.screenHeight);
+                case MOUSE_WHEEL -> new MouseWheelInput(packet.computerId, packet.button);
             };
             ComputerInMinecraft.INPUT_SERVICE.send(input);
         });

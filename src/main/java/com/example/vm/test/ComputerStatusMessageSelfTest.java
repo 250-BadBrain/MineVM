@@ -30,5 +30,11 @@ public final class ComputerStatusMessageSelfTest {
         if (!windowsMessage.equals(windowsExpected)) {
             throw new AssertionError("Expected " + windowsExpected + " but got " + windowsMessage);
         }
+
+        String desktopMessage = ComputerStatusMessage.describe("computer-test", configuration, VirtualMachineState.RUNNING, "127.0.0.1:5910", GuestOperatingSystem.UBUNTU_DESKTOP, "UBUNTU_DESKTOP");
+        String desktopExpected = "Computer computer-test | CPU: 4 | Memory: 4096 MB | Disk: computer-test.qcow2 | Guest: UBUNTU_DESKTOP | Disc: UBUNTU_DESKTOP | VM: RUNNING | Screen: 127.0.0.1:5910";
+        if (!desktopMessage.equals(desktopExpected)) {
+            throw new AssertionError("Expected " + desktopExpected + " but got " + desktopMessage);
+        }
     }
 }

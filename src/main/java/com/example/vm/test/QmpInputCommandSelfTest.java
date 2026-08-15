@@ -3,6 +3,7 @@ package com.example.vm.test;
 import com.example.vm.input.KeyboardInput;
 import com.example.vm.input.MouseButtonInput;
 import com.example.vm.input.MouseMoveInput;
+import com.example.vm.input.MouseWheelInput;
 import com.example.vm.qmp.QmpInputCommand;
 
 public final class QmpInputCommandSelfTest {
@@ -25,6 +26,14 @@ public final class QmpInputCommandSelfTest {
         assertEquals(
                 QmpInputCommand.toJson(new MouseMoveInput("computer-test", 100, 200, 1024, 768)),
                 "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[{\"type\":\"abs\",\"data\":{\"axis\":\"x\",\"value\":3203}},{\"type\":\"abs\",\"data\":{\"axis\":\"y\",\"value\":8544}}]}}"
+        );
+        assertEquals(
+                QmpInputCommand.toJson(new MouseWheelInput("computer-test", 1)),
+                "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[{\"type\":\"btn\",\"data\":{\"down\":true,\"button\":\"wheel-up\"}},{\"type\":\"btn\",\"data\":{\"down\":false,\"button\":\"wheel-up\"}}]}}"
+        );
+        assertEquals(
+                QmpInputCommand.toJson(new MouseWheelInput("computer-test", -1)),
+                "{\"execute\":\"input-send-event\",\"arguments\":{\"events\":[{\"type\":\"btn\",\"data\":{\"down\":true,\"button\":\"wheel-down\"}},{\"type\":\"btn\",\"data\":{\"down\":false,\"button\":\"wheel-down\"}}]}}"
         );
         assertEquals(QmpInputCommand.toAbsolutePointerCoordinate(0, 1280), 0);
         assertEquals(QmpInputCommand.toAbsolutePointerCoordinate(1279, 1280), 32767);

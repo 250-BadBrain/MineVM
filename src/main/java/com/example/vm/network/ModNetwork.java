@@ -88,4 +88,8 @@ public final class ModNetwork {
     public static void sendMouseMoveInput(String computerId, int x, int y, int screenWidth, int screenHeight) {
         CHANNEL.sendToServer(ComputerInputPacket.mouseMove(computerId, x, y, screenWidth, screenHeight));
     }
+
+    public static void sendMouseWheelInput(String computerId, int steps) {
+        CHANNEL.sendToServer(ComputerInputPacket.mouseWheel(computerId, steps));
+    }
 }

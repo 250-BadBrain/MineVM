@@ -18,14 +18,27 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public final class LocalQemuBackend implements VirtualMachineBackend {
+    private static final long QMP_KEEP_ALIVE_INITIAL_DELAY_SECONDS = 5L;
+    private static final long QMP_KEEP_ALIVE_INTERVAL_SECONDS = 10L;
+
     private final LocalQemuConfiguration configuration;
     private final QemuCommandBuilder commandBuilder;
     private final QmpClient qmpClient;
     private final Map<String, VirtualMachineDescriptor> descriptors = new ConcurrentHashMap<>();
     private final Map<String, Process> processes = new ConcurrentHashMap<>();
     private final Map<String, VirtualMachineState> states = new ConcurrentHashMap<>();
+    private final Map<String, ScheduledFuture<?>> qmpKeepAliveTasks = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService qmpKeepAliveExecutor = Executors.newSingleThreadScheduledExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "computer-in-minecraft-qmp-keepalive");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     public LocalQemuBackend(LocalQemuConfiguration configuration) {
         this(configuration, new QemuCommandBuilder(configuration), new QmpClient());
@@ -64,6 +77,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
         Process existingProcess = processes.get(bootRequest.computerId());
         if (existingProcess != null && existingProcess.isAlive()) {
             states.put(bootRequest.computerId(), VirtualMachineState.RUNNING);
+            scheduleQmpKeepAlive(bootRequest.computerId(), existingProcess);
             return new VirtualMachineHandle(bootRequest.computerId(), VirtualMachineState.RUNNING);
         }
 
@@ -75,6 +89,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
                     .start();
             processes.put(bootRequest.computerId(), process);
             registerProcessExitHandler(bootRequest.computerId(), process);
+            scheduleQmpKeepAlive(bootRequest.computerId(), process);
             ComputerInMinecraft.SCREEN_SERVICE.startVncReceiver(bootRequest.computerId(), VncEndpoint.forComputer(bootRequest.computerId()));
             states.put(bootRequest.computerId(), VirtualMachineState.RUNNING);
             return new VirtualMachineHandle(bootRequest.computerId(), VirtualMachineState.RUNNING);
@@ -91,6 +106,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
 
         Process process = processes.get(computerId);
         if (process != null) {
+            cancelQmpKeepAlive(computerId);
             trySendQmpCommand(computerId, QmpCommand.SYSTEM_POWERDOWN);
             if (!waitForProcessExit(process)) {
                 process.destroy();
@@ -158,6 +174,9 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
     @Override
     public void close() {
         processes.keySet().forEach(ComputerInMinecraft.SCREEN_SERVICE::stopVncReceiver);
+        qmpKeepAliveTasks.values().forEach(task -> task.cancel(false));
+        qmpKeepAliveTasks.clear();
+        qmpKeepAliveExecutor.shutdownNow();
         processes.values().forEach(Process::destroy);
         processes.clear();
         qmpClient.close();
@@ -224,11 +243,34 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
     private void registerProcessExitHandler(String computerId, Process process) {
         process.onExit().thenAccept(exitedProcess -> {
             if (processes.remove(computerId, exitedProcess)) {
+                cancelQmpKeepAlive(computerId);
                 ComputerInMinecraft.SCREEN_SERVICE.stopVncReceiver(computerId);
                 qmpClient.close(QmpEndpoint.forComputer(computerId));
                 states.put(computerId, VirtualMachineState.STOPPED);
             }
         });
+    }
+
+    private void scheduleQmpKeepAlive(String computerId, Process process) {
+        qmpKeepAliveTasks.computeIfAbsent(computerId, ignored -> qmpKeepAliveExecutor.scheduleAtFixedRate(
+                () -> {
+                    if (!process.isAlive()) {
+                        cancelQmpKeepAlive(computerId);
+                        return;
+                    }
+                    trySendQmpCommand(computerId, QmpCommand.QUERY_STATUS);
+                },
+                QMP_KEEP_ALIVE_INITIAL_DELAY_SECONDS,
+                QMP_KEEP_ALIVE_INTERVAL_SECONDS,
+                TimeUnit.SECONDS
+        ));
+    }
+
+    private void cancelQmpKeepAlive(String computerId) {
+        ScheduledFuture<?> task = qmpKeepAliveTasks.remove(computerId);
+        if (task != null) {
+            task.cancel(false);
+        }
     }
 
     private VirtualMachineDescriptor requireDescriptor(String computerId) {

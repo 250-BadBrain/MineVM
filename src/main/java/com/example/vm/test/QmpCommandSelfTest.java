@@ -11,6 +11,7 @@ public final class QmpCommandSelfTest {
         assertEquals(QmpCommand.capabilities(), "{\"execute\":\"qmp_capabilities\"}");
         assertEquals(QmpCommand.execute(QmpCommand.SYSTEM_POWERDOWN), "{\"execute\":\"system_powerdown\"}");
         assertEquals(QmpCommand.execute(QmpCommand.SYSTEM_RESET), "{\"execute\":\"system_reset\"}");
+        assertEquals(QmpCommand.execute(QmpCommand.QUERY_STATUS), "{\"execute\":\"query-status\"}");
         assertEquals(QmpCommand.eject("system_disc"), "{\"execute\":\"eject\",\"arguments\":{\"device\":\"system_disc\",\"force\":true}}");
 
         QmpEndpoint endpoint = QmpEndpoint.forComputer("computer-test");

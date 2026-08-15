@@ -212,8 +212,6 @@ public class ComputerBlock extends BaseEntityBlock {
     private static void showComputerStatus(MinecraftServer server, Player player, ComputerBlockEntity computer) {
         String computerId = computer.getComputerId();
         ComputerHardwareConfiguration configuration = computer.getHardwareConfiguration();
-        VirtualMachineDescriptor descriptor = ComputerRuntimeConfig.descriptorFor(computer);
-
         ensureRegistered(computer)
                 .thenCompose(ignored -> ComputerInMinecraft.VM_MANAGER.getState(computerId))
                 .whenComplete((vmState, throwable) -> server.execute(() -> {
@@ -224,7 +222,7 @@ public class ComputerBlock extends BaseEntityBlock {
 
                     String screenAddress = VncEndpoint.forComputer(computerId).toDisplayAddress();
                     String insertedDisc = computer.insertedDisc().map(Enum::name).orElse("");
-                    player.sendSystemMessage(Component.literal(ComputerStatusMessage.describe(computerId, configuration, vmState, screenAddress, descriptor.guestOperatingSystem(), insertedDisc)));
+                    player.sendSystemMessage(Component.literal(ComputerStatusMessage.describe(computerId, configuration, vmState, screenAddress, computer.activeGuestOperatingSystem(), insertedDisc)));
                 }));
     }
 

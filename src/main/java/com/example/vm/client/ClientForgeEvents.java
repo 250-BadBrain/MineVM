@@ -75,7 +75,9 @@ public final class ClientForgeEvents {
     @SubscribeEvent
     public static void onMouseScroll(InputEvent.MouseScrollingEvent event) {
         if (ImmersiveControlClient.active()) {
-            if (event.getScrollDelta() < 0.0D) {
+            if (ImmersiveControlClient.controllingVmDisplay()) {
+                ImmersiveControlClient.handleVmMouseScroll(event.getScrollDelta());
+            } else if (event.getScrollDelta() < 0.0D) {
                 ImmersiveControlClient.selectNextAction();
             } else if (event.getScrollDelta() > 0.0D) {
                 ImmersiveControlClient.selectPreviousAction();

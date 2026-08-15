@@ -6,6 +6,7 @@ public final class QmpCommand {
     public static final String QMP_CAPABILITIES = "qmp_capabilities";
     public static final String SYSTEM_POWERDOWN = "system_powerdown";
     public static final String SYSTEM_RESET = "system_reset";
+    public static final String QUERY_STATUS = "query-status";
     public static final String EJECT = "eject";
 
     private QmpCommand() {

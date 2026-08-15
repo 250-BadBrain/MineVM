@@ -3,6 +3,7 @@ package com.example.vm.qmp;
 import com.example.vm.input.KeyboardInput;
 import com.example.vm.input.MouseButtonInput;
 import com.example.vm.input.MouseMoveInput;
+import com.example.vm.input.MouseWheelInput;
 import com.example.vm.input.VirtualMachineInput;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -22,6 +23,9 @@ public final class QmpInputCommand {
         }
         if (input instanceof MouseMoveInput mouseMoveInput) {
             return mouseMoveToJson(mouseMoveInput);
+        }
+        if (input instanceof MouseWheelInput mouseWheelInput) {
+            return mouseWheelToJson(mouseWheelInput);
         }
 
         throw new IllegalArgumentException("Unsupported input event: " + input);
@@ -77,6 +81,18 @@ public final class QmpInputCommand {
         return command.toString();
     }
 
+    private static String mouseWheelToJson(MouseWheelInput input) {
+        String button = input.steps() > 0 ? "wheel-up" : "wheel-down";
+        int count = Math.abs(input.steps());
+        JsonObject command = baseInputSendEvent();
+        JsonArray events = command.getAsJsonObject("arguments").getAsJsonArray("events");
+        for (int index = 0; index < count; index++) {
+            events.add(inputEvent("btn", wheelEventData(button, true)));
+            events.add(inputEvent("btn", wheelEventData(button, false)));
+        }
+        return command.toString();
+    }
+
     public static int toAbsolutePointerCoordinate(int coordinate, int size) {
         if (size <= 1) {
             return 0;
@@ -106,6 +122,13 @@ public final class QmpInputCommand {
         event.addProperty("type", type);
         event.add("data", data);
         return event;
+    }
+
+    private static JsonObject wheelEventData(String button, boolean down) {
+        JsonObject eventData = new JsonObject();
+        eventData.addProperty("down", down);
+        eventData.addProperty("button", button);
+        return eventData;
     }
 
     private static String qmpButton(int button) {

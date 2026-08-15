@@ -124,7 +124,7 @@ public final class ComputerRuntimeConfig {
     }
 
     public static VirtualMachineDescriptor descriptorFor(ComputerBlockEntity computer) {
-        return descriptor(computer.getComputerId(), computer.getHardwareConfiguration());
+        return descriptorFor(computer, computer.activeGuestOperatingSystem());
     }
 
     public static VirtualMachineDescriptor descriptorFor(ComputerBlockEntity computer, GuestOperatingSystem guestOperatingSystem) {

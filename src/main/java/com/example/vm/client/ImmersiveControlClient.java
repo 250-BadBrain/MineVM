@@ -229,6 +229,19 @@ public final class ImmersiveControlClient {
         suppressMinecraftBindings();
     }
 
+    public static void handleVmMouseScroll(double scrollDelta) {
+        if (!active() || activeComputerId.isBlank() || scrollDelta == 0.0D) {
+            return;
+        }
+        syncVmMousePosition(true);
+        int steps = (int) Math.max(-8, Math.min(8, Math.round(scrollDelta)));
+        if (steps == 0) {
+            steps = scrollDelta > 0.0D ? 1 : -1;
+        }
+        ModNetwork.sendMouseWheelInput(activeComputerId, steps);
+        suppressMinecraftBindings();
+    }
+
     public static void syncVmMousePosition() {
         syncVmMousePosition(false);
     }
