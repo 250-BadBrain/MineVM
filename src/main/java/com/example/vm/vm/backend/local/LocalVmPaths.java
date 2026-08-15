@@ -6,9 +6,11 @@ import java.nio.file.Path;
 
 public final class LocalVmPaths {
     private final Path storageRoot;
+    private final Path qemuShareDirectory;
 
     public LocalVmPaths(LocalQemuConfiguration configuration) {
         this.storageRoot = configuration.vmStorageDirectory().toAbsolutePath().normalize();
+        this.qemuShareDirectory = configuration.qemuSystemPath().toAbsolutePath().normalize().getParent().resolve("share").normalize();
     }
 
     public Path storageRoot() {
@@ -33,5 +35,10 @@ public final class LocalVmPaths {
 
     public Path ovmfVarsPath(VirtualMachineDescriptor descriptor) {
         return vmDirectory(descriptor).resolve("OVMF_VARS.fd").normalize();
+    }
+
+    public Path uefiCodePath(boolean secureBoot) {
+        String fileName = secureBoot ? "edk2-x86_64-secure-code.fd" : "edk2-x86_64-code.fd";
+        return qemuShareDirectory.resolve(fileName).normalize();
     }
 }

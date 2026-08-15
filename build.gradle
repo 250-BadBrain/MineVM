@@ -1090,8 +1090,9 @@ tasks.register('verifyPhase10WindowsProfileFoundation') {
             throw new GradleException('VirtualMachineDescriptor must carry guest OS and firmware intent.')
         }
 
-        def commandBuilderText = file('src/main/java/com/example/vm/vm/backend/local/QemuCommandBuilder.java').text
-        ['OVMF_', 'code.fd', 'secboot.fd', 'tpm-tis', 'if=pflash', 'q35'].each { fragment ->
+        def commandBuilderText = file('src/main/java/com/example/vm/vm/backend/local/QemuCommandBuilder.java').text +
+                file('src/main/java/com/example/vm/vm/backend/local/LocalVmPaths.java').text
+        ['edk2-x86_64-code.fd', 'edk2-x86_64-secure-code.fd', 'tpm-tis', '-bios', 'q35'].each { fragment ->
             if (!commandBuilderText.contains(fragment)) {
                 throw new GradleException("Windows QEMU command strategy missing ${fragment}.")
             }

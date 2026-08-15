@@ -22,6 +22,8 @@ public final class ComputerRuntimeConfig {
     public static final String DEFAULT_VM_STORAGE_DIRECTORY = "run\\computer-vms";
     public static final String DEFAULT_ACCELERATOR = "whpx";
     public static final int DEFAULT_DISK_SIZE_GB = 20;
+    public static final int DEFAULT_UBUNTU_DESKTOP_DISK_SIZE_GB = 25;
+    public static final int DEFAULT_WINDOWS_DISK_SIZE_GB = 64;
     public static final String DEFAULT_ISO_PATH = "";
     public static final String DEFAULT_UBUNTU_SERVER_ISO_PATH = "";
     public static final String DEFAULT_UBUNTU_DESKTOP_ISO_PATH = "";
@@ -142,10 +144,18 @@ public final class ComputerRuntimeConfig {
                 configuration.cpuCores(),
                 configuration.memoryMb(),
                 configuration.diskFile(),
-                valueOrDefault(DISK_SIZE_GB, DEFAULT_DISK_SIZE_GB),
+                Math.max(valueOrDefault(DISK_SIZE_GB, DEFAULT_DISK_SIZE_GB), minimumDiskSizeGb(guestOperatingSystem)),
                 guestOperatingSystem,
                 FirmwareConfiguration.forGuest(guestOperatingSystem)
         );
+    }
+
+    public static int minimumDiskSizeGb(GuestOperatingSystem guestOperatingSystem) {
+        return switch (guestOperatingSystem) {
+            case UBUNTU_DESKTOP -> DEFAULT_UBUNTU_DESKTOP_DISK_SIZE_GB;
+            case WINDOWS_10, WINDOWS_11 -> DEFAULT_WINDOWS_DISK_SIZE_GB;
+            case UBUNTU_SERVER, LINUX -> DEFAULT_DISK_SIZE_GB;
+        };
     }
 
     public static boolean vmDiskExists(ComputerBlockEntity computer) {

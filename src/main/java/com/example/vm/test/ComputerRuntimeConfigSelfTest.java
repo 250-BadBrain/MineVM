@@ -49,6 +49,15 @@ public final class ComputerRuntimeConfigSelfTest {
         if (descriptor.firmwareConfiguration().requiresUefi()) {
             throw new AssertionError("Ubuntu default profile must not require UEFI");
         }
+
+        VirtualMachineDescriptor ubuntuDesktopDescriptor = ComputerRuntimeConfig.descriptor("computer-desktop", configuration, GuestOperatingSystem.UBUNTU_DESKTOP);
+        assertEquals(ubuntuDesktopDescriptor.diskSizeGb(), 25);
+
+        VirtualMachineDescriptor windows10Descriptor = ComputerRuntimeConfig.descriptor("computer-windows", configuration, GuestOperatingSystem.WINDOWS_10);
+        assertEquals(windows10Descriptor.diskSizeGb(), 64);
+        if (!windows10Descriptor.firmwareConfiguration().requiresUefi()) {
+            throw new AssertionError("Windows 10 profile must require UEFI");
+        }
     }
 
     private static void assertEquals(String actual, String expected) {

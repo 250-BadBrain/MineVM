@@ -22,6 +22,13 @@ public final class SystemDiscItemSelfTest {
         assertEquals(ubuntuDesktopDisc.guestOperatingSystem(), GuestOperatingSystem.UBUNTU_DESKTOP);
         assertEquals(ubuntuDesktopDisc.displayNameKey(), "item.computer_in_minecraft.ubuntu_desktop_disc");
 
+        SystemDiscDefinition windows10Disc = new SystemDiscDefinition(
+                GuestOperatingSystem.WINDOWS_10,
+                "item.computer_in_minecraft.windows_10_disc"
+        );
+        assertEquals(windows10Disc.guestOperatingSystem(), GuestOperatingSystem.WINDOWS_10);
+        assertEquals(windows10Disc.displayNameKey(), "item.computer_in_minecraft.windows_10_disc");
+
         SystemDiscDefinition windows11Disc = new SystemDiscDefinition(
                 GuestOperatingSystem.WINDOWS_11,
                 "item.computer_in_minecraft.windows_11_disc"

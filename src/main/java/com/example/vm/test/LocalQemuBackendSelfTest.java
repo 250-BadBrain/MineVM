@@ -96,8 +96,8 @@ public final class LocalQemuBackendSelfTest {
         List<String> command = builder.startCommand(descriptor);
         assertContains(command, "-machine");
         assertContains(command, "q35");
-        assertContains(command, "if=pflash,format=raw,readonly=on,file=OVMF_code.fd");
-        assertContains(command, "if=pflash,format=raw,file=E:\\MinecraftVMs\\computer-windows-10\\OVMF_VARS.fd");
+        assertContains(command, "-bios");
+        assertContains(command, "D:\\qemu\\share\\edk2-x86_64-code.fd");
     }
 
     private static void assertWindows11Command(QemuCommandBuilder builder) {
@@ -111,7 +111,7 @@ public final class LocalQemuBackendSelfTest {
                 FirmwareConfiguration.forGuest(GuestOperatingSystem.WINDOWS_11)
         );
         List<String> command = builder.startCommand(descriptor);
-        assertContains(command, "if=pflash,format=raw,readonly=on,file=OVMF_secboot.fd");
+        assertContains(command, "D:\\qemu\\share\\edk2-x86_64-secure-code.fd");
         assertContains(command, "-tpmdev");
         assertContains(command, "emulator,id=tpm0,chardev=chrtpm");
         assertContains(command, "-device");

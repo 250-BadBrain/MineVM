@@ -97,11 +97,8 @@ public final class QemuCommandBuilder {
             return;
         }
 
-        String codeSuffix = descriptor.firmwareConfiguration().requiresSecureBoot() ? "secboot.fd" : "code.fd";
-        command.add("-drive");
-        command.add("if=pflash,format=raw,readonly=on,file=OVMF_" + codeSuffix);
-        command.add("-drive");
-        command.add("if=pflash,format=raw,file=" + paths.ovmfVarsPath(descriptor));
+        command.add("-bios");
+        command.add(paths.uefiCodePath(descriptor.firmwareConfiguration().requiresSecureBoot()).toString());
 
         if (descriptor.firmwareConfiguration().requiresTpm()) {
             command.add("-chardev");
