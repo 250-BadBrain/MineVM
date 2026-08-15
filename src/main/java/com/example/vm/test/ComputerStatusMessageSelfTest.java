@@ -12,14 +12,14 @@ public final class ComputerStatusMessageSelfTest {
     public static void main(String[] args) {
         ComputerHardwareConfiguration configuration = new ComputerHardwareConfiguration(4, 4096, "computer-test.qcow2");
         String message = ComputerStatusMessage.describe("computer-test", configuration, VirtualMachineState.STOPPED);
-        String expected = "Computer computer-test | CPU: 4 | Memory: 4096 MB | Disk: computer-test.qcow2 | Guest: UBUNTU_SERVER | Disc: EMPTY | VM: STOPPED";
+        String expected = "Computer computer-test | CPU: 4 | Memory: 4096 MB | Disk: computer-test.qcow2 | Guest: NULL | Disc: EMPTY | VM: STOPPED";
 
         if (!message.equals(expected)) {
             throw new AssertionError("Expected " + expected + " but got " + message);
         }
 
         String screenMessage = ComputerStatusMessage.describe("computer-test", configuration, VirtualMachineState.RUNNING, "127.0.0.1:5910");
-        String screenExpected = "Computer computer-test | CPU: 4 | Memory: 4096 MB | Disk: computer-test.qcow2 | Guest: UBUNTU_SERVER | Disc: EMPTY | VM: RUNNING | Screen: 127.0.0.1:5910";
+        String screenExpected = "Computer computer-test | CPU: 4 | Memory: 4096 MB | Disk: computer-test.qcow2 | Guest: NULL | Disc: EMPTY | VM: RUNNING | Screen: 127.0.0.1:5910";
 
         if (!screenMessage.equals(screenExpected)) {
             throw new AssertionError("Expected " + screenExpected + " but got " + screenMessage);

@@ -3,6 +3,7 @@ package com.example.vm.client;
 import com.example.vm.ComputerInMinecraft;
 import com.example.vm.blockentity.ComputerBlockEntity;
 import com.example.vm.registry.ModBlocks;
+import com.example.vm.vm.GuestOperatingSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -26,6 +27,7 @@ public class ComputerScreenRenderer implements BlockEntityRenderer<ComputerBlock
         }
 
         if (computer.vmDisplayActive()) {
+            GuestOperatingSystem guestOperatingSystem = computer.activeGuestOperatingSystem();
             ScreenSurfaceRenderer.renderLaptopVmDisplay(
                     poseStack,
                     buffer,
@@ -34,7 +36,7 @@ public class ComputerScreenRenderer implements BlockEntityRenderer<ComputerBlock
                     SCREEN_Z,
                     SCREEN_SCALE,
                     computer.getComputerId(),
-                    computer.activeGuestOperatingSystem().usesGraphicalPointer(),
+                    guestOperatingSystem != null && guestOperatingSystem.usesGraphicalPointer(),
                     ComputerInMinecraft.SCREEN_SERVICE.latestFrameSnapshot(computer.getComputerId()),
                     packedLight
             );

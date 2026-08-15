@@ -98,6 +98,14 @@ public final class LocalQemuBackendSelfTest {
         assertContains(command, "q35");
         assertContains(command, "-bios");
         assertContains(command, "D:\\qemu\\share\\edk2-x86_64-code.fd");
+        assertContains(command, "ich9-ahci,id=sata");
+        assertContains(command, "if=none,file=E:\\MinecraftVMs\\computer-windows-10\\computer-windows-10.qcow2,format=qcow2,id=vm_disk");
+        assertContains(command, "ide-hd,bus=sata.1,drive=vm_disk,bootindex=1");
+
+        List<String> discCommand = builder.startCommand(descriptor, VirtualMachineBootRequest.systemDisc("computer-windows-10", "E:\\Downloads\\Win10.iso"));
+        assertContains(discCommand, "if=none,file=E:\\Downloads\\Win10.iso,media=cdrom,readonly=on,id=system_disc");
+        assertContains(discCommand, "ide-cd,bus=sata.0,drive=system_disc,bootindex=1");
+        assertContains(discCommand, "ide-hd,bus=sata.1,drive=vm_disk,bootindex=2");
     }
 
     private static void assertWindows11Command(QemuCommandBuilder builder) {

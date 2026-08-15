@@ -96,8 +96,6 @@ public final class ComputerBiosActions {
         }
 
         String computerId = computer.getComputerId();
-        GuestOperatingSystem guestOperatingSystem = computer.activeGuestOperatingSystem();
-        VirtualMachineDescriptor descriptor = ComputerRuntimeConfig.descriptorFor(computer, guestOperatingSystem);
         ensureRegistered(computer)
                 .thenCompose(ignored -> ComputerInMinecraft.VM_MANAGER.getState(computerId))
                 .whenComplete((state, throwable) -> {
@@ -111,17 +109,27 @@ public final class ComputerBiosActions {
                             send(server, player, "Computer " + computerId + " | VM disk is not created. Boot from a system disc first.");
                             return;
                         }
-                        createThenStart(server, player, pos, descriptor, guestOperatingSystem, VirtualMachineBootRequest.vmDisk(computerId), "Booting from VM disk");
+                        GuestOperatingSystem selectedGuestOperatingSystem = selectedGuestOperatingSystem(computer);
+                        VirtualMachineDescriptor descriptor = ComputerRuntimeConfig.descriptorFor(computer, selectedGuestOperatingSystem);
+                        computer.setActiveGuestOperatingSystem(selectedGuestOperatingSystem);
+                        createThenStart(server, player, pos, descriptor, selectedGuestOperatingSystem, VirtualMachineBootRequest.vmDisk(computerId), "Booting from VM disk");
                     } else if (state == VirtualMachineState.STOPPED) {
-                        start(server, player, pos, guestOperatingSystem, computerId, "Booting from VM disk");
+                        start(server, player, pos, selectedGuestOperatingSystem(computer), computerId, "Booting from VM disk");
                     } else if (state == VirtualMachineState.ERROR && ComputerRuntimeConfig.vmDiskExists(computer)) {
-                        createThenStart(server, player, pos, descriptor, guestOperatingSystem, VirtualMachineBootRequest.vmDisk(computerId), "Recovering and booting from VM disk");
+                        GuestOperatingSystem selectedGuestOperatingSystem = selectedGuestOperatingSystem(computer);
+                        VirtualMachineDescriptor descriptor = ComputerRuntimeConfig.descriptorFor(computer, selectedGuestOperatingSystem);
+                        computer.setActiveGuestOperatingSystem(selectedGuestOperatingSystem);
+                        createThenStart(server, player, pos, descriptor, selectedGuestOperatingSystem, VirtualMachineBootRequest.vmDisk(computerId), "Recovering and booting from VM disk");
                     } else if (isRunningOrStarting(state)) {
                         send(server, player, "Computer " + computerId + " | Already running | State: " + state);
                     } else {
                         send(server, player, "Computer " + computerId + " | VM busy | State: " + state);
                     }
                 });
+    }
+
+    private static GuestOperatingSystem selectedGuestOperatingSystem(ComputerBlockEntity computer) {
+        return computer.selectedGuestOperatingSystem().orElseGet(ComputerRuntimeConfig::configuredGuestOperatingSystem);
     }
 
     private static void powerOff(ServerPlayer player, BlockPos pos, ComputerBlockEntity computer) {

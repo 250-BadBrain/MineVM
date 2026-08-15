@@ -30,7 +30,8 @@ public class ComputerBlockEntity extends BlockEntity {
     private String computerId;
     private ComputerHardwareConfiguration hardwareConfiguration;
     private GuestOperatingSystem insertedDisc;
-    private GuestOperatingSystem activeGuestOperatingSystem = GuestOperatingSystem.UBUNTU_SERVER;
+    @Nullable
+    private GuestOperatingSystem activeGuestOperatingSystem;
     private BlockPos linkedMonitorPos;
     private boolean keyboardConnected;
     private boolean mouseConnected;
@@ -56,16 +57,20 @@ public class ComputerBlockEntity extends BlockEntity {
         return Optional.ofNullable(insertedDisc);
     }
 
+    @Nullable
     public GuestOperatingSystem activeGuestOperatingSystem() {
         return activeGuestOperatingSystem;
     }
 
+    public Optional<GuestOperatingSystem> selectedGuestOperatingSystem() {
+        return Optional.ofNullable(activeGuestOperatingSystem);
+    }
+
     public void setActiveGuestOperatingSystem(GuestOperatingSystem guestOperatingSystem) {
-        GuestOperatingSystem nextGuestOperatingSystem = guestOperatingSystem == null ? GuestOperatingSystem.UBUNTU_SERVER : guestOperatingSystem;
-        if (activeGuestOperatingSystem == nextGuestOperatingSystem) {
+        if (activeGuestOperatingSystem == guestOperatingSystem) {
             return;
         }
-        activeGuestOperatingSystem = nextGuestOperatingSystem;
+        activeGuestOperatingSystem = guestOperatingSystem;
         markUpdated();
     }
 
@@ -177,7 +182,9 @@ public class ComputerBlockEntity extends BlockEntity {
         if (insertedDisc != null) {
             tag.putString(TAG_INSERTED_DISC, insertedDisc.name());
         }
-        tag.putString(TAG_ACTIVE_GUEST_OPERATING_SYSTEM, activeGuestOperatingSystem.name());
+        if (activeGuestOperatingSystem != null) {
+            tag.putString(TAG_ACTIVE_GUEST_OPERATING_SYSTEM, activeGuestOperatingSystem.name());
+        }
         if (linkedMonitorPos != null) {
             tag.putLong(TAG_LINKED_MONITOR_POS, linkedMonitorPos.asLong());
         }
@@ -199,7 +206,7 @@ public class ComputerBlockEntity extends BlockEntity {
         String diskFile = tag.contains(TAG_DISK_FILE) ? tag.getString(TAG_DISK_FILE) : computerId + ".qcow2";
         hardwareConfiguration = new ComputerHardwareConfiguration(cpuCores, memoryMb, diskFile);
         insertedDisc = tag.contains(TAG_INSERTED_DISC) ? GuestOperatingSystem.parse(tag.getString(TAG_INSERTED_DISC)) : null;
-        activeGuestOperatingSystem = tag.contains(TAG_ACTIVE_GUEST_OPERATING_SYSTEM) ? GuestOperatingSystem.parse(tag.getString(TAG_ACTIVE_GUEST_OPERATING_SYSTEM)) : GuestOperatingSystem.UBUNTU_SERVER;
+        activeGuestOperatingSystem = tag.contains(TAG_ACTIVE_GUEST_OPERATING_SYSTEM) ? GuestOperatingSystem.parse(tag.getString(TAG_ACTIVE_GUEST_OPERATING_SYSTEM)) : null;
         linkedMonitorPos = tag.contains(TAG_LINKED_MONITOR_POS) ? BlockPos.of(tag.getLong(TAG_LINKED_MONITOR_POS)) : null;
         keyboardConnected = tag.getBoolean(TAG_KEYBOARD_CONNECTED);
         mouseConnected = tag.getBoolean(TAG_MOUSE_CONNECTED);

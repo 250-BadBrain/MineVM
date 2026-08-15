@@ -12,6 +12,7 @@ import java.util.List;
 
 public final class QemuCommandBuilder {
     public static final String SYSTEM_DISC_DEVICE_ID = "system_disc";
+    private static final String VM_DISK_DEVICE_ID = "vm_disk";
 
     private final LocalQemuConfiguration configuration;
     private final LocalVmPaths paths;
@@ -62,12 +63,14 @@ public final class QemuCommandBuilder {
         command.add("-smp");
         command.add(Integer.toString(descriptor.cpuCores()));
         addFirmwareArgs(command, descriptor);
-        command.add("-drive");
-        command.add("file=" + diskPath(descriptor) + ",format=qcow2,if=virtio");
+        if (descriptor.firmwareConfiguration().requiresUefi()) {
+            command.add("-device");
+            command.add("ich9-ahci,id=sata");
+        }
+        addDiskArgs(command, descriptor, bootRequest.bootDevice());
 
         if (bootRequest.bootDevice() == VirtualMachineBootDevice.SYSTEM_DISC) {
-            command.add("-drive");
-            command.add("file=" + bootRequest.isoPath() + ",media=cdrom,readonly=on,id=" + SYSTEM_DISC_DEVICE_ID);
+            addSystemDiscArgs(command, descriptor, bootRequest);
             command.add("-boot");
             command.add("order=d");
         } else {
@@ -90,6 +93,33 @@ public final class QemuCommandBuilder {
         command.add("-name");
         command.add(descriptor.computerId());
         return List.copyOf(command);
+    }
+
+    private void addDiskArgs(List<String> command, VirtualMachineDescriptor descriptor, VirtualMachineBootDevice bootDevice) {
+        if (!descriptor.firmwareConfiguration().requiresUefi()) {
+            command.add("-drive");
+            command.add("file=" + diskPath(descriptor) + ",format=qcow2,if=virtio");
+            return;
+        }
+
+        command.add("-drive");
+        command.add("if=none,file=" + diskPath(descriptor) + ",format=qcow2,id=" + VM_DISK_DEVICE_ID);
+        command.add("-device");
+        int bootIndex = bootDevice == VirtualMachineBootDevice.SYSTEM_DISC ? 2 : 1;
+        command.add("ide-hd,bus=sata.1,drive=" + VM_DISK_DEVICE_ID + ",bootindex=" + bootIndex);
+    }
+
+    private void addSystemDiscArgs(List<String> command, VirtualMachineDescriptor descriptor, VirtualMachineBootRequest bootRequest) {
+        if (!descriptor.firmwareConfiguration().requiresUefi()) {
+            command.add("-drive");
+            command.add("file=" + bootRequest.isoPath() + ",media=cdrom,readonly=on,id=" + SYSTEM_DISC_DEVICE_ID);
+            return;
+        }
+
+        command.add("-drive");
+        command.add("if=none,file=" + bootRequest.isoPath() + ",media=cdrom,readonly=on,id=" + SYSTEM_DISC_DEVICE_ID);
+        command.add("-device");
+        command.add("ide-cd,bus=sata.0,drive=" + SYSTEM_DISC_DEVICE_ID + ",bootindex=1");
     }
 
     private void addFirmwareArgs(List<String> command, VirtualMachineDescriptor descriptor) {

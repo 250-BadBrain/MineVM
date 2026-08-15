@@ -126,7 +126,7 @@ public final class ComputerRuntimeConfig {
     }
 
     public static VirtualMachineDescriptor descriptorFor(ComputerBlockEntity computer) {
-        return descriptorFor(computer, computer.activeGuestOperatingSystem());
+        return descriptorFor(computer, configuredGuestOperatingSystem(computer));
     }
 
     public static VirtualMachineDescriptor descriptorFor(ComputerBlockEntity computer, GuestOperatingSystem guestOperatingSystem) {
@@ -134,8 +134,7 @@ public final class ComputerRuntimeConfig {
     }
 
     public static VirtualMachineDescriptor descriptor(String computerId, ComputerHardwareConfiguration configuration) {
-        GuestOperatingSystem guestOperatingSystem = GuestOperatingSystem.parse(valueOrDefault(GUEST_OPERATING_SYSTEM, DEFAULT_GUEST_OPERATING_SYSTEM));
-        return descriptor(computerId, configuration, guestOperatingSystem);
+        return descriptor(computerId, configuration, configuredGuestOperatingSystem());
     }
 
     public static VirtualMachineDescriptor descriptor(String computerId, ComputerHardwareConfiguration configuration, GuestOperatingSystem guestOperatingSystem) {
@@ -187,6 +186,15 @@ public final class ComputerRuntimeConfig {
             return valueOrDefault(ISO_PATH, DEFAULT_ISO_PATH);
         }
         return isoPath;
+    }
+
+    public static GuestOperatingSystem configuredGuestOperatingSystem(ComputerBlockEntity computer) {
+        GuestOperatingSystem guestOperatingSystem = computer.activeGuestOperatingSystem();
+        return guestOperatingSystem == null ? configuredGuestOperatingSystem() : guestOperatingSystem;
+    }
+
+    public static GuestOperatingSystem configuredGuestOperatingSystem() {
+        return GuestOperatingSystem.parse(valueOrDefault(GUEST_OPERATING_SYSTEM, DEFAULT_GUEST_OPERATING_SYSTEM));
     }
 
     private static <T> T valueOrDefault(ForgeConfigSpec.ConfigValue<T> value, T defaultValue) {
