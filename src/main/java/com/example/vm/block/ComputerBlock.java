@@ -16,6 +16,7 @@ import com.example.vm.network.ModNetwork;
 import com.example.vm.registry.ModBlocks;
 import com.example.vm.screen.VncEndpoint;
 import com.example.vm.vm.VirtualMachineDescriptor;
+import com.example.vm.vm.VirtualMachineState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -160,7 +161,7 @@ public class ComputerBlock extends BaseEntityBlock {
                         player.sendSystemMessage(Component.literal("Computer " + computer.getComputerId() + " | Press the laptop power button first."));
                         return InteractionResult.CONSUME;
                     }
-                    ModNetwork.startScreenControl(serverPlayer, pos, pos, computer.getComputerId(), true, computer.vmDisplayActive());
+                    startLaptopControlAfterStateRefresh(serverPlayer, pos, computer);
                 } else {
                     showComputerStatus(server, player, computer);
                 }
@@ -223,6 +224,23 @@ public class ComputerBlock extends BaseEntityBlock {
                     String screenAddress = VncEndpoint.forComputer(computerId).toDisplayAddress();
                     String insertedDisc = computer.insertedDisc().map(Enum::name).orElse("");
                     player.sendSystemMessage(Component.literal(ComputerStatusMessage.describe(computerId, configuration, vmState, screenAddress, computer.activeGuestOperatingSystem(), insertedDisc)));
+                }));
+    }
+
+    private static void startLaptopControlAfterStateRefresh(ServerPlayer player, BlockPos pos, ComputerBlockEntity computer) {
+        String computerId = computer.getComputerId();
+        ComputerInMinecraft.VM_MANAGER.getState(computerId)
+                .whenComplete((vmState, throwable) -> player.server.execute(() -> {
+                    if (throwable != null) {
+                        computer.setVmDisplayActive(false);
+                        player.sendSystemMessage(Component.literal("Computer " + computerId + " | VM state check failed: " + rootMessage(throwable)));
+                        return;
+                    }
+                    boolean vmDisplayActive = computer.vmDisplayActive() && vmState == VirtualMachineState.RUNNING;
+                    if (computer.vmDisplayActive() && !vmDisplayActive) {
+                        computer.setVmDisplayActive(false);
+                    }
+                    ModNetwork.startScreenControl(player, pos, pos, computerId, true, vmDisplayActive);
                 }));
     }
 

@@ -6,6 +6,7 @@ import com.example.vm.blockentity.ComputerOccupancyBlockEntity;
 import com.example.vm.network.ModNetwork;
 import com.example.vm.registry.ModBlocks;
 import com.example.vm.item.SystemDiscItem;
+import com.example.vm.ComputerInMinecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -13,6 +14,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
+import com.example.vm.vm.VirtualMachineState;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -147,8 +149,33 @@ public class ComputerMonitorBlock extends BaseEntityBlock {
             return true;
         }
 
-        ModNetwork.startScreenControl(player, monitorPos, monitor.linkedComputerPos().get(), computer.getComputerId(), false, computer.vmDisplayActive());
+        startControlAfterStateRefresh(player, monitorPos, monitor.linkedComputerPos().get(), computer);
         return true;
+    }
+
+    private static void startControlAfterStateRefresh(ServerPlayer player, BlockPos monitorPos, BlockPos computerPos, ComputerBlockEntity computer) {
+        String computerId = computer.getComputerId();
+        ComputerInMinecraft.VM_MANAGER.getState(computerId)
+                .whenComplete((state, throwable) -> player.server.execute(() -> {
+                    if (throwable != null) {
+                        computer.setVmDisplayActive(false);
+                        player.sendSystemMessage(Component.literal("Monitor | VM state check failed: " + rootMessage(throwable)));
+                        return;
+                    }
+                    boolean vmDisplayActive = computer.vmDisplayActive() && state == VirtualMachineState.RUNNING;
+                    if (computer.vmDisplayActive() && !vmDisplayActive) {
+                        computer.setVmDisplayActive(false);
+                    }
+                    ModNetwork.startScreenControl(player, monitorPos, computerPos, computerId, false, vmDisplayActive);
+                }));
+    }
+
+    private static String rootMessage(Throwable throwable) {
+        Throwable current = throwable;
+        while (current instanceof java.util.concurrent.CompletionException && current.getCause() != null) {
+            current = current.getCause();
+        }
+        return current.getMessage() == null ? current.getClass().getSimpleName() : current.getMessage();
     }
 
     private static boolean isDisplayPowerButton(BlockState state, BlockPos pos, BlockHitResult hit) {

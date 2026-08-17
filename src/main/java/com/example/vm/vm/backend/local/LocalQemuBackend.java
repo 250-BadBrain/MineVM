@@ -26,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 public final class LocalQemuBackend implements VirtualMachineBackend {
     private static final long QMP_KEEP_ALIVE_INITIAL_DELAY_SECONDS = 5L;
     private static final long QMP_KEEP_ALIVE_INTERVAL_SECONDS = 10L;
+    private static final int QMP_READY_ATTEMPTS = 20;
+    private static final long QMP_READY_DELAY_MS = 250L;
 
     private final LocalQemuConfiguration configuration;
     private final QemuCommandBuilder commandBuilder;
@@ -84,6 +86,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
 
         states.put(bootRequest.computerId(), VirtualMachineState.STARTING);
         try {
+            qmpClient.close(QmpEndpoint.forComputer(bootRequest.computerId()));
             java.util.List<String> command = commandBuilder.startCommand(descriptor, bootRequest);
             writeCommandLog(descriptor, command);
             Process process = new ProcessBuilder(command)
@@ -92,11 +95,18 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
                     .start();
             processes.put(bootRequest.computerId(), process);
             registerProcessExitHandler(bootRequest.computerId(), process);
+            waitForQmpReady(bootRequest.computerId(), process);
             scheduleQmpKeepAlive(bootRequest.computerId(), process);
             ComputerInMinecraft.SCREEN_SERVICE.startVncReceiver(bootRequest.computerId(), VncEndpoint.forComputer(bootRequest.computerId()));
             states.put(bootRequest.computerId(), VirtualMachineState.RUNNING);
             return new VirtualMachineHandle(bootRequest.computerId(), VirtualMachineState.RUNNING);
         } catch (IOException exception) {
+            Process process = processes.remove(bootRequest.computerId());
+            if (process != null) {
+                process.destroy();
+            }
+            ComputerInMinecraft.SCREEN_SERVICE.stopVncReceiver(bootRequest.computerId());
+            qmpClient.close(QmpEndpoint.forComputer(bootRequest.computerId()));
             states.put(bootRequest.computerId(), VirtualMachineState.ERROR);
             throw new IllegalStateException("Failed to start local QEMU VM: " + bootRequest.computerId(), exception);
         }
@@ -152,6 +162,9 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
         Process process = processes.get(computerId);
         if (process != null && !process.isAlive()) {
             processes.remove(computerId);
+            cancelQmpKeepAlive(computerId);
+            ComputerInMinecraft.SCREEN_SERVICE.stopVncReceiver(computerId);
+            qmpClient.close(QmpEndpoint.forComputer(computerId));
             states.put(computerId, VirtualMachineState.STOPPED);
         }
         if (states.get(computerId) == VirtualMachineState.ERROR && (process == null || !process.isAlive())) {
@@ -259,6 +272,31 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
             qmpClient.sendJson(QmpEndpoint.forComputer(computerId), json);
         } catch (IOException exception) {
             ComputerInMinecraft.LOGGER.warn("Ignored non-critical QMP failure for {}", computerId, exception);
+        }
+    }
+
+    private void waitForQmpReady(String computerId, Process process) throws IOException {
+        IOException lastFailure = null;
+        for (int attempt = 0; attempt < QMP_READY_ATTEMPTS; attempt++) {
+            if (!process.isAlive()) {
+                throw new IOException("QEMU exited before QMP became ready");
+            }
+            try {
+                qmpClient.sendJson(QmpEndpoint.forComputer(computerId), QmpCommand.execute(QmpCommand.QUERY_STATUS));
+                return;
+            } catch (IOException exception) {
+                lastFailure = exception;
+                sleepBeforeQmpRetry();
+            }
+        }
+        throw lastFailure == null ? new IOException("QMP did not become ready") : lastFailure;
+    }
+
+    private static void sleepBeforeQmpRetry() {
+        try {
+            Thread.sleep(QMP_READY_DELAY_MS);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
         }
     }
 
