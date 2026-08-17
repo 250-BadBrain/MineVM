@@ -1139,6 +1139,7 @@ tasks.register('verifySystemDiscInstallationFoundation') {
                 'src/main/java/com/example/vm/test/SystemDiscItemSelfTest.java',
                 'src/main/resources/assets/computer_in_minecraft/models/item/ubuntu_server_disc.json',
                 'src/main/resources/assets/computer_in_minecraft/models/item/ubuntu_desktop_disc.json',
+                'src/main/resources/assets/computer_in_minecraft/models/item/windows_xp_disc.json',
                 'src/main/resources/assets/computer_in_minecraft/models/item/windows_10_disc.json',
                 'src/main/resources/assets/computer_in_minecraft/models/item/windows_11_disc.json',
                 'build/classes/java/main/com/example/vm/item/SystemDiscItem.class',
@@ -1153,7 +1154,7 @@ tasks.register('verifySystemDiscInstallationFoundation') {
         }
 
         def itemsText = file('src/main/java/com/example/vm/registry/ModItems.java').text
-        ['UBUNTU_SERVER_DISC', 'UBUNTU_DESKTOP_DISC', 'WINDOWS_10_DISC', 'WINDOWS_11_DISC'].each { registryName ->
+        ['UBUNTU_SERVER_DISC', 'UBUNTU_DESKTOP_DISC', 'WINDOWS_XP_DISC', 'WINDOWS_10_DISC', 'WINDOWS_11_DISC'].each { registryName ->
             if (!itemsText.contains(registryName)) {
                 throw new GradleException("Missing system disc registry object ${registryName}.")
             }
@@ -1182,7 +1183,7 @@ tasks.register('verifySystemDiscInstallationFoundation') {
         }
 
         def langText = file('src/main/resources/assets/computer_in_minecraft/lang/en_us.json').text
-        ['Ubuntu Server Disc', 'Ubuntu Desktop Disc', 'Windows 10 Disc', 'Windows 11 Disc'].each { text ->
+        ['Ubuntu Server Disc', 'Ubuntu Desktop Disc', 'Windows XP Disc', 'Windows 10 Disc', 'Windows 11 Disc'].each { text ->
             if (!langText.contains(text)) {
                 throw new GradleException("Missing disc language entry ${text}.")
             }
@@ -1194,11 +1195,12 @@ tasks.register('verifySystemDiscInstallationFoundation') {
             include 'com/example/vm/item/SystemDiscDefinition.class'
             include 'assets/computer_in_minecraft/models/item/ubuntu_server_disc.json'
             include 'assets/computer_in_minecraft/models/item/ubuntu_desktop_disc.json'
+            include 'assets/computer_in_minecraft/models/item/windows_xp_disc.json'
             include 'assets/computer_in_minecraft/models/item/windows_10_disc.json'
             include 'assets/computer_in_minecraft/models/item/windows_11_disc.json'
         }.files*.path
 
-        if (jarEntries.size() != 6) {
+        if (jarEntries.size() != 7) {
             throw new GradleException("System disc foundation jar verification failed for ${jarFile}")
         }
     }
@@ -1494,7 +1496,7 @@ tasks.register('verifyBiosMenuFoundation') {
         }
 
         def configText = file('src/main/java/com/example/vm/config/ComputerRuntimeConfig.java').text
-        ['ubuntuServerIsoPath', 'ubuntuDesktopIsoPath', 'windows10IsoPath', 'windows11IsoPath', 'isoPathFor'].each { marker ->
+        ['ubuntuServerIsoPath', 'ubuntuDesktopIsoPath', 'windowsXpIsoPath', 'windows10IsoPath', 'windows11IsoPath', 'isoPathFor'].each { marker ->
             if (!configText.contains(marker)) {
                 throw new GradleException("ComputerRuntimeConfig missing per-disc ISO marker ${marker}.")
             }

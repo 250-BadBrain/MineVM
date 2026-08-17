@@ -21,6 +21,7 @@ public final class ComputerRuntimeConfigSelfTest {
         assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.UBUNTU_SERVER), "");
         assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.LINUX), "");
         assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.UBUNTU_DESKTOP), "");
+        assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.WINDOWS_XP), "");
         assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.WINDOWS_10), "");
         assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.WINDOWS_11), "");
     }
@@ -52,6 +53,12 @@ public final class ComputerRuntimeConfigSelfTest {
 
         VirtualMachineDescriptor ubuntuDesktopDescriptor = ComputerRuntimeConfig.descriptor("computer-desktop", configuration, GuestOperatingSystem.UBUNTU_DESKTOP);
         assertEquals(ubuntuDesktopDescriptor.diskSizeGb(), 25);
+
+        VirtualMachineDescriptor windowsXpDescriptor = ComputerRuntimeConfig.descriptor("computer-xp", configuration, GuestOperatingSystem.WINDOWS_XP);
+        assertEquals(windowsXpDescriptor.diskSizeGb(), 20);
+        if (windowsXpDescriptor.firmwareConfiguration().requiresUefi()) {
+            throw new AssertionError("Windows XP profile must use legacy BIOS");
+        }
 
         VirtualMachineDescriptor windows10Descriptor = ComputerRuntimeConfig.descriptor("computer-windows", configuration, GuestOperatingSystem.WINDOWS_10);
         assertEquals(windows10Descriptor.diskSizeGb(), 64);

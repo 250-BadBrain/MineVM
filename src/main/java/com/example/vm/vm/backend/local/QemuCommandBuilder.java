@@ -3,6 +3,7 @@ package com.example.vm.vm.backend.local;
 import com.example.vm.vm.VirtualMachineBootDevice;
 import com.example.vm.vm.VirtualMachineBootRequest;
 import com.example.vm.vm.VirtualMachineDescriptor;
+import com.example.vm.vm.GuestOperatingSystem;
 import com.example.vm.qmp.QmpEndpoint;
 import com.example.vm.screen.VncEndpoint;
 
@@ -83,10 +84,7 @@ public final class QemuCommandBuilder {
         command.add("none");
         command.add("-vga");
         command.add(vgaDevice(descriptor));
-        command.add("-device");
-        command.add("qemu-xhci,id=usb_bus");
-        command.add("-device");
-        command.add("usb-tablet,bus=usb_bus.0");
+        addInputDeviceArgs(command, descriptor);
         command.add("-vnc");
         command.add(VncEndpoint.forComputer(descriptor.computerId()).toQemuArgument() + ",share=ignore");
         command.add("-qmp");
@@ -98,6 +96,10 @@ public final class QemuCommandBuilder {
 
     private void addCpuArgs(List<String> command, VirtualMachineDescriptor descriptor) {
         switch (descriptor.guestOperatingSystem()) {
+            case WINDOWS_XP -> {
+                command.add("-cpu");
+                command.add("qemu32");
+            }
             case WINDOWS_10, WINDOWS_11 -> {
                 command.add("-cpu");
                 command.add("max");
@@ -109,6 +111,7 @@ public final class QemuCommandBuilder {
 
     private int effectiveCpuCores(VirtualMachineDescriptor descriptor) {
         return switch (descriptor.guestOperatingSystem()) {
+            case WINDOWS_XP -> Math.min(descriptor.cpuCores(), 2);
             case WINDOWS_10, WINDOWS_11 -> Math.min(descriptor.cpuCores(), 2);
             case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> descriptor.cpuCores();
         };
@@ -116,6 +119,7 @@ public final class QemuCommandBuilder {
 
     private String accelerator(VirtualMachineDescriptor descriptor) {
         return switch (descriptor.guestOperatingSystem()) {
+            case WINDOWS_XP -> "tcg,thread=multi";
             case WINDOWS_10, WINDOWS_11 -> "tcg,thread=multi";
             case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> configuration.accelerator();
         };
@@ -123,12 +127,33 @@ public final class QemuCommandBuilder {
 
     private String vgaDevice(VirtualMachineDescriptor descriptor) {
         return switch (descriptor.guestOperatingSystem()) {
+            case WINDOWS_XP -> "cirrus";
             case WINDOWS_10, WINDOWS_11 -> "std";
             case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> "virtio";
         };
     }
 
+    private void addInputDeviceArgs(List<String> command, VirtualMachineDescriptor descriptor) {
+        if (descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_XP) {
+            command.add("-usb");
+            command.add("-device");
+            command.add("usb-tablet");
+            return;
+        }
+
+        command.add("-device");
+        command.add("qemu-xhci,id=usb_bus");
+        command.add("-device");
+        command.add("usb-tablet,bus=usb_bus.0");
+    }
+
     private void addDiskArgs(List<String> command, VirtualMachineDescriptor descriptor, VirtualMachineBootDevice bootDevice) {
+        if (descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_XP) {
+            command.add("-drive");
+            command.add("file=" + diskPath(descriptor) + ",format=qcow2,if=ide,index=0,media=disk,id=" + VM_DISK_DEVICE_ID);
+            return;
+        }
+
         if (!descriptor.firmwareConfiguration().requiresUefi()) {
             command.add("-drive");
             command.add("file=" + diskPath(descriptor) + ",format=qcow2,if=virtio");
@@ -143,6 +168,12 @@ public final class QemuCommandBuilder {
     }
 
     private void addSystemDiscArgs(List<String> command, VirtualMachineDescriptor descriptor, VirtualMachineBootRequest bootRequest) {
+        if (descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_XP) {
+            command.add("-drive");
+            command.add("file=" + bootRequest.isoPath() + ",media=cdrom,readonly=on,if=ide,index=2,id=" + SYSTEM_DISC_DEVICE_ID);
+            return;
+        }
+
         if (!descriptor.firmwareConfiguration().requiresUefi()) {
             command.add("-drive");
             command.add("file=" + bootRequest.isoPath() + ",media=cdrom,readonly=on,id=" + SYSTEM_DISC_DEVICE_ID);

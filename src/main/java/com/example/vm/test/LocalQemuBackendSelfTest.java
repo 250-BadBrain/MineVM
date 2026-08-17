@@ -38,6 +38,7 @@ public final class LocalQemuBackendSelfTest {
         assertCreateDiskCommand(builder.createDiskCommand(descriptor));
         assertDiscStartCommand(builder.startCommand(descriptor, VirtualMachineBootRequest.systemDisc("computer-test", "E:\\Downloads\\ubuntu-22.04.5-live-server-amd64.iso")));
         assertDiskStartCommand(builder.startCommand(descriptor));
+        assertWindowsXpCommand(builder);
         assertWindows10Command(builder);
         assertWindows11Command(builder);
         assertPreflightRejectsMissingIso();
@@ -115,6 +116,38 @@ public final class LocalQemuBackendSelfTest {
         assertContains(discCommand, "ide-hd,bus=sata.1,drive=vm_disk,bootindex=2");
         assertContains(discCommand, "-vga");
         assertContains(discCommand, "std");
+    }
+
+    private static void assertWindowsXpCommand(QemuCommandBuilder builder) {
+        VirtualMachineDescriptor descriptor = new VirtualMachineDescriptor(
+                "computer-windows-xp",
+                4,
+                2048,
+                "computer-windows-xp.qcow2",
+                10,
+                GuestOperatingSystem.WINDOWS_XP,
+                FirmwareConfiguration.forGuest(GuestOperatingSystem.WINDOWS_XP)
+        );
+        List<String> command = builder.startCommand(descriptor);
+        assertNotContains(command, "-machine");
+        assertNotContains(command, "q35");
+        assertContains(command, "-accel");
+        assertContains(command, "tcg,thread=multi");
+        assertContains(command, "-cpu");
+        assertContains(command, "qemu32");
+        assertValueAfter(command, "-smp", "2");
+        assertContains(command, "file=E:\\MinecraftVMs\\computer-windows-xp\\computer-windows-xp.qcow2,format=qcow2,if=ide,index=0,media=disk,id=vm_disk");
+        assertContains(command, "-vga");
+        assertContains(command, "cirrus");
+        assertContains(command, "-usb");
+        assertContains(command, "usb-tablet");
+        assertNotContains(command, "qemu-xhci,id=usb_bus");
+        assertNotContains(command, "virtio");
+
+        List<String> discCommand = builder.startCommand(descriptor, VirtualMachineBootRequest.systemDisc("computer-windows-xp", "E:\\Downloads\\WinXP.iso"));
+        assertContains(discCommand, "file=E:\\Downloads\\WinXP.iso,media=cdrom,readonly=on,if=ide,index=2,id=system_disc");
+        assertContains(discCommand, "-boot");
+        assertContains(discCommand, "order=d");
     }
 
     private static void assertWindows11Command(QemuCommandBuilder builder) {

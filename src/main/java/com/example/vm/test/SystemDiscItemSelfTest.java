@@ -29,6 +29,13 @@ public final class SystemDiscItemSelfTest {
         assertEquals(windows10Disc.guestOperatingSystem(), GuestOperatingSystem.WINDOWS_10);
         assertEquals(windows10Disc.displayNameKey(), "item.computer_in_minecraft.windows_10_disc");
 
+        SystemDiscDefinition windowsXpDisc = new SystemDiscDefinition(
+                GuestOperatingSystem.WINDOWS_XP,
+                "item.computer_in_minecraft.windows_xp_disc"
+        );
+        assertEquals(windowsXpDisc.guestOperatingSystem(), GuestOperatingSystem.WINDOWS_XP);
+        assertEquals(windowsXpDisc.displayNameKey(), "item.computer_in_minecraft.windows_xp_disc");
+
         SystemDiscDefinition windows11Disc = new SystemDiscDefinition(
                 GuestOperatingSystem.WINDOWS_11,
                 "item.computer_in_minecraft.windows_11_disc"

@@ -12,10 +12,12 @@ public final class GuestOperatingSystemSelfTest {
         assertEquals(GuestOperatingSystem.parse("linux"), GuestOperatingSystem.UBUNTU_SERVER);
         assertEquals(GuestOperatingSystem.parse("UBUNTU_SERVER"), GuestOperatingSystem.UBUNTU_SERVER);
         assertEquals(GuestOperatingSystem.parse("UBUNTU_DESKTOP"), GuestOperatingSystem.UBUNTU_DESKTOP);
+        assertEquals(GuestOperatingSystem.parse("WINDOWS_XP"), GuestOperatingSystem.WINDOWS_XP);
         assertEquals(GuestOperatingSystem.parse("WINDOWS_10"), GuestOperatingSystem.WINDOWS_10);
         assertEquals(GuestOperatingSystem.parse("bad-value"), GuestOperatingSystem.UBUNTU_SERVER);
         assertEquals(GuestOperatingSystem.UBUNTU_SERVER.usesGraphicalPointer(), false);
         assertEquals(GuestOperatingSystem.UBUNTU_DESKTOP.usesGraphicalPointer(), true);
+        assertEquals(GuestOperatingSystem.WINDOWS_XP.usesGraphicalPointer(), true);
 
         FirmwareConfiguration ubuntuDesktop = FirmwareConfiguration.forGuest(GuestOperatingSystem.UBUNTU_DESKTOP);
         assertFalse(ubuntuDesktop.requiresUefi());
@@ -26,6 +28,10 @@ public final class GuestOperatingSystemSelfTest {
         assertTrue(windows10.requiresUefi());
         assertFalse(windows10.requiresSecureBoot());
         assertFalse(windows10.requiresTpm());
+
+        FirmwareConfiguration windowsXp = FirmwareConfiguration.forGuest(GuestOperatingSystem.WINDOWS_XP);
+        assertFalse(windowsXp.requiresUefi());
+        assertFalse(windowsXp.prefersVirtio());
 
         FirmwareConfiguration windows11 = FirmwareConfiguration.forGuest(GuestOperatingSystem.WINDOWS_11);
         assertTrue(windows11.requiresUefi());

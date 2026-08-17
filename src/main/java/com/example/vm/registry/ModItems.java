@@ -61,6 +61,13 @@ public final class ModItems {
                     new Item.Properties().stacksTo(1)
             ));
 
+    public static final RegistryObject<Item> WINDOWS_XP_DISC =
+            ITEMS.register("windows_xp_disc", () -> new SystemDiscItem(
+                    GuestOperatingSystem.WINDOWS_XP,
+                    "item.computer_in_minecraft.windows_xp_disc",
+                    new Item.Properties().stacksTo(1)
+            ));
+
     public static final RegistryObject<Item> WINDOWS_11_DISC =
             ITEMS.register("windows_11_disc", () -> new SystemDiscItem(
                     GuestOperatingSystem.WINDOWS_11,
