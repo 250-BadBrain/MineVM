@@ -148,6 +148,11 @@ public final class LocalQemuBackendSelfTest {
         assertContains(discCommand, "file=E:\\Downloads\\WinXP.iso,media=cdrom,readonly=on,if=ide,index=2,id=system_disc");
         assertContains(discCommand, "-boot");
         assertContains(discCommand, "order=d");
+
+        List<String> secondStageCommand = builder.startCommand(descriptor, VirtualMachineBootRequest.vmDiskWithAttachedDisc("computer-windows-xp", "E:\\Downloads\\WinXP.iso"));
+        assertContains(secondStageCommand, "file=E:\\Downloads\\WinXP.iso,media=cdrom,readonly=on,if=ide,index=2,id=system_disc");
+        assertContains(secondStageCommand, "-boot");
+        assertContains(secondStageCommand, "order=c");
     }
 
     private static void assertWindows11Command(QemuCommandBuilder builder) {

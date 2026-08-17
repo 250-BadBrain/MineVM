@@ -76,6 +76,9 @@ public final class QemuCommandBuilder {
             command.add("-boot");
             command.add("order=d");
         } else {
+            if (bootRequest.hasAttachedDisc()) {
+                addAttachedSystemDiscArgs(command, descriptor, bootRequest);
+            }
             command.add("-boot");
             command.add("order=c");
         }
@@ -168,22 +171,31 @@ public final class QemuCommandBuilder {
     }
 
     private void addSystemDiscArgs(List<String> command, VirtualMachineDescriptor descriptor, VirtualMachineBootRequest bootRequest) {
+        addSystemDiscArgs(command, descriptor, bootRequest.isoPath(), true);
+    }
+
+    private void addAttachedSystemDiscArgs(List<String> command, VirtualMachineDescriptor descriptor, VirtualMachineBootRequest bootRequest) {
+        addSystemDiscArgs(command, descriptor, bootRequest.attachedIsoPath(), false);
+    }
+
+    private void addSystemDiscArgs(List<String> command, VirtualMachineDescriptor descriptor, String isoPath, boolean bootable) {
         if (descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_XP) {
             command.add("-drive");
-            command.add("file=" + bootRequest.isoPath() + ",media=cdrom,readonly=on,if=ide,index=2,id=" + SYSTEM_DISC_DEVICE_ID);
+            command.add("file=" + isoPath + ",media=cdrom,readonly=on,if=ide,index=2,id=" + SYSTEM_DISC_DEVICE_ID);
             return;
         }
 
         if (!descriptor.firmwareConfiguration().requiresUefi()) {
             command.add("-drive");
-            command.add("file=" + bootRequest.isoPath() + ",media=cdrom,readonly=on,id=" + SYSTEM_DISC_DEVICE_ID);
+            command.add("file=" + isoPath + ",media=cdrom,readonly=on,id=" + SYSTEM_DISC_DEVICE_ID);
             return;
         }
 
         command.add("-drive");
-        command.add("if=none,file=" + bootRequest.isoPath() + ",media=cdrom,readonly=on,id=" + SYSTEM_DISC_DEVICE_ID);
+        command.add("if=none,file=" + isoPath + ",media=cdrom,readonly=on,id=" + SYSTEM_DISC_DEVICE_ID);
         command.add("-device");
-        command.add("ide-cd,bus=sata.0,drive=" + SYSTEM_DISC_DEVICE_ID + ",bootindex=1");
+        String bootIndex = bootable ? ",bootindex=1" : "";
+        command.add("ide-cd,bus=sata.0,drive=" + SYSTEM_DISC_DEVICE_ID + bootIndex);
     }
 
     private void addFirmwareArgs(List<String> command, VirtualMachineDescriptor descriptor) {

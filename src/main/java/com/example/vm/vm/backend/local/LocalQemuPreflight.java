@@ -27,11 +27,16 @@ public final class LocalQemuPreflight {
     }
 
     public static void validateBootRequest(VirtualMachineBootRequest bootRequest) {
-        if (bootRequest.bootDevice() != VirtualMachineBootDevice.SYSTEM_DISC) {
-            return;
+        if (bootRequest.bootDevice() == VirtualMachineBootDevice.SYSTEM_DISC) {
+            requireIso(bootRequest.isoPath());
         }
+        if (bootRequest.hasAttachedDisc()) {
+            requireIso(bootRequest.attachedIsoPath());
+        }
+    }
 
-        Path isoPath = Path.of(bootRequest.isoPath());
+    private static void requireIso(String isoPathValue) {
+        Path isoPath = Path.of(isoPathValue);
         if (!Files.isRegularFile(isoPath)) {
             throw new IllegalStateException("System disc ISO does not exist: " + isoPath);
         }

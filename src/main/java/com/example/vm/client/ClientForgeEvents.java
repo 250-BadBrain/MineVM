@@ -132,7 +132,11 @@ public final class ClientForgeEvents {
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && ImmersiveControlClient.active()) {
+        if (event.phase != TickEvent.Phase.END) {
+            return;
+        }
+        ImmersiveControlClient.tickIdleMouseKeepAlive();
+        if (ImmersiveControlClient.active()) {
             ImmersiveControlClient.suppressMinecraftBindings();
             ImmersiveControlClient.releaseMouseForScreenControl();
             ImmersiveControlClient.syncVmMousePosition();

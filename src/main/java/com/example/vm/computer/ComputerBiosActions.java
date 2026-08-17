@@ -114,14 +114,14 @@ public final class ComputerBiosActions {
                         GuestOperatingSystem selectedGuestOperatingSystem = selectedGuestOperatingSystem(computer);
                         VirtualMachineDescriptor descriptor = ComputerRuntimeConfig.descriptorFor(computer, selectedGuestOperatingSystem);
                         computer.setActiveGuestOperatingSystem(selectedGuestOperatingSystem);
-                        createThenStart(server, player, pos, descriptor, selectedGuestOperatingSystem, VirtualMachineBootRequest.vmDisk(computerId), "Booting from VM disk", true);
+                        createThenStart(server, player, pos, descriptor, selectedGuestOperatingSystem, bootDiskRequest(computer), "Booting from VM disk", true);
                     } else if (state == VirtualMachineState.STOPPED) {
-                        start(server, player, pos, selectedGuestOperatingSystem(computer), computerId, "Booting from VM disk", true);
+                        start(server, player, pos, selectedGuestOperatingSystem(computer), bootDiskRequest(computer), "Booting from VM disk", true);
                     } else if (state == VirtualMachineState.ERROR && ComputerRuntimeConfig.vmDiskExists(computer)) {
                         GuestOperatingSystem selectedGuestOperatingSystem = selectedGuestOperatingSystem(computer);
                         VirtualMachineDescriptor descriptor = ComputerRuntimeConfig.descriptorFor(computer, selectedGuestOperatingSystem);
                         computer.setActiveGuestOperatingSystem(selectedGuestOperatingSystem);
-                        createThenStart(server, player, pos, descriptor, selectedGuestOperatingSystem, VirtualMachineBootRequest.vmDisk(computerId), "Recovering and booting from VM disk", true);
+                        createThenStart(server, player, pos, descriptor, selectedGuestOperatingSystem, bootDiskRequest(computer), "Recovering and booting from VM disk", true);
                     } else if (isRunningOrStarting(state)) {
                         send(server, player, "Computer " + computerId + " | Already running | State: " + state);
                     } else {
@@ -132,6 +132,14 @@ public final class ComputerBiosActions {
 
     private static GuestOperatingSystem selectedGuestOperatingSystem(ComputerBlockEntity computer) {
         return computer.selectedGuestOperatingSystem().orElseGet(ComputerRuntimeConfig::configuredGuestOperatingSystem);
+    }
+
+    private static VirtualMachineBootRequest bootDiskRequest(ComputerBlockEntity computer) {
+        return computer.insertedDisc()
+                .map(ComputerRuntimeConfig::isoPathFor)
+                .filter(isoPath -> !isoPath.isBlank())
+                .map(isoPath -> VirtualMachineBootRequest.vmDiskWithAttachedDisc(computer.getComputerId(), isoPath))
+                .orElseGet(() -> VirtualMachineBootRequest.vmDisk(computer.getComputerId()));
     }
 
     private static void powerOff(ServerPlayer player, BlockPos pos, ComputerBlockEntity computer) {

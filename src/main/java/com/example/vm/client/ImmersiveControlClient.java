@@ -23,6 +23,8 @@ public final class ImmersiveControlClient {
     private static final int VM_POINTER_WIDTH = 1280;
     private static final int VM_POINTER_HEIGHT = 800;
     private static final long VM_MOUSE_MOVE_INTERVAL_NANOS = 33_000_000L;
+    private static final long IDLE_MOUSE_KEEP_ALIVE_INTERVAL_NANOS = 5_000_000_000L;
+    private static final long IDLE_MOUSE_KEEP_ALIVE_DURATION_NANOS = 300_000_000_000L;
     private static final int[] VM_MOUSE_BUTTONS = {
             GLFW.GLFW_MOUSE_BUTTON_LEFT,
             GLFW.GLFW_MOUSE_BUTTON_MIDDLE,
@@ -40,6 +42,11 @@ public final class ImmersiveControlClient {
     private static int lastSentMouseX = -1;
     private static int lastSentMouseY = -1;
     private static long lastMouseMoveSentNanos;
+    private static String idleMouseKeepAliveComputerId = "";
+    private static int idleMouseKeepAliveX = -1;
+    private static int idleMouseKeepAliveY = -1;
+    private static long idleMouseKeepAliveUntilNanos;
+    private static long lastIdleMouseKeepAliveNanos;
 
     private ImmersiveControlClient() {
     }
@@ -49,6 +56,7 @@ public final class ImmersiveControlClient {
         activeSession = new ScreenControlSession(playerId, packet.screenPos(), ScreenControlMode.IMMERSIVE_CAPTURE);
         activeComputerPos = packet.computerPos();
         activeComputerId = packet.computerId();
+        clearIdleMouseKeepAlive();
         selectedActionIndex = 0;
         vmInputMode = packet.vmDisplayActive();
         capturedHotbarSlot = Minecraft.getInstance().player == null ? 0 : Minecraft.getInstance().player.getInventory().selected;
@@ -74,6 +82,10 @@ public final class ImmersiveControlClient {
 
     public static void stop() {
         boolean wasActive = active();
+        boolean keepMouseAlive = wasActive && controllingVmDisplay() && !activeComputerId.isBlank() && lastMouseX >= 0 && lastMouseY >= 0;
+        String keepAliveComputerId = activeComputerId;
+        int keepAliveX = lastMouseX;
+        int keepAliveY = lastMouseY;
         if (wasActive) {
             suppressMinecraftBindings();
             releaseVmInputState();
@@ -92,6 +104,9 @@ public final class ImmersiveControlClient {
         if (wasActive) {
             Minecraft.getInstance().options.hideGui = capturedHideGui;
         }
+        if (keepMouseAlive) {
+            armIdleMouseKeepAlive(keepAliveComputerId, keepAliveX, keepAliveY);
+        }
         showCursorAfterScreenControl();
         grabMouseAfterScreenControl();
         if (wasActive && Minecraft.getInstance().player != null) {
@@ -102,6 +117,9 @@ public final class ImmersiveControlClient {
     public static void stopIfControlling(String computerId) {
         if (active() && activeComputerId.equals(computerId)) {
             stop();
+        }
+        if (idleMouseKeepAliveComputerId.equals(computerId)) {
+            clearIdleMouseKeepAlive();
         }
     }
 
@@ -246,6 +264,22 @@ public final class ImmersiveControlClient {
         syncVmMousePosition(false);
     }
 
+    public static void tickIdleMouseKeepAlive() {
+        if (active() || idleMouseKeepAliveComputerId.isBlank()) {
+            return;
+        }
+        long now = System.nanoTime();
+        if (now > idleMouseKeepAliveUntilNanos) {
+            clearIdleMouseKeepAlive();
+            return;
+        }
+        if (lastIdleMouseKeepAliveNanos > 0L && now - lastIdleMouseKeepAliveNanos < IDLE_MOUSE_KEEP_ALIVE_INTERVAL_NANOS) {
+            return;
+        }
+        lastIdleMouseKeepAliveNanos = now;
+        ModNetwork.sendMouseMoveInput(idleMouseKeepAliveComputerId, idleMouseKeepAliveX, idleMouseKeepAliveY, VM_POINTER_WIDTH, VM_POINTER_HEIGHT);
+    }
+
     private static void syncVmMousePosition(boolean force) {
         if (!controllingVmDisplay() || activeComputerId.isBlank()) {
             return;
@@ -269,6 +303,23 @@ public final class ImmersiveControlClient {
         lastMouseMoveSentNanos = now;
         ModNetwork.sendMouseMoveInput(activeComputerId, x, y, VM_POINTER_WIDTH, VM_POINTER_HEIGHT);
         suppressMinecraftBindings();
+    }
+
+    private static void armIdleMouseKeepAlive(String computerId, int x, int y) {
+        idleMouseKeepAliveComputerId = computerId;
+        idleMouseKeepAliveX = clamp(x, 0, VM_POINTER_WIDTH - 1);
+        idleMouseKeepAliveY = clamp(y, 0, VM_POINTER_HEIGHT - 1);
+        long now = System.nanoTime();
+        idleMouseKeepAliveUntilNanos = now + IDLE_MOUSE_KEEP_ALIVE_DURATION_NANOS;
+        lastIdleMouseKeepAliveNanos = 0L;
+    }
+
+    private static void clearIdleMouseKeepAlive() {
+        idleMouseKeepAliveComputerId = "";
+        idleMouseKeepAliveX = -1;
+        idleMouseKeepAliveY = -1;
+        idleMouseKeepAliveUntilNanos = 0L;
+        lastIdleMouseKeepAliveNanos = 0L;
     }
 
     public static boolean shouldRelease(int key) {
