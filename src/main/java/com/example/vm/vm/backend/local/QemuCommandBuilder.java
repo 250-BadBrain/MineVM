@@ -62,7 +62,7 @@ public final class QemuCommandBuilder {
         command.add("-m");
         command.add(Integer.toString(descriptor.memoryMb()));
         command.add("-smp");
-        command.add(Integer.toString(descriptor.cpuCores()));
+        command.add(Integer.toString(effectiveCpuCores(descriptor)));
         addFirmwareArgs(command, descriptor);
         if (descriptor.firmwareConfiguration().requiresUefi()) {
             command.add("-device");
@@ -100,11 +100,18 @@ public final class QemuCommandBuilder {
         switch (descriptor.guestOperatingSystem()) {
             case WINDOWS_10, WINDOWS_11 -> {
                 command.add("-cpu");
-                command.add("qemu64");
+                command.add("max");
             }
             case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> {
             }
         }
+    }
+
+    private int effectiveCpuCores(VirtualMachineDescriptor descriptor) {
+        return switch (descriptor.guestOperatingSystem()) {
+            case WINDOWS_10, WINDOWS_11 -> Math.min(descriptor.cpuCores(), 2);
+            case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> descriptor.cpuCores();
+        };
     }
 
     private String accelerator(VirtualMachineDescriptor descriptor) {

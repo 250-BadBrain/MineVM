@@ -84,7 +84,9 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
 
         states.put(bootRequest.computerId(), VirtualMachineState.STARTING);
         try {
-            Process process = new ProcessBuilder(commandBuilder.startCommand(descriptor, bootRequest))
+            java.util.List<String> command = commandBuilder.startCommand(descriptor, bootRequest);
+            writeCommandLog(descriptor, command);
+            Process process = new ProcessBuilder(command)
                     .redirectOutput(ProcessBuilder.Redirect.DISCARD)
                     .redirectError(commandBuilder.vmDirectory(descriptor).resolve("qemu-stderr.log").toFile())
                     .start();
@@ -204,6 +206,16 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
             Thread.currentThread().interrupt();
             states.put(descriptor.computerId(), VirtualMachineState.ERROR);
             throw new IllegalStateException("Interrupted while creating VM disk: " + diskPath, exception);
+        }
+    }
+
+    private void writeCommandLog(VirtualMachineDescriptor descriptor, java.util.List<String> command) {
+        Path commandPath = commandBuilder.vmDirectory(descriptor).resolve("qemu-command.txt");
+        try {
+            Files.createDirectories(commandPath.getParent());
+            Files.writeString(commandPath, String.join(System.lineSeparator(), command));
+        } catch (IOException exception) {
+            ComputerInMinecraft.LOGGER.warn("Failed to write QEMU command log for {}", descriptor.computerId(), exception);
         }
     }
 

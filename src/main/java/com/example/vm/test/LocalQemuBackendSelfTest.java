@@ -103,7 +103,8 @@ public final class LocalQemuBackendSelfTest {
         assertContains(command, "if=pflash,format=raw,readonly=on,file=D:\\qemu\\share\\edk2-x86_64-code.fd");
         assertContains(command, "if=pflash,format=raw,file=E:\\MinecraftVMs\\computer-windows-10\\OVMF_VARS.fd");
         assertContains(command, "-cpu");
-        assertContains(command, "qemu64");
+        assertContains(command, "max");
+        assertValueAfter(command, "-smp", "2");
         assertContains(command, "ich9-ahci,id=sata");
         assertContains(command, "if=none,file=E:\\MinecraftVMs\\computer-windows-10\\computer-windows-10.qcow2,format=qcow2,id=vm_disk");
         assertContains(command, "ide-hd,bus=sata.1,drive=vm_disk,bootindex=1");
@@ -170,6 +171,14 @@ public final class LocalQemuBackendSelfTest {
         if (!actual.equals(expected)) {
             throw new AssertionError("Expected " + expected + " but got " + actual);
         }
+    }
+
+    private static void assertValueAfter(List<String> command, String option, String expectedValue) {
+        int optionIndex = command.indexOf(option);
+        if (optionIndex < 0 || optionIndex + 1 >= command.size()) {
+            throw new AssertionError("Expected command to contain option " + option + " but got " + command);
+        }
+        assertEquals(command.get(optionIndex + 1), expectedValue);
     }
 
     private static void assertContains(String actual, String expected) {
