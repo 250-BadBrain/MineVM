@@ -166,6 +166,9 @@ public class ComputerMonitorBlock extends BaseEntityBlock {
                     if (computer.vmDisplayActive() && !vmDisplayActive) {
                         computer.setVmDisplayActive(false);
                     }
+                    if (vmDisplayActive) {
+                        ComputerInMinecraft.SCREEN_SERVICE.refreshVncReceiver(computerId);
+                    }
                     ModNetwork.startScreenControl(player, monitorPos, computerPos, computerId, false, vmDisplayActive);
                 }));
     }

@@ -53,6 +53,27 @@ public final class ScreenServiceSelfTest {
                 throw new AssertionError("ScreenService must coalesce dirty rectangles between render snapshots: " + coalescedSnapshot);
             }
 
+            ScreenFrame tinyFrame = new ScreenFrame(10, 10, 1, 1, 1, 1, new int[] {0xFF123456});
+            service.updateFrame("computer-keyframe", tinyFrame).get(10, TimeUnit.SECONDS);
+            service.latestFrameSnapshot("computer-keyframe");
+            for (int index = 0; index < 120; index++) {
+                service.updateFrame("computer-keyframe", tinyFrame).get(10, TimeUnit.SECONDS);
+            }
+            Optional<ScreenFrame> keyframeSnapshot = service.latestFrameSnapshot("computer-keyframe");
+            if (keyframeSnapshot.isEmpty() || keyframeSnapshot.get().changedWidth() != 10 || keyframeSnapshot.get().changedHeight() != 10) {
+                throw new AssertionError("ScreenService must emit periodic full-frame keyframes: " + keyframeSnapshot);
+            }
+
+            ScreenFrame fullSeedFrame = new ScreenFrame(10, 10, 0, 0, 1, 1, new int[] {0xFF000000});
+            service.updateFrame("computer-large-dirty", fullSeedFrame).get(10, TimeUnit.SECONDS);
+            service.latestFrameSnapshot("computer-large-dirty");
+            ScreenFrame largeDirtyFrame = new ScreenFrame(10, 10, 0, 0, 5, 8, new int[40]);
+            service.updateFrame("computer-large-dirty", largeDirtyFrame).get(10, TimeUnit.SECONDS);
+            Optional<ScreenFrame> largeDirtySnapshot = service.latestFrameSnapshot("computer-large-dirty");
+            if (largeDirtySnapshot.isEmpty() || largeDirtySnapshot.get().changedWidth() != 10 || largeDirtySnapshot.get().changedHeight() != 10) {
+                throw new AssertionError("ScreenService must promote large dirty regions to full-frame updates: " + largeDirtySnapshot);
+            }
+
             service.close();
             service.updateFrame("computer-test", frame).get(10, TimeUnit.SECONDS);
             if (service.getLatestFrame("computer-test").get(10, TimeUnit.SECONDS).isEmpty()) {

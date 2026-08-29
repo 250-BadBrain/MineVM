@@ -88,6 +88,7 @@ public final class QemuCommandBuilder {
         command.add("-vga");
         command.add(vgaDevice(descriptor));
         addInputDeviceArgs(command, descriptor);
+        addNetworkArgs(command, descriptor);
         command.add("-vnc");
         command.add(VncEndpoint.forComputer(descriptor.computerId()).toQemuArgument() + ",share=ignore");
         command.add("-qmp");
@@ -148,6 +149,19 @@ public final class QemuCommandBuilder {
         command.add("qemu-xhci,id=usb_bus");
         command.add("-device");
         command.add("usb-tablet,bus=usb_bus.0");
+    }
+
+    private void addNetworkArgs(List<String> command, VirtualMachineDescriptor descriptor) {
+        command.add("-nic");
+        command.add("user,model=" + networkModel(descriptor));
+    }
+
+    private String networkModel(VirtualMachineDescriptor descriptor) {
+        return switch (descriptor.guestOperatingSystem()) {
+            case WINDOWS_XP -> "rtl8139";
+            case WINDOWS_10, WINDOWS_11 -> "e1000e";
+            case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> "virtio-net-pci";
+        };
     }
 
     private void addDiskArgs(List<String> command, VirtualMachineDescriptor descriptor, VirtualMachineBootDevice bootDevice) {

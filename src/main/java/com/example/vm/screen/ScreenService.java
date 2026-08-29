@@ -2,6 +2,7 @@ package com.example.vm.screen;
 
 import com.example.vm.concurrent.ComputerExecutors;
 import com.example.vm.ComputerInMinecraft;
+import com.example.vm.input.VirtualMachineInput;
 
 import java.io.IOException;
 import java.util.Map;
@@ -48,19 +49,40 @@ public final class ScreenService implements AutoCloseable {
         return frameBuffer == null ? Optional.empty() : frameBuffer.snapshot();
     }
 
+    public boolean sendVncInput(String computerId, VirtualMachineInput input) {
+        return vncFrameReceiver.sendInput(VncEndpoint.forComputer(requireComputerId(computerId)), input);
+    }
+
     public synchronized void startVncReceiver(String computerId, VncEndpoint endpoint) {
         String id = requireComputerId(computerId);
-        stopVncReceiver(id);
+        stopVncReceiver(id, true);
+        receivers.put(id, receiverExecutor().submit(() -> receiveWithRetry(id, endpoint)));
+    }
+
+    public synchronized void refreshVncReceiver(String computerId) {
+        String id = requireComputerId(computerId);
+        VncEndpoint endpoint = VncEndpoint.forComputer(id);
+        Future<?> receiver = receivers.get(id);
+        if (receiver != null && !receiver.isDone() && vncFrameReceiver.hasActiveConnection(endpoint)) {
+            return;
+        }
+        stopVncReceiver(id, false);
         receivers.put(id, receiverExecutor().submit(() -> receiveWithRetry(id, endpoint)));
     }
 
     public synchronized void stopVncReceiver(String computerId) {
         String id = requireComputerId(computerId);
+        stopVncReceiver(id, true);
+    }
+
+    private void stopVncReceiver(String id, boolean removeFrameBuffer) {
         Future<?> receiver = receivers.remove(id);
         if (receiver != null) {
             receiver.cancel(true);
         }
-        frameBuffers.remove(id);
+        if (removeFrameBuffer) {
+            frameBuffers.remove(id);
+        }
     }
 
     @Override

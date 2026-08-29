@@ -7,6 +7,7 @@ import com.example.vm.vm.VirtualMachineBootRequest;
 import com.example.vm.vm.FirmwareConfiguration;
 import com.example.vm.vm.GuestOperatingSystem;
 import com.example.vm.vm.VirtualMachineDescriptor;
+import com.example.vm.vm.backend.local.LocalQemuBackend;
 import com.example.vm.vm.backend.local.LocalQemuConfiguration;
 import com.example.vm.vm.backend.local.LocalQemuPreflight;
 import com.example.vm.vm.backend.local.QemuCommandBuilder;
@@ -42,6 +43,7 @@ public final class LocalQemuBackendSelfTest {
         assertWindows10Command(builder);
         assertWindows11Command(builder);
         assertPreflightRejectsMissingIso();
+        assertIdleInputResetsQmpSession();
         assertDefaultBackendRemainsSafe();
     }
 
@@ -71,6 +73,8 @@ public final class LocalQemuBackendSelfTest {
         assertContains(command, "-vga");
         assertContains(command, "virtio");
         assertNotContains(command, "std");
+        assertContains(command, "-nic");
+        assertContains(command, "user,model=virtio-net-pci");
         assertContains(command, "-vnc");
         assertContains(command, VncEndpoint.forComputer("computer-test").toQemuArgument() + ",share=ignore");
         assertContains(command, "-qmp");
@@ -116,6 +120,8 @@ public final class LocalQemuBackendSelfTest {
         assertContains(discCommand, "ide-hd,bus=sata.1,drive=vm_disk,bootindex=2");
         assertContains(discCommand, "-vga");
         assertContains(discCommand, "std");
+        assertContains(discCommand, "-nic");
+        assertContains(discCommand, "user,model=e1000e");
     }
 
     private static void assertWindowsXpCommand(QemuCommandBuilder builder) {
@@ -141,6 +147,8 @@ public final class LocalQemuBackendSelfTest {
         assertContains(command, "cirrus");
         assertContains(command, "-usb");
         assertContains(command, "usb-tablet");
+        assertContains(command, "-nic");
+        assertContains(command, "user,model=rtl8139");
         assertNotContains(command, "qemu-xhci,id=usb_bus");
         assertNotContains(command, "virtio");
 
@@ -178,6 +186,16 @@ public final class LocalQemuBackendSelfTest {
         String managerClassName = ComputerInMinecraft.VM_MANAGER.getClass().getName();
         if (!managerClassName.endsWith("VirtualMachineManager")) {
             throw new AssertionError("Unexpected VM manager type: " + managerClassName);
+        }
+    }
+
+    private static void assertIdleInputResetsQmpSession() {
+        long now = 50_000_000_000L;
+        if (LocalQemuBackend.shouldResetInputQmpSession(now - 9_999_999_999L, now)) {
+            throw new AssertionError("Input session should stay open before the idle reset threshold");
+        }
+        if (!LocalQemuBackend.shouldResetInputQmpSession(now - 10_000_000_000L, now)) {
+            throw new AssertionError("Input session should reset at the idle reset threshold");
         }
     }
 

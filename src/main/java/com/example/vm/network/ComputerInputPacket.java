@@ -65,7 +65,9 @@ public record ComputerInputPacket(String computerId, InputKind kind, String key,
                 case MOUSE_MOVE -> new MouseMoveInput(packet.computerId, packet.x, packet.y, packet.screenWidth, packet.screenHeight);
                 case MOUSE_WHEEL -> new MouseWheelInput(packet.computerId, packet.button);
             };
-            ComputerInMinecraft.INPUT_SERVICE.send(input);
+            if (!ComputerInMinecraft.SCREEN_SERVICE.sendVncInput(packet.computerId, input)) {
+                ComputerInMinecraft.INPUT_SERVICE.send(input);
+            }
         });
         context.setPacketHandled(true);
     }

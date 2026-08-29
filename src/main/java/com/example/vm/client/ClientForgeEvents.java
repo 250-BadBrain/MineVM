@@ -135,12 +135,10 @@ public final class ClientForgeEvents {
         if (event.phase != TickEvent.Phase.END) {
             return;
         }
-        ImmersiveControlClient.tickIdleMouseKeepAlive();
         if (ImmersiveControlClient.active()) {
             ImmersiveControlClient.suppressMinecraftBindings();
             ImmersiveControlClient.releaseMouseForScreenControl();
             ImmersiveControlClient.syncVmMousePosition();
-            ImmersiveControlClient.tickActiveInputKeepAlive();
             Minecraft minecraft = Minecraft.getInstance();
             if (minecraft.screen != null && !(minecraft.screen instanceof net.minecraft.client.gui.screens.PauseScreen)) {
                 minecraft.setScreen(null);

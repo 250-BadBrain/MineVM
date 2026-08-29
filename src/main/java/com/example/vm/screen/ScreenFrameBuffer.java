@@ -4,6 +4,9 @@ import java.util.Arrays;
 import java.util.Optional;
 
 final class ScreenFrameBuffer {
+    private static final int KEYFRAME_INTERVAL_FRAMES = 120;
+    private static final int MAX_DIRTY_AREA_PERCENT = 40;
+
     private int width;
     private int height;
     private int[] pixels = new int[0];
@@ -13,18 +16,18 @@ final class ScreenFrameBuffer {
     private int dirtyMaxY;
     private boolean dirty;
     private ScreenFrame lastSnapshot;
+    private int framesSinceKeyframe;
 
     synchronized void apply(ScreenFrame frame) {
+        boolean resized = false;
         if (frame.width() != width || frame.height() != height || pixels.length != frame.width() * frame.height()) {
             width = frame.width();
             height = frame.height();
             pixels = new int[width * height];
             Arrays.fill(pixels, 0xFF000000);
-            dirtyX = 0;
-            dirtyY = 0;
-            dirtyMaxX = width;
-            dirtyMaxY = height;
-            dirty = true;
+            markFullFrameDirty();
+            framesSinceKeyframe = 0;
+            resized = true;
         }
 
         int[] changedPixels = frame.argbPixels();
@@ -34,7 +37,14 @@ final class ScreenFrameBuffer {
             System.arraycopy(changedPixels, sourceOffset, pixels, targetOffset, frame.changedWidth());
         }
 
-        includeDirtyRectangle(frame.changedX(), frame.changedY(), frame.changedWidth(), frame.changedHeight());
+        if (!resized) {
+            includeDirtyRectangle(frame.changedX(), frame.changedY(), frame.changedWidth(), frame.changedHeight());
+            framesSinceKeyframe++;
+            if (shouldEmitKeyframe()) {
+                markFullFrameDirty();
+                framesSinceKeyframe = 0;
+            }
+        }
         lastSnapshot = snapshotDirtyRectangle();
     }
 
@@ -59,6 +69,25 @@ final class ScreenFrameBuffer {
         dirtyY = Math.min(dirtyY, y);
         dirtyMaxX = Math.max(dirtyMaxX, x + rectangleWidth);
         dirtyMaxY = Math.max(dirtyMaxY, y + rectangleHeight);
+    }
+
+    private boolean shouldEmitKeyframe() {
+        if (framesSinceKeyframe >= KEYFRAME_INTERVAL_FRAMES) {
+            return true;
+        }
+        int dirtyWidth = dirtyMaxX - dirtyX;
+        int dirtyHeight = dirtyMaxY - dirtyY;
+        long dirtyArea = (long) dirtyWidth * dirtyHeight;
+        long fullArea = (long) width * height;
+        return fullArea > 0L && dirtyArea * 100L >= fullArea * MAX_DIRTY_AREA_PERCENT;
+    }
+
+    private void markFullFrameDirty() {
+        dirtyX = 0;
+        dirtyY = 0;
+        dirtyMaxX = width;
+        dirtyMaxY = height;
+        dirty = true;
     }
 
     private ScreenFrame snapshotDirtyRectangle() {

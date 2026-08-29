@@ -28,6 +28,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
     private static final long QMP_KEEP_ALIVE_INTERVAL_SECONDS = 10L;
     private static final int QMP_READY_ATTEMPTS = 20;
     private static final long QMP_READY_DELAY_MS = 250L;
+    private static final long INPUT_QMP_IDLE_RESET_NANOS = TimeUnit.SECONDS.toNanos(10L);
 
     private final LocalQemuConfiguration configuration;
     private final QemuCommandBuilder commandBuilder;
@@ -36,6 +37,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
     private final Map<String, Process> processes = new ConcurrentHashMap<>();
     private final Map<String, VirtualMachineState> states = new ConcurrentHashMap<>();
     private final Map<String, ScheduledFuture<?>> qmpKeepAliveTasks = new ConcurrentHashMap<>();
+    private final Map<String, Long> lastInputNanos = new ConcurrentHashMap<>();
     private final ScheduledExecutorService qmpKeepAliveExecutor = Executors.newSingleThreadScheduledExecutor(runnable -> {
         Thread thread = new Thread(runnable, "computer-in-minecraft-qmp-keepalive");
         thread.setDaemon(true);
@@ -129,6 +131,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
 
         ComputerInMinecraft.SCREEN_SERVICE.stopVncReceiver(computerId);
         qmpClient.close(QmpEndpoint.forComputer(computerId));
+        lastInputNanos.remove(computerId);
         states.put(computerId, VirtualMachineState.STOPPED);
         return new VirtualMachineHandle(computerId, VirtualMachineState.STOPPED);
     }
@@ -181,10 +184,13 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
             if (process != null) {
                 processes.remove(input.computerId(), process);
             }
+            lastInputNanos.remove(input.computerId());
             states.put(input.computerId(), VirtualMachineState.STOPPED);
             return;
         }
+        resetInputQmpSessionIfIdle(input.computerId());
         trySendQmpJson(input.computerId(), QmpInputCommand.toJson(input));
+        lastInputNanos.put(input.computerId(), System.nanoTime());
     }
 
     @Override
@@ -198,6 +204,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
         qmpClient.close();
         descriptors.clear();
         states.clear();
+        lastInputNanos.clear();
     }
 
     private void runCreateDiskCommand(VirtualMachineDescriptor descriptor, Path diskPath) {
@@ -315,9 +322,26 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
                 cancelQmpKeepAlive(computerId);
                 ComputerInMinecraft.SCREEN_SERVICE.stopVncReceiver(computerId);
                 qmpClient.close(QmpEndpoint.forComputer(computerId));
+                lastInputNanos.remove(computerId);
                 states.put(computerId, VirtualMachineState.STOPPED);
             }
         });
+    }
+
+    private void resetInputQmpSessionIfIdle(String computerId) {
+        Long lastInput = lastInputNanos.get(computerId);
+        if (lastInput == null) {
+            return;
+        }
+        long now = System.nanoTime();
+        if (shouldResetInputQmpSession(lastInput, now)) {
+            qmpClient.close(QmpEndpoint.forComputer(computerId));
+            ComputerInMinecraft.LOGGER.debug("Reset idle QMP input session for {}", computerId);
+        }
+    }
+
+    public static boolean shouldResetInputQmpSession(long lastInputNanos, long nowNanos) {
+        return nowNanos - lastInputNanos >= INPUT_QMP_IDLE_RESET_NANOS;
     }
 
     private void scheduleQmpKeepAlive(String computerId, Process process) {
