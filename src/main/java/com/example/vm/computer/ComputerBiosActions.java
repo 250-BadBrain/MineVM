@@ -63,6 +63,8 @@ public final class ComputerBiosActions {
         String computerId = computer.getComputerId();
         VirtualMachineDescriptor descriptor = ComputerRuntimeConfig.descriptorFor(computer, guestOperatingSystem);
         String isoPath = ComputerRuntimeConfig.isoPathFor(guestOperatingSystem);
+        String bootFloppyPath = ComputerRuntimeConfig.bootFloppyPathFor(guestOperatingSystem);
+        VirtualMachineBootRequest bootRequest = discBootRequest(computerId, isoPath, bootFloppyPath);
         java.util.List<String> preflightErrors = ComputerRuntimePreflight.validateSystemDiscBoot(guestOperatingSystem);
         if (!preflightErrors.isEmpty()) {
             player.sendSystemMessage(Component.literal("Computer " + computerId + " | Disc boot blocked: " + preflightErrors.get(0)));
@@ -81,10 +83,10 @@ public final class ComputerBiosActions {
                         send(server, player, "Computer " + computerId + " | Already running | State: " + state);
                     } else if (state == VirtualMachineState.NOT_CREATED) {
                         computer.rememberDiskGuestOperatingSystem(guestOperatingSystem);
-                        createThenStart(server, player, pos, descriptor, guestOperatingSystem, VirtualMachineBootRequest.systemDisc(computerId, isoPath), "Booting from " + guestOperatingSystem + " disc", false);
+                        createThenStart(server, player, pos, descriptor, guestOperatingSystem, bootRequest, "Booting from " + guestOperatingSystem + " disc", false);
                     } else if (state == VirtualMachineState.STOPPED) {
                         computer.rememberDiskGuestOperatingSystem(guestOperatingSystem);
-                        start(server, player, pos, guestOperatingSystem, VirtualMachineBootRequest.systemDisc(computerId, isoPath), "Booting from inserted disc", false);
+                        start(server, player, pos, guestOperatingSystem, bootRequest, "Booting from inserted disc", false);
                     } else {
                         send(server, player, "Computer " + computerId + " | VM busy | State: " + state);
                     }
@@ -140,6 +142,13 @@ public final class ComputerBiosActions {
                 .filter(isoPath -> !isoPath.isBlank())
                 .map(isoPath -> VirtualMachineBootRequest.vmDiskWithAttachedDisc(computer.getComputerId(), isoPath))
                 .orElseGet(() -> VirtualMachineBootRequest.vmDisk(computer.getComputerId()));
+    }
+
+    private static VirtualMachineBootRequest discBootRequest(String computerId, String isoPath, String bootFloppyPath) {
+        if (bootFloppyPath == null || bootFloppyPath.isBlank()) {
+            return VirtualMachineBootRequest.systemDisc(computerId, isoPath);
+        }
+        return VirtualMachineBootRequest.systemDiscWithBootFloppy(computerId, isoPath, bootFloppyPath);
     }
 
     private static void powerOff(ServerPlayer player, BlockPos pos, ComputerBlockEntity computer) {

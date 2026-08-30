@@ -198,6 +198,13 @@ public final class LocalQemuBackendSelfTest {
         assertContains(discCommand, "-boot");
         assertContains(discCommand, "order=d");
 
+        List<String> floppyBootCommand = builder.startCommand(descriptor, VirtualMachineBootRequest.systemDiscWithBootFloppy("computer-windows-95", "E:\\Downloads\\Win95.iso", "E:\\Downloads\\Win95Boot.img"));
+        assertContains(floppyBootCommand, "file=E:\\Downloads\\Win95.iso,media=cdrom,readonly=on,if=ide,index=2,id=system_disc");
+        assertContains(floppyBootCommand, "-fda");
+        assertContains(floppyBootCommand, "E:\\Downloads\\Win95Boot.img");
+        assertContains(floppyBootCommand, "-boot");
+        assertContains(floppyBootCommand, "order=a");
+
         List<String> secondStageCommand = builder.startCommand(descriptor, VirtualMachineBootRequest.vmDiskWithAttachedDisc("computer-windows-95", "E:\\Downloads\\Win95.iso"));
         assertContains(secondStageCommand, "file=E:\\Downloads\\Win95.iso,media=cdrom,readonly=on,if=ide,index=2,id=system_disc");
         assertContains(secondStageCommand, "-boot");

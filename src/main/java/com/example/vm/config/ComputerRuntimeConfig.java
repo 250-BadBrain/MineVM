@@ -32,6 +32,7 @@ public final class ComputerRuntimeConfig {
     public static final String DEFAULT_UBUNTU_DESKTOP_ISO_PATH = "";
     public static final String DEFAULT_FREEDOS_ISO_PATH = "";
     public static final String DEFAULT_WINDOWS_95_ISO_PATH = "";
+    public static final String DEFAULT_WINDOWS_95_BOOT_FLOPPY_PATH = "";
     public static final String DEFAULT_WINDOWS_XP_ISO_PATH = "";
     public static final String DEFAULT_WINDOWS_10_ISO_PATH = "";
     public static final String DEFAULT_WINDOWS_11_ISO_PATH = "";
@@ -48,6 +49,7 @@ public final class ComputerRuntimeConfig {
     private static final ForgeConfigSpec.ConfigValue<String> UBUNTU_DESKTOP_ISO_PATH;
     private static final ForgeConfigSpec.ConfigValue<String> FREEDOS_ISO_PATH;
     private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_95_ISO_PATH;
+    private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_95_BOOT_FLOPPY_PATH;
     private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_XP_ISO_PATH;
     private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_10_ISO_PATH;
     private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_11_ISO_PATH;
@@ -90,6 +92,9 @@ public final class ComputerRuntimeConfig {
         WINDOWS_95_ISO_PATH = builder
                 .comment("ISO path used when booting an inserted Windows 95 system disc.")
                 .define("windows95IsoPath", DEFAULT_WINDOWS_95_ISO_PATH);
+        WINDOWS_95_BOOT_FLOPPY_PATH = builder
+                .comment("Optional boot floppy image used together with the Windows 95 system disc when the ISO is not directly bootable.")
+                .define("windows95BootFloppyPath", DEFAULT_WINDOWS_95_BOOT_FLOPPY_PATH);
         WINDOWS_XP_ISO_PATH = builder
                 .comment("ISO path used when booting an inserted Windows XP system disc.")
                 .define("windowsXpIsoPath", DEFAULT_WINDOWS_XP_ISO_PATH);
@@ -218,6 +223,13 @@ public final class ComputerRuntimeConfig {
             return valueOrDefault(ISO_PATH, DEFAULT_ISO_PATH);
         }
         return isoPath;
+    }
+
+    public static String bootFloppyPathFor(GuestOperatingSystem guestOperatingSystem) {
+        if (guestOperatingSystem == GuestOperatingSystem.WINDOWS_95) {
+            return valueOrDefault(WINDOWS_95_BOOT_FLOPPY_PATH, DEFAULT_WINDOWS_95_BOOT_FLOPPY_PATH);
+        }
+        return "";
     }
 
     public static GuestOperatingSystem configuredGuestOperatingSystem(ComputerBlockEntity computer) {

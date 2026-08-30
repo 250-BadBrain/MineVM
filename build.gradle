@@ -1500,7 +1500,7 @@ tasks.register('verifyBiosMenuFoundation') {
         }
 
         def configText = file('src/main/java/com/example/vm/config/ComputerRuntimeConfig.java').text
-        ['ubuntuServerIsoPath', 'ubuntuDesktopIsoPath', 'freedosIsoPath', 'windows95IsoPath', 'windowsXpIsoPath', 'windows10IsoPath', 'windows11IsoPath', 'isoPathFor'].each { marker ->
+        ['ubuntuServerIsoPath', 'ubuntuDesktopIsoPath', 'freedosIsoPath', 'windows95IsoPath', 'windows95BootFloppyPath', 'windowsXpIsoPath', 'windows10IsoPath', 'windows11IsoPath', 'isoPathFor'].each { marker ->
             if (!configText.contains(marker)) {
                 throw new GradleException("ComputerRuntimeConfig missing per-disc ISO marker ${marker}.")
             }
@@ -1512,7 +1512,7 @@ tasks.register('verifyBiosMenuFoundation') {
         }
 
         def qemuBuilderText = file('src/main/java/com/example/vm/vm/backend/local/QemuCommandBuilder.java').text
-        ['VirtualMachineBootDevice.SYSTEM_DISC', 'bootRequest.isoPath()', 'VirtualMachineBootRequest.vmDisk', 'order=d', 'order=c', 'LocalVmPaths'].each { marker ->
+        ['VirtualMachineBootDevice.SYSTEM_DISC', 'bootRequest.isoPath()', 'VirtualMachineBootRequest.vmDisk', 'order=d', 'order=c', 'order=a', 'LocalVmPaths'].each { marker ->
             if (!qemuBuilderText.contains(marker)) {
                 throw new GradleException("QemuCommandBuilder missing boot request marker ${marker}.")
             }
@@ -1531,7 +1531,7 @@ tasks.register('verifyBiosMenuFoundation') {
         }
 
         def preflightText = file('src/main/java/com/example/vm/vm/backend/local/LocalQemuPreflight.java').text
-        ['validateTools', 'validateBootRequest', 'System disc ISO does not exist', 'createDirectories'].each { marker ->
+        ['validateTools', 'validateBootRequest', 'System disc ISO does not exist', 'Boot floppy image does not exist', 'createDirectories'].each { marker ->
             if (!preflightText.contains(marker)) {
                 throw new GradleException("LocalQemuPreflight missing marker ${marker}.")
             }

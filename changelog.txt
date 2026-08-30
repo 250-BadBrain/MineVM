@@ -4,6 +4,7 @@
 
 - Added a FreeDOS system disc, `freedosIsoPath` runtime configuration, and a BIOS/IDE QEMU profile for FreeDOS installation and boot testing.
 - Added a Windows 95 system disc, `windows95IsoPath` runtime configuration, and a capped low-memory BIOS/IDE QEMU profile for Windows 95 testing.
+- Added optional `windows95BootFloppyPath` support so non-bootable Windows 95 CDs can boot from a floppy image while keeping the CD mounted.
 
 ## 1.0.0
 

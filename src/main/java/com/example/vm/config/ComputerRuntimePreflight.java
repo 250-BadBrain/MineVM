@@ -35,6 +35,10 @@ public final class ComputerRuntimePreflight {
         } else if (!Files.isRegularFile(Path.of(isoPath))) {
             errors.add("System disc ISO does not exist: " + isoPath);
         }
+        String bootFloppyPath = ComputerRuntimeConfig.bootFloppyPathFor(guestOperatingSystem);
+        if (!bootFloppyPath.isBlank() && !Files.isRegularFile(Path.of(bootFloppyPath))) {
+            errors.add("Boot floppy image does not exist: " + bootFloppyPath);
+        }
         return errors;
     }
 

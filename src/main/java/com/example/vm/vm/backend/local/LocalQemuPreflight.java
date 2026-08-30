@@ -33,12 +33,22 @@ public final class LocalQemuPreflight {
         if (bootRequest.hasAttachedDisc()) {
             requireIso(bootRequest.attachedIsoPath());
         }
+        if (bootRequest.hasBootFloppy()) {
+            requireBootFloppy(bootRequest.bootFloppyPath());
+        }
     }
 
     private static void requireIso(String isoPathValue) {
         Path isoPath = Path.of(isoPathValue);
         if (!Files.isRegularFile(isoPath)) {
             throw new IllegalStateException("System disc ISO does not exist: " + isoPath);
+        }
+    }
+
+    private static void requireBootFloppy(String bootFloppyPathValue) {
+        Path bootFloppyPath = Path.of(bootFloppyPathValue);
+        if (!Files.isRegularFile(bootFloppyPath)) {
+            throw new IllegalStateException("Boot floppy image does not exist: " + bootFloppyPath);
         }
     }
 

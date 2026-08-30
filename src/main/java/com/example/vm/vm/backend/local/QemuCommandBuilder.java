@@ -73,8 +73,11 @@ public final class QemuCommandBuilder {
 
         if (bootRequest.bootDevice() == VirtualMachineBootDevice.SYSTEM_DISC) {
             addSystemDiscArgs(command, descriptor, bootRequest);
+            if (bootRequest.hasBootFloppy()) {
+                addBootFloppyArgs(command, bootRequest.bootFloppyPath());
+            }
             command.add("-boot");
-            command.add("order=d");
+            command.add(bootRequest.hasBootFloppy() ? "order=a" : "order=d");
         } else {
             if (bootRequest.hasAttachedDisc()) {
                 addAttachedSystemDiscArgs(command, descriptor, bootRequest);
@@ -197,6 +200,11 @@ public final class QemuCommandBuilder {
 
     private void addAttachedSystemDiscArgs(List<String> command, VirtualMachineDescriptor descriptor, VirtualMachineBootRequest bootRequest) {
         addSystemDiscArgs(command, descriptor, bootRequest.attachedIsoPath(), false);
+    }
+
+    private void addBootFloppyArgs(List<String> command, String bootFloppyPath) {
+        command.add("-fda");
+        command.add(bootFloppyPath);
     }
 
     private void addSystemDiscArgs(List<String> command, VirtualMachineDescriptor descriptor, String isoPath, boolean bootable) {

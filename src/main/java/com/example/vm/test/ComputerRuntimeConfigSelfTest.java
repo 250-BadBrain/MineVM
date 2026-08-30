@@ -26,6 +26,8 @@ public final class ComputerRuntimeConfigSelfTest {
         assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.WINDOWS_XP), "");
         assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.WINDOWS_10), "");
         assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.WINDOWS_11), "");
+        assertEquals(ComputerRuntimeConfig.bootFloppyPathFor(GuestOperatingSystem.WINDOWS_95), "");
+        assertEquals(ComputerRuntimeConfig.bootFloppyPathFor(GuestOperatingSystem.WINDOWS_XP), "");
     }
 
     private static void assertDefaultBackendIsSafe() {
