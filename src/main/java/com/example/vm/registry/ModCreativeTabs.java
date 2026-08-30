@@ -26,6 +26,8 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.LAPTOP_COMPUTER.get());
                         output.accept(ModItems.UBUNTU_SERVER_DISC.get());
                         output.accept(ModItems.UBUNTU_DESKTOP_DISC.get());
+                        output.accept(ModItems.FREEDOS_DISC.get());
+                        output.accept(ModItems.WINDOWS_95_DISC.get());
                         output.accept(ModItems.WINDOWS_XP_DISC.get());
                         output.accept(ModItems.WINDOWS_10_DISC.get());
                         output.accept(ModItems.WINDOWS_11_DISC.get());

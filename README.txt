@@ -8,7 +8,7 @@ MineVM is a Minecraft Forge 1.20.1 mod that embeds real QEMU virtual machines in
 - In-world BIOS for booting installed disks or inserted system discs.
 - Local QEMU backend with per-computer disks and managed VM state.
 - VNC-based display, keyboard input, mouse input, cursor rendering, power control, and disc eject behavior.
-- Tested guest paths for Ubuntu Server, Ubuntu Desktop, and Windows XP. Windows 10/11 discs are exposed for ongoing compatibility work.
+- Tested guest paths for Ubuntu Server, Ubuntu Desktop, Windows XP, and FreeDOS. Windows 95 is available for compatibility testing. Windows 10/11 discs are exposed for ongoing compatibility work.
 
 ## Build
 
@@ -21,7 +21,7 @@ Run:
 The release jar is written to:
 
 ```text
-build\libs\minevm-1.0.0.jar
+build\libs\minevm-1.1.0-dev.jar
 ```
 
 Drop the jar into a Forge 1.20.1 `mods` folder. Runtime tools such as QEMU are configured outside the jar through the generated MineVM config file.

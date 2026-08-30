@@ -22,6 +22,20 @@ public final class SystemDiscItemSelfTest {
         assertEquals(ubuntuDesktopDisc.guestOperatingSystem(), GuestOperatingSystem.UBUNTU_DESKTOP);
         assertEquals(ubuntuDesktopDisc.displayNameKey(), "item.minevm.ubuntu_desktop_disc");
 
+        SystemDiscDefinition freeDosDisc = new SystemDiscDefinition(
+                GuestOperatingSystem.FREEDOS,
+                "item.minevm.freedos_disc"
+        );
+        assertEquals(freeDosDisc.guestOperatingSystem(), GuestOperatingSystem.FREEDOS);
+        assertEquals(freeDosDisc.displayNameKey(), "item.minevm.freedos_disc");
+
+        SystemDiscDefinition windows95Disc = new SystemDiscDefinition(
+                GuestOperatingSystem.WINDOWS_95,
+                "item.minevm.windows_95_disc"
+        );
+        assertEquals(windows95Disc.guestOperatingSystem(), GuestOperatingSystem.WINDOWS_95);
+        assertEquals(windows95Disc.displayNameKey(), "item.minevm.windows_95_disc");
+
         SystemDiscDefinition windows10Disc = new SystemDiscDefinition(
                 GuestOperatingSystem.WINDOWS_10,
                 "item.minevm.windows_10_disc"

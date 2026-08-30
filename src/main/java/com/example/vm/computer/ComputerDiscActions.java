@@ -76,6 +76,8 @@ public final class ComputerDiscActions {
 
     private static Item discItemFor(GuestOperatingSystem guestOperatingSystem) {
         return switch (guestOperatingSystem) {
+            case FREEDOS -> ModItems.FREEDOS_DISC.get();
+            case WINDOWS_95 -> ModItems.WINDOWS_95_DISC.get();
             case WINDOWS_XP -> ModItems.WINDOWS_XP_DISC.get();
             case WINDOWS_10 -> ModItems.WINDOWS_10_DISC.get();
             case WINDOWS_11 -> ModItems.WINDOWS_11_DISC.get();

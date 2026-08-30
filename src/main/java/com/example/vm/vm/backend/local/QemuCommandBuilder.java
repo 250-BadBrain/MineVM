@@ -61,7 +61,7 @@ public final class QemuCommandBuilder {
         }
         addCpuArgs(command, descriptor);
         command.add("-m");
-        command.add(Integer.toString(descriptor.memoryMb()));
+        command.add(Integer.toString(effectiveMemoryMb(descriptor)));
         command.add("-smp");
         command.add(Integer.toString(effectiveCpuCores(descriptor)));
         addFirmwareArgs(command, descriptor);
@@ -100,7 +100,7 @@ public final class QemuCommandBuilder {
 
     private void addCpuArgs(List<String> command, VirtualMachineDescriptor descriptor) {
         switch (descriptor.guestOperatingSystem()) {
-            case WINDOWS_XP -> {
+            case FREEDOS, WINDOWS_95, WINDOWS_XP -> {
                 command.add("-cpu");
                 command.add("qemu32");
             }
@@ -115,6 +115,7 @@ public final class QemuCommandBuilder {
 
     private int effectiveCpuCores(VirtualMachineDescriptor descriptor) {
         return switch (descriptor.guestOperatingSystem()) {
+            case FREEDOS, WINDOWS_95 -> 1;
             case WINDOWS_XP -> Math.min(descriptor.cpuCores(), 2);
             case WINDOWS_10, WINDOWS_11 -> Math.min(descriptor.cpuCores(), 2);
             case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> descriptor.cpuCores();
@@ -123,7 +124,7 @@ public final class QemuCommandBuilder {
 
     private String accelerator(VirtualMachineDescriptor descriptor) {
         return switch (descriptor.guestOperatingSystem()) {
-            case WINDOWS_XP -> "tcg,thread=multi";
+            case FREEDOS, WINDOWS_95, WINDOWS_XP -> "tcg,thread=multi";
             case WINDOWS_10, WINDOWS_11 -> "tcg,thread=multi";
             case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> configuration.accelerator();
         };
@@ -131,14 +132,20 @@ public final class QemuCommandBuilder {
 
     private String vgaDevice(VirtualMachineDescriptor descriptor) {
         return switch (descriptor.guestOperatingSystem()) {
-            case WINDOWS_XP -> "cirrus";
+            case FREEDOS -> "std";
+            case WINDOWS_95, WINDOWS_XP -> "cirrus";
             case WINDOWS_10, WINDOWS_11 -> "std";
             case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> "virtio";
         };
     }
 
     private void addInputDeviceArgs(List<String> command, VirtualMachineDescriptor descriptor) {
-        if (descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_XP) {
+        if (descriptor.guestOperatingSystem() == GuestOperatingSystem.FREEDOS) {
+            return;
+        }
+
+        if (descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_95
+                || descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_XP) {
             command.add("-usb");
             command.add("-device");
             command.add("usb-tablet");
@@ -158,14 +165,14 @@ public final class QemuCommandBuilder {
 
     private String networkModel(VirtualMachineDescriptor descriptor) {
         return switch (descriptor.guestOperatingSystem()) {
-            case WINDOWS_XP -> "rtl8139";
+            case FREEDOS, WINDOWS_95, WINDOWS_XP -> "rtl8139";
             case WINDOWS_10, WINDOWS_11 -> "e1000e";
             case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> "virtio-net-pci";
         };
     }
 
     private void addDiskArgs(List<String> command, VirtualMachineDescriptor descriptor, VirtualMachineBootDevice bootDevice) {
-        if (descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_XP) {
+        if (usesLegacyIdeStorage(descriptor)) {
             command.add("-drive");
             command.add("file=" + diskPath(descriptor) + ",format=qcow2,if=ide,index=0,media=disk,id=" + VM_DISK_DEVICE_ID);
             return;
@@ -193,7 +200,7 @@ public final class QemuCommandBuilder {
     }
 
     private void addSystemDiscArgs(List<String> command, VirtualMachineDescriptor descriptor, String isoPath, boolean bootable) {
-        if (descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_XP) {
+        if (usesLegacyIdeStorage(descriptor)) {
             command.add("-drive");
             command.add("file=" + isoPath + ",media=cdrom,readonly=on,if=ide,index=2,id=" + SYSTEM_DISC_DEVICE_ID);
             return;
@@ -210,6 +217,19 @@ public final class QemuCommandBuilder {
         command.add("-device");
         String bootIndex = bootable ? ",bootindex=1" : "";
         command.add("ide-cd,bus=sata.0,drive=" + SYSTEM_DISC_DEVICE_ID + bootIndex);
+    }
+
+    private boolean usesLegacyIdeStorage(VirtualMachineDescriptor descriptor) {
+        return descriptor.guestOperatingSystem() == GuestOperatingSystem.FREEDOS
+                || descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_95
+                || descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_XP;
+    }
+
+    private int effectiveMemoryMb(VirtualMachineDescriptor descriptor) {
+        if (descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_95) {
+            return Math.min(descriptor.memoryMb(), 256);
+        }
+        return descriptor.memoryMb();
     }
 
     private void addFirmwareArgs(List<String> command, VirtualMachineDescriptor descriptor) {

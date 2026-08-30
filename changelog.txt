@@ -1,5 +1,10 @@
 # MineVM Changelog
 
+## Unreleased
+
+- Added a FreeDOS system disc, `freedosIsoPath` runtime configuration, and a BIOS/IDE QEMU profile for FreeDOS installation and boot testing.
+- Added a Windows 95 system disc, `windows95IsoPath` runtime configuration, and a capped low-memory BIOS/IDE QEMU profile for Windows 95 testing.
+
 ## 1.0.0
 
 - Renamed the project, mod id, resource namespace, and release artifact to MineVM.

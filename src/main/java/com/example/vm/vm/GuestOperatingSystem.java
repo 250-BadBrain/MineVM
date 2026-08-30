@@ -6,14 +6,16 @@ public enum GuestOperatingSystem {
     UBUNTU_SERVER,
     UBUNTU_DESKTOP,
     LINUX,
+    FREEDOS,
+    WINDOWS_95,
     WINDOWS_XP,
     WINDOWS_10,
     WINDOWS_11;
 
     public boolean usesGraphicalPointer() {
         return switch (this) {
-            case UBUNTU_DESKTOP, WINDOWS_XP, WINDOWS_10, WINDOWS_11 -> true;
-            case UBUNTU_SERVER, LINUX -> false;
+            case UBUNTU_DESKTOP, WINDOWS_95, WINDOWS_XP, WINDOWS_10, WINDOWS_11 -> true;
+            case UBUNTU_SERVER, LINUX, FREEDOS -> false;
         };
     }
 

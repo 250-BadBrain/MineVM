@@ -8,6 +8,8 @@ public record FirmwareConfiguration(
 ) {
     public static FirmwareConfiguration forGuest(GuestOperatingSystem guestOperatingSystem) {
         return switch (guestOperatingSystem) {
+            case FREEDOS -> new FirmwareConfiguration(false, false, false, false);
+            case WINDOWS_95 -> new FirmwareConfiguration(false, false, false, false);
             case WINDOWS_XP -> new FirmwareConfiguration(false, false, false, false);
             case WINDOWS_10 -> new FirmwareConfiguration(true, false, false, true);
             case WINDOWS_11 -> new FirmwareConfiguration(true, true, true, true);

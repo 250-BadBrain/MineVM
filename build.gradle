@@ -1081,8 +1081,8 @@ tasks.register('verifyPhase10WindowsProfileFoundation') {
         }
 
         def configText = file('src/main/java/com/example/vm/config/ComputerRuntimeConfig.java').text
-        if (!configText.contains('DEFAULT_GUEST_OPERATING_SYSTEM = "UBUNTU_SERVER"') || !configText.contains('UBUNTU_DESKTOP') || !configText.contains('guestOperatingSystem')) {
-            throw new GradleException('Guest OS profile must default to Ubuntu Server, support Ubuntu Desktop, and be configurable.')
+        if (!configText.contains('DEFAULT_GUEST_OPERATING_SYSTEM = "UBUNTU_SERVER"') || !configText.contains('UBUNTU_DESKTOP') || !configText.contains('FREEDOS') || !configText.contains('WINDOWS_95') || !configText.contains('guestOperatingSystem')) {
+            throw new GradleException('Guest OS profile must default to Ubuntu Server, support Ubuntu Desktop, FreeDOS, and Windows 95, and be configurable.')
         }
 
         def descriptorText = file('src/main/java/com/example/vm/vm/VirtualMachineDescriptor.java').text
@@ -1139,6 +1139,8 @@ tasks.register('verifySystemDiscInstallationFoundation') {
                 'src/main/java/com/example/vm/test/SystemDiscItemSelfTest.java',
                 'src/main/resources/assets/minevm/models/item/ubuntu_server_disc.json',
                 'src/main/resources/assets/minevm/models/item/ubuntu_desktop_disc.json',
+                'src/main/resources/assets/minevm/models/item/freedos_disc.json',
+                'src/main/resources/assets/minevm/models/item/windows_95_disc.json',
                 'src/main/resources/assets/minevm/models/item/windows_xp_disc.json',
                 'src/main/resources/assets/minevm/models/item/windows_10_disc.json',
                 'src/main/resources/assets/minevm/models/item/windows_11_disc.json',
@@ -1154,7 +1156,7 @@ tasks.register('verifySystemDiscInstallationFoundation') {
         }
 
         def itemsText = file('src/main/java/com/example/vm/registry/ModItems.java').text
-        ['UBUNTU_SERVER_DISC', 'UBUNTU_DESKTOP_DISC', 'WINDOWS_XP_DISC', 'WINDOWS_10_DISC', 'WINDOWS_11_DISC'].each { registryName ->
+        ['UBUNTU_SERVER_DISC', 'UBUNTU_DESKTOP_DISC', 'FREEDOS_DISC', 'WINDOWS_95_DISC', 'WINDOWS_XP_DISC', 'WINDOWS_10_DISC', 'WINDOWS_11_DISC'].each { registryName ->
             if (!itemsText.contains(registryName)) {
                 throw new GradleException("Missing system disc registry object ${registryName}.")
             }
@@ -1183,7 +1185,7 @@ tasks.register('verifySystemDiscInstallationFoundation') {
         }
 
         def langText = file('src/main/resources/assets/minevm/lang/en_us.json').text
-        ['Ubuntu Server Disc', 'Ubuntu Desktop Disc', 'Windows XP Disc', 'Windows 10 Disc', 'Windows 11 Disc'].each { text ->
+        ['Ubuntu Server Disc', 'Ubuntu Desktop Disc', 'FreeDOS Disc', 'Windows 95 Disc', 'Windows XP Disc', 'Windows 10 Disc', 'Windows 11 Disc'].each { text ->
             if (!langText.contains(text)) {
                 throw new GradleException("Missing disc language entry ${text}.")
             }
@@ -1195,12 +1197,14 @@ tasks.register('verifySystemDiscInstallationFoundation') {
             include 'com/example/vm/item/SystemDiscDefinition.class'
             include 'assets/minevm/models/item/ubuntu_server_disc.json'
             include 'assets/minevm/models/item/ubuntu_desktop_disc.json'
+            include 'assets/minevm/models/item/freedos_disc.json'
+            include 'assets/minevm/models/item/windows_95_disc.json'
             include 'assets/minevm/models/item/windows_xp_disc.json'
             include 'assets/minevm/models/item/windows_10_disc.json'
             include 'assets/minevm/models/item/windows_11_disc.json'
         }.files*.path
 
-        if (jarEntries.size() != 7) {
+        if (jarEntries.size() != 9) {
             throw new GradleException("System disc foundation jar verification failed for ${jarFile}")
         }
     }
@@ -1496,7 +1500,7 @@ tasks.register('verifyBiosMenuFoundation') {
         }
 
         def configText = file('src/main/java/com/example/vm/config/ComputerRuntimeConfig.java').text
-        ['ubuntuServerIsoPath', 'ubuntuDesktopIsoPath', 'windowsXpIsoPath', 'windows10IsoPath', 'windows11IsoPath', 'isoPathFor'].each { marker ->
+        ['ubuntuServerIsoPath', 'ubuntuDesktopIsoPath', 'freedosIsoPath', 'windows95IsoPath', 'windowsXpIsoPath', 'windows10IsoPath', 'windows11IsoPath', 'isoPathFor'].each { marker ->
             if (!configText.contains(marker)) {
                 throw new GradleException("ComputerRuntimeConfig missing per-disc ISO marker ${marker}.")
             }

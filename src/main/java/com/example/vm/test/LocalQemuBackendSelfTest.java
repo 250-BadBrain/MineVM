@@ -39,6 +39,8 @@ public final class LocalQemuBackendSelfTest {
         assertCreateDiskCommand(builder.createDiskCommand(descriptor));
         assertDiscStartCommand(builder.startCommand(descriptor, VirtualMachineBootRequest.systemDisc("computer-test", "E:\\Downloads\\ubuntu-22.04.5-live-server-amd64.iso")));
         assertDiskStartCommand(builder.startCommand(descriptor));
+        assertFreeDosCommand(builder);
+        assertWindows95Command(builder);
         assertWindowsXpCommand(builder);
         assertWindows10Command(builder);
         assertWindows11Command(builder);
@@ -159,6 +161,82 @@ public final class LocalQemuBackendSelfTest {
 
         List<String> secondStageCommand = builder.startCommand(descriptor, VirtualMachineBootRequest.vmDiskWithAttachedDisc("computer-windows-xp", "E:\\Downloads\\WinXP.iso"));
         assertContains(secondStageCommand, "file=E:\\Downloads\\WinXP.iso,media=cdrom,readonly=on,if=ide,index=2,id=system_disc");
+        assertContains(secondStageCommand, "-boot");
+        assertContains(secondStageCommand, "order=c");
+    }
+
+    private static void assertWindows95Command(QemuCommandBuilder builder) {
+        VirtualMachineDescriptor descriptor = new VirtualMachineDescriptor(
+                "computer-windows-95",
+                4,
+                1024,
+                "computer-windows-95.qcow2",
+                2,
+                GuestOperatingSystem.WINDOWS_95,
+                FirmwareConfiguration.forGuest(GuestOperatingSystem.WINDOWS_95)
+        );
+        List<String> command = builder.startCommand(descriptor);
+        assertNotContains(command, "-machine");
+        assertContains(command, "-accel");
+        assertContains(command, "tcg,thread=multi");
+        assertContains(command, "-cpu");
+        assertContains(command, "qemu32");
+        assertValueAfter(command, "-m", "256");
+        assertValueAfter(command, "-smp", "1");
+        assertContains(command, "file=E:\\MinecraftVMs\\computer-windows-95\\computer-windows-95.qcow2,format=qcow2,if=ide,index=0,media=disk,id=vm_disk");
+        assertContains(command, "-vga");
+        assertContains(command, "cirrus");
+        assertContains(command, "-usb");
+        assertContains(command, "usb-tablet");
+        assertContains(command, "-nic");
+        assertContains(command, "user,model=rtl8139");
+        assertNotContains(command, "qemu-xhci,id=usb_bus");
+        assertNotContains(command, "virtio");
+
+        List<String> discCommand = builder.startCommand(descriptor, VirtualMachineBootRequest.systemDisc("computer-windows-95", "E:\\Downloads\\Win95.iso"));
+        assertContains(discCommand, "file=E:\\Downloads\\Win95.iso,media=cdrom,readonly=on,if=ide,index=2,id=system_disc");
+        assertContains(discCommand, "-boot");
+        assertContains(discCommand, "order=d");
+
+        List<String> secondStageCommand = builder.startCommand(descriptor, VirtualMachineBootRequest.vmDiskWithAttachedDisc("computer-windows-95", "E:\\Downloads\\Win95.iso"));
+        assertContains(secondStageCommand, "file=E:\\Downloads\\Win95.iso,media=cdrom,readonly=on,if=ide,index=2,id=system_disc");
+        assertContains(secondStageCommand, "-boot");
+        assertContains(secondStageCommand, "order=c");
+    }
+
+    private static void assertFreeDosCommand(QemuCommandBuilder builder) {
+        VirtualMachineDescriptor descriptor = new VirtualMachineDescriptor(
+                "computer-freedos",
+                4,
+                512,
+                "computer-freedos.qcow2",
+                1,
+                GuestOperatingSystem.FREEDOS,
+                FirmwareConfiguration.forGuest(GuestOperatingSystem.FREEDOS)
+        );
+        List<String> command = builder.startCommand(descriptor);
+        assertNotContains(command, "-machine");
+        assertContains(command, "-accel");
+        assertContains(command, "tcg,thread=multi");
+        assertContains(command, "-cpu");
+        assertContains(command, "qemu32");
+        assertValueAfter(command, "-smp", "1");
+        assertContains(command, "file=E:\\MinecraftVMs\\computer-freedos\\computer-freedos.qcow2,format=qcow2,if=ide,index=0,media=disk,id=vm_disk");
+        assertContains(command, "-vga");
+        assertContains(command, "std");
+        assertContains(command, "-nic");
+        assertContains(command, "user,model=rtl8139");
+        assertNotContains(command, "usb-tablet");
+        assertNotContains(command, "qemu-xhci,id=usb_bus");
+        assertNotContains(command, "virtio");
+
+        List<String> discCommand = builder.startCommand(descriptor, VirtualMachineBootRequest.systemDisc("computer-freedos", "E:\\Downloads\\FD14LIVE.iso"));
+        assertContains(discCommand, "file=E:\\Downloads\\FD14LIVE.iso,media=cdrom,readonly=on,if=ide,index=2,id=system_disc");
+        assertContains(discCommand, "-boot");
+        assertContains(discCommand, "order=d");
+
+        List<String> secondStageCommand = builder.startCommand(descriptor, VirtualMachineBootRequest.vmDiskWithAttachedDisc("computer-freedos", "E:\\Downloads\\FD14LIVE.iso"));
+        assertContains(secondStageCommand, "file=E:\\Downloads\\FD14LIVE.iso,media=cdrom,readonly=on,if=ide,index=2,id=system_disc");
         assertContains(secondStageCommand, "-boot");
         assertContains(secondStageCommand, "order=c");
     }

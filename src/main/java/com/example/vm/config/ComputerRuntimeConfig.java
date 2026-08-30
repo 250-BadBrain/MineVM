@@ -23,11 +23,15 @@ public final class ComputerRuntimeConfig {
     public static final String DEFAULT_ACCELERATOR = "whpx";
     public static final int DEFAULT_DISK_SIZE_GB = 20;
     public static final int DEFAULT_UBUNTU_DESKTOP_DISK_SIZE_GB = 25;
+    public static final int DEFAULT_FREEDOS_DISK_SIZE_GB = 1;
+    public static final int DEFAULT_WINDOWS_95_DISK_SIZE_GB = 2;
     public static final int DEFAULT_WINDOWS_XP_DISK_SIZE_GB = 10;
     public static final int DEFAULT_WINDOWS_DISK_SIZE_GB = 64;
     public static final String DEFAULT_ISO_PATH = "";
     public static final String DEFAULT_UBUNTU_SERVER_ISO_PATH = "";
     public static final String DEFAULT_UBUNTU_DESKTOP_ISO_PATH = "";
+    public static final String DEFAULT_FREEDOS_ISO_PATH = "";
+    public static final String DEFAULT_WINDOWS_95_ISO_PATH = "";
     public static final String DEFAULT_WINDOWS_XP_ISO_PATH = "";
     public static final String DEFAULT_WINDOWS_10_ISO_PATH = "";
     public static final String DEFAULT_WINDOWS_11_ISO_PATH = "";
@@ -42,6 +46,8 @@ public final class ComputerRuntimeConfig {
     private static final ForgeConfigSpec.ConfigValue<String> ISO_PATH;
     private static final ForgeConfigSpec.ConfigValue<String> UBUNTU_SERVER_ISO_PATH;
     private static final ForgeConfigSpec.ConfigValue<String> UBUNTU_DESKTOP_ISO_PATH;
+    private static final ForgeConfigSpec.ConfigValue<String> FREEDOS_ISO_PATH;
+    private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_95_ISO_PATH;
     private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_XP_ISO_PATH;
     private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_10_ISO_PATH;
     private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_11_ISO_PATH;
@@ -78,6 +84,12 @@ public final class ComputerRuntimeConfig {
         UBUNTU_DESKTOP_ISO_PATH = builder
                 .comment("ISO path used when booting an inserted Ubuntu Desktop system disc.")
                 .define("ubuntuDesktopIsoPath", DEFAULT_UBUNTU_DESKTOP_ISO_PATH);
+        FREEDOS_ISO_PATH = builder
+                .comment("ISO path used when booting an inserted FreeDOS system disc.")
+                .define("freedosIsoPath", DEFAULT_FREEDOS_ISO_PATH);
+        WINDOWS_95_ISO_PATH = builder
+                .comment("ISO path used when booting an inserted Windows 95 system disc.")
+                .define("windows95IsoPath", DEFAULT_WINDOWS_95_ISO_PATH);
         WINDOWS_XP_ISO_PATH = builder
                 .comment("ISO path used when booting an inserted Windows XP system disc.")
                 .define("windowsXpIsoPath", DEFAULT_WINDOWS_XP_ISO_PATH);
@@ -88,7 +100,7 @@ public final class ComputerRuntimeConfig {
                 .comment("ISO path used when booting an inserted Windows 11 system disc.")
                 .define("windows11IsoPath", DEFAULT_WINDOWS_11_ISO_PATH);
         GUEST_OPERATING_SYSTEM = builder
-                .comment("Guest OS profile: UBUNTU_SERVER, UBUNTU_DESKTOP, WINDOWS_XP, WINDOWS_10, or WINDOWS_11. Legacy LINUX maps to UBUNTU_SERVER.")
+                .comment("Guest OS profile: UBUNTU_SERVER, UBUNTU_DESKTOP, FREEDOS, WINDOWS_95, WINDOWS_XP, WINDOWS_10, or WINDOWS_11. Legacy LINUX maps to UBUNTU_SERVER.")
                 .define("guestOperatingSystem", DEFAULT_GUEST_OPERATING_SYSTEM);
 
         builder.pop();
@@ -149,14 +161,24 @@ public final class ComputerRuntimeConfig {
                 configuration.cpuCores(),
                 configuration.memoryMb(),
                 configuration.diskFile(),
-                Math.max(valueOrDefault(DISK_SIZE_GB, DEFAULT_DISK_SIZE_GB), minimumDiskSizeGb(guestOperatingSystem)),
+                diskSizeGbFor(guestOperatingSystem),
                 guestOperatingSystem,
                 FirmwareConfiguration.forGuest(guestOperatingSystem)
         );
     }
 
+    private static int diskSizeGbFor(GuestOperatingSystem guestOperatingSystem) {
+        int requestedDiskSizeGb = Math.max(valueOrDefault(DISK_SIZE_GB, DEFAULT_DISK_SIZE_GB), minimumDiskSizeGb(guestOperatingSystem));
+        if (guestOperatingSystem == GuestOperatingSystem.WINDOWS_95) {
+            return Math.min(requestedDiskSizeGb, DEFAULT_WINDOWS_95_DISK_SIZE_GB);
+        }
+        return requestedDiskSizeGb;
+    }
+
     public static int minimumDiskSizeGb(GuestOperatingSystem guestOperatingSystem) {
         return switch (guestOperatingSystem) {
+            case FREEDOS -> DEFAULT_FREEDOS_DISK_SIZE_GB;
+            case WINDOWS_95 -> DEFAULT_WINDOWS_95_DISK_SIZE_GB;
             case UBUNTU_DESKTOP -> DEFAULT_UBUNTU_DESKTOP_DISK_SIZE_GB;
             case WINDOWS_XP -> DEFAULT_WINDOWS_XP_DISK_SIZE_GB;
             case WINDOWS_10, WINDOWS_11 -> DEFAULT_WINDOWS_DISK_SIZE_GB;
@@ -183,6 +205,8 @@ public final class ComputerRuntimeConfig {
 
     public static String isoPathFor(GuestOperatingSystem guestOperatingSystem) {
         String isoPath = switch (guestOperatingSystem) {
+            case FREEDOS -> valueOrDefault(FREEDOS_ISO_PATH, DEFAULT_FREEDOS_ISO_PATH);
+            case WINDOWS_95 -> valueOrDefault(WINDOWS_95_ISO_PATH, DEFAULT_WINDOWS_95_ISO_PATH);
             case WINDOWS_XP -> valueOrDefault(WINDOWS_XP_ISO_PATH, DEFAULT_WINDOWS_XP_ISO_PATH);
             case WINDOWS_10 -> valueOrDefault(WINDOWS_10_ISO_PATH, DEFAULT_WINDOWS_10_ISO_PATH);
             case WINDOWS_11 -> valueOrDefault(WINDOWS_11_ISO_PATH, DEFAULT_WINDOWS_11_ISO_PATH);

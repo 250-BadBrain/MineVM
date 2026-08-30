@@ -54,6 +54,20 @@ public final class ModItems {
                     new Item.Properties().stacksTo(1)
             ));
 
+    public static final RegistryObject<Item> FREEDOS_DISC =
+            ITEMS.register("freedos_disc", () -> new SystemDiscItem(
+                    GuestOperatingSystem.FREEDOS,
+                    "item.minevm.freedos_disc",
+                    new Item.Properties().stacksTo(1)
+            ));
+
+    public static final RegistryObject<Item> WINDOWS_95_DISC =
+            ITEMS.register("windows_95_disc", () -> new SystemDiscItem(
+                    GuestOperatingSystem.WINDOWS_95,
+                    "item.minevm.windows_95_disc",
+                    new Item.Properties().stacksTo(1)
+            ));
+
     public static final RegistryObject<Item> WINDOWS_10_DISC =
             ITEMS.register("windows_10_disc", () -> new SystemDiscItem(
                     GuestOperatingSystem.WINDOWS_10,

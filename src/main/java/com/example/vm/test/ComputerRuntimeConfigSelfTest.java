@@ -21,6 +21,8 @@ public final class ComputerRuntimeConfigSelfTest {
         assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.UBUNTU_SERVER), "");
         assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.LINUX), "");
         assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.UBUNTU_DESKTOP), "");
+        assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.FREEDOS), "");
+        assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.WINDOWS_95), "");
         assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.WINDOWS_XP), "");
         assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.WINDOWS_10), "");
         assertEquals(ComputerRuntimeConfig.isoPathFor(GuestOperatingSystem.WINDOWS_11), "");
@@ -58,6 +60,20 @@ public final class ComputerRuntimeConfigSelfTest {
         assertEquals(windowsXpDescriptor.diskSizeGb(), 20);
         if (windowsXpDescriptor.firmwareConfiguration().requiresUefi()) {
             throw new AssertionError("Windows XP profile must use legacy BIOS");
+        }
+
+        ComputerHardwareConfiguration lowDiskConfiguration = new ComputerHardwareConfiguration(1, 512, "computer-dos.qcow2");
+        VirtualMachineDescriptor freeDosDescriptor = ComputerRuntimeConfig.descriptor("computer-dos", lowDiskConfiguration, GuestOperatingSystem.FREEDOS);
+        assertEquals(ComputerRuntimeConfig.minimumDiskSizeGb(GuestOperatingSystem.FREEDOS), 1);
+        assertEquals(freeDosDescriptor.diskSizeGb(), 20);
+        if (freeDosDescriptor.firmwareConfiguration().requiresUefi() || freeDosDescriptor.firmwareConfiguration().prefersVirtio()) {
+            throw new AssertionError("FreeDOS profile must use legacy BIOS and IDE-compatible devices");
+        }
+
+        VirtualMachineDescriptor windows95Descriptor = ComputerRuntimeConfig.descriptor("computer-win95", configuration, GuestOperatingSystem.WINDOWS_95);
+        assertEquals(windows95Descriptor.diskSizeGb(), 2);
+        if (windows95Descriptor.firmwareConfiguration().requiresUefi() || windows95Descriptor.firmwareConfiguration().prefersVirtio()) {
+            throw new AssertionError("Windows 95 profile must use legacy BIOS and IDE-compatible devices");
         }
 
         VirtualMachineDescriptor windows10Descriptor = ComputerRuntimeConfig.descriptor("computer-windows", configuration, GuestOperatingSystem.WINDOWS_10);
