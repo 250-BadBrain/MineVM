@@ -21,7 +21,7 @@ Run:
 The release jar is written to:
 
 ```text
-build\libs\minevm-1.0.0.jar
+build\libs\minevm-0.9.0-dev.jar
 ```
 
 Drop the jar into a Forge 1.20.1 `mods` folder. Runtime tools such as QEMU are configured outside the jar through the generated MineVM config file.

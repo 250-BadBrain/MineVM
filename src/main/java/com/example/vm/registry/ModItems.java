@@ -17,13 +17,13 @@ public final class ModItems {
             DeferredRegister.create(ForgeRegistries.ITEMS, MineVM.MOD_ID);
 
     public static final RegistryObject<Item> COMPUTER_BLOCK_ITEM =
-            ITEMS.register("computer_block", () -> new BlockItem(ModBlocks.COMPUTER_BLOCK.get(), new Item.Properties()));
+            ITEMS.register("computer_block", () -> new BlockItem(ModBlocks.COMPUTER_BLOCK.get(), new Item.Properties().stacksTo(1)));
 
     public static final RegistryObject<Item> DESKTOP_COMPUTER =
-            ITEMS.register("desktop_computer", () -> new BlockItem(ModBlocks.DESKTOP_COMPUTER.get(), new Item.Properties()));
+            ITEMS.register("desktop_computer", () -> new BlockItem(ModBlocks.DESKTOP_COMPUTER.get(), new Item.Properties().stacksTo(1)));
 
     public static final RegistryObject<Item> LAPTOP_COMPUTER =
-            ITEMS.register("laptop_computer", () -> new BlockItem(ModBlocks.LAPTOP_COMPUTER.get(), new Item.Properties()));
+            ITEMS.register("laptop_computer", () -> new BlockItem(ModBlocks.LAPTOP_COMPUTER.get(), new Item.Properties().stacksTo(1)));
 
     public static final RegistryObject<Item> COMPUTER_MONITOR =
             ITEMS.register("computer_monitor", () -> new BlockItem(ModBlocks.COMPUTER_MONITOR.get(), new Item.Properties()));

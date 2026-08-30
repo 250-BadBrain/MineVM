@@ -1,6 +1,6 @@
 # MineVM Changelog
 
-## 1.0.0
+## Unreleased
 
 - Renamed the project, mod id, resource namespace, and release artifact to MineVM.
 - Added stable in-world virtual computer hardware for Forge 1.20.1.
@@ -8,3 +8,4 @@
 - Added local QEMU VM lifecycle management, display streaming through VNC frame updates, keyboard input, mouse input, cursor rendering, and power/disc controls.
 - Added Ubuntu Server, Ubuntu Desktop, Windows XP, Windows 10, and Windows 11 disc items with per-disc ISO configuration.
 - Stabilized immersive control behavior, VM reconnect behavior, framebuffer refresh, laptop/monitor interaction, and display rendering.
+- Bound VM identity to the computer item NBT instead of the block coordinates, so replacing a fresh machine at the same position no longer inherits an old VM.

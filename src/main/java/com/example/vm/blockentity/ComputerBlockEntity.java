@@ -15,6 +15,7 @@ import java.util.UUID;
 import java.util.Optional;
 
 public class ComputerBlockEntity extends BlockEntity {
+    public static final String ITEM_TAG_COMPUTER = "MineVMComputer";
     private static final String TAG_COMPUTER_ID = "ComputerId";
     private static final String TAG_CPU_CORES = "CpuCores";
     private static final String TAG_MEMORY_MB = "MemoryMb";
@@ -54,6 +55,24 @@ public class ComputerBlockEntity extends BlockEntity {
 
     public ComputerHardwareConfiguration getHardwareConfiguration() {
         return hardwareConfiguration;
+    }
+
+    public void loadFromItemStack(net.minecraft.world.item.ItemStack stack) {
+        if (!stack.hasTag()) {
+            return;
+        }
+        CompoundTag computerTag = stack.getTag().getCompound(ITEM_TAG_COMPUTER);
+        if (computerTag.isEmpty()) {
+            return;
+        }
+        loadIdentity(computerTag);
+        markUpdated();
+    }
+
+    public net.minecraft.world.item.ItemStack saveToItemStack(net.minecraft.world.level.ItemLike item) {
+        net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(item);
+        stack.getOrCreateTag().put(ITEM_TAG_COMPUTER, saveIdentity());
+        return stack;
     }
 
     public Optional<GuestOperatingSystem> insertedDisc() {
@@ -222,17 +241,7 @@ public class ComputerBlockEntity extends BlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag);
 
-        if (tag.contains(TAG_COMPUTER_ID)) {
-            computerId = tag.getString(TAG_COMPUTER_ID);
-        }
-
-        int cpuCores = tag.contains(TAG_CPU_CORES) ? tag.getInt(TAG_CPU_CORES) : ComputerHardwareConfiguration.DEFAULT_CPU_CORES;
-        int memoryMb = tag.contains(TAG_MEMORY_MB) ? tag.getInt(TAG_MEMORY_MB) : ComputerHardwareConfiguration.DEFAULT_MEMORY_MB;
-        String diskFile = tag.contains(TAG_DISK_FILE) ? tag.getString(TAG_DISK_FILE) : computerId + ".qcow2";
-        hardwareConfiguration = new ComputerHardwareConfiguration(cpuCores, memoryMb, diskFile);
-        insertedDisc = tag.contains(TAG_INSERTED_DISC) ? GuestOperatingSystem.parse(tag.getString(TAG_INSERTED_DISC)) : null;
-        activeGuestOperatingSystem = tag.contains(TAG_ACTIVE_GUEST_OPERATING_SYSTEM) ? GuestOperatingSystem.parse(tag.getString(TAG_ACTIVE_GUEST_OPERATING_SYSTEM)) : null;
-        diskGuestOperatingSystem = tag.contains(TAG_DISK_GUEST_OPERATING_SYSTEM) ? GuestOperatingSystem.parse(tag.getString(TAG_DISK_GUEST_OPERATING_SYSTEM)) : null;
+        loadIdentity(tag);
         linkedMonitorPos = tag.contains(TAG_LINKED_MONITOR_POS) ? BlockPos.of(tag.getLong(TAG_LINKED_MONITOR_POS)) : null;
         keyboardConnected = tag.getBoolean(TAG_KEYBOARD_CONNECTED);
         mouseConnected = tag.getBoolean(TAG_MOUSE_CONNECTED);
@@ -264,6 +273,41 @@ public class ComputerBlockEntity extends BlockEntity {
         if (level != null) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         }
+    }
+
+    private CompoundTag saveIdentity() {
+        CompoundTag tag = new CompoundTag();
+        tag.putString(TAG_COMPUTER_ID, computerId);
+        tag.putInt(TAG_CPU_CORES, hardwareConfiguration.cpuCores());
+        tag.putInt(TAG_MEMORY_MB, hardwareConfiguration.memoryMb());
+        tag.putString(TAG_DISK_FILE, hardwareConfiguration.diskFile());
+        if (insertedDisc != null) {
+            tag.putString(TAG_INSERTED_DISC, insertedDisc.name());
+        }
+        if (activeGuestOperatingSystem != null) {
+            tag.putString(TAG_ACTIVE_GUEST_OPERATING_SYSTEM, activeGuestOperatingSystem.name());
+        }
+        if (diskGuestOperatingSystem != null) {
+            tag.putString(TAG_DISK_GUEST_OPERATING_SYSTEM, diskGuestOperatingSystem.name());
+        }
+        return tag;
+    }
+
+    private void loadIdentity(CompoundTag tag) {
+        if (tag.contains(TAG_COMPUTER_ID)) {
+            computerId = tag.getString(TAG_COMPUTER_ID);
+        }
+        if (computerId == null || computerId.isBlank()) {
+            computerId = createComputerId();
+        }
+
+        int cpuCores = tag.contains(TAG_CPU_CORES) ? tag.getInt(TAG_CPU_CORES) : ComputerHardwareConfiguration.DEFAULT_CPU_CORES;
+        int memoryMb = tag.contains(TAG_MEMORY_MB) ? tag.getInt(TAG_MEMORY_MB) : ComputerHardwareConfiguration.DEFAULT_MEMORY_MB;
+        String diskFile = tag.contains(TAG_DISK_FILE) ? tag.getString(TAG_DISK_FILE) : computerId + ".qcow2";
+        hardwareConfiguration = new ComputerHardwareConfiguration(cpuCores, memoryMb, diskFile);
+        insertedDisc = tag.contains(TAG_INSERTED_DISC) ? GuestOperatingSystem.parse(tag.getString(TAG_INSERTED_DISC)) : null;
+        activeGuestOperatingSystem = tag.contains(TAG_ACTIVE_GUEST_OPERATING_SYSTEM) ? GuestOperatingSystem.parse(tag.getString(TAG_ACTIVE_GUEST_OPERATING_SYSTEM)) : null;
+        diskGuestOperatingSystem = tag.contains(TAG_DISK_GUEST_OPERATING_SYSTEM) ? GuestOperatingSystem.parse(tag.getString(TAG_DISK_GUEST_OPERATING_SYSTEM)) : null;
     }
 
     private static String createComputerId() {

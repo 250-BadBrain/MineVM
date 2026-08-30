@@ -28,6 +28,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -46,8 +47,12 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletionException;
 
 public class ComputerBlock extends BaseEntityBlock {
@@ -111,13 +116,33 @@ public class ComputerBlock extends BaseEntityBlock {
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable net.minecraft.world.entity.LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (blockEntity instanceof ComputerBlockEntity computer) {
+            computer.loadFromItemStack(stack);
+        }
         if (formFactor == ComputerFormFactor.LAPTOP) {
             placeOccupancy(level, pos, ComputerFootprint.laptopOffsets(state.getValue(FACING)));
         }
     }
 
     @Override
+    public List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) {
+        BlockEntity blockEntity = builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
+        if (blockEntity instanceof ComputerBlockEntity computer) {
+            return List.of(computer.saveToItemStack((ItemLike) this));
+        }
+        return Collections.singletonList(new ItemStack(this));
+    }
+
+    @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+        if (!level.isClientSide && !state.is(newState.getBlock())) {
+            BlockEntity blockEntity = level.getBlockEntity(pos);
+            if (blockEntity instanceof ComputerBlockEntity computer) {
+                MineVM.SCREEN_SERVICE.stopVncReceiver(computer.getComputerId());
+                MineVM.VM_MANAGER.stop(computer.getComputerId());
+            }
+        }
         if (formFactor == ComputerFormFactor.LAPTOP && !state.is(newState.getBlock())) {
             removeOccupancy(level, pos, ComputerFootprint.laptopOffsets(state.getValue(FACING)));
         }
