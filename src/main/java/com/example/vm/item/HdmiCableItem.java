@@ -61,6 +61,7 @@ public class HdmiCableItem extends Item {
             computer.linkMonitor(context.getClickedPos());
             stack.removeTagKey(TAG_SOURCE_POS);
             stack.removeTagKey(TAG_SOURCE_ID);
+            consumeCable(context);
             context.getPlayer().sendSystemMessage(Component.literal("HDMI Cable | Linked case to monitor."));
             return InteractionResult.CONSUME;
         }
@@ -71,5 +72,11 @@ public class HdmiCableItem extends Item {
 
     private static boolean isComputerCase(Block block) {
         return block == ModBlocks.DESKTOP_COMPUTER.get() || block == ModBlocks.COMPUTER_BLOCK.get();
+    }
+
+    private static void consumeCable(UseOnContext context) {
+        if (!context.getPlayer().getAbilities().instabuild) {
+            context.getItemInHand().shrink(1);
+        }
     }
 }

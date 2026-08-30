@@ -76,8 +76,7 @@ public class ComputerBlock extends BaseEntityBlock {
     public ComputerBlock(ComputerFormFactor formFactor) {
         super(BlockBehaviour.Properties.of()
                 .mapColor(MapColor.METAL)
-                .strength(2.5F, 6.0F)
-                .requiresCorrectToolForDrops());
+                .strength(2.5F, 6.0F));
         this.formFactor = formFactor;
         registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
@@ -132,6 +131,15 @@ public class ComputerBlock extends BaseEntityBlock {
             return List.of(computer.saveToItemStack((ItemLike) this));
         }
         return Collections.singletonList(new ItemStack(this));
+    }
+
+    @Override
+    public ItemStack getCloneItemStack(BlockGetter level, BlockPos pos, BlockState state) {
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (blockEntity instanceof ComputerBlockEntity computer) {
+            return computer.saveToItemStack((ItemLike) this);
+        }
+        return super.getCloneItemStack(level, pos, state);
     }
 
     @Override

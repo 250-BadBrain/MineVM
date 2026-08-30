@@ -54,6 +54,7 @@ public class UsbCableItem extends Item {
             connectPeripheral(computer, selectedType);
             stack.removeTagKey(TAG_PERIPHERAL_POS);
             stack.removeTagKey(TAG_PERIPHERAL_TYPE);
+            consumeCable(context);
             context.getPlayer().sendSystemMessage(Component.literal("USB Cable | Connected " + selectedType + " to computer case."));
             return InteractionResult.CONSUME;
         }
@@ -67,6 +68,7 @@ public class UsbCableItem extends Item {
         }
 
         connectPeripheral(computer, fallbackType);
+        consumeCable(context);
         context.getPlayer().sendSystemMessage(Component.literal("USB Cable | Connected " + fallbackType + " to computer case."));
         return InteractionResult.SUCCESS;
     }
@@ -112,5 +114,11 @@ public class UsbCableItem extends Item {
 
     private static boolean isComputerCase(Block block) {
         return block == ModBlocks.DESKTOP_COMPUTER.get() || block == ModBlocks.COMPUTER_BLOCK.get();
+    }
+
+    private static void consumeCable(UseOnContext context) {
+        if (!context.getPlayer().getAbilities().instabuild) {
+            context.getItemInHand().shrink(1);
+        }
     }
 }
