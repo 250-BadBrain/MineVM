@@ -1,4 +1,4 @@
-﻿# Remove BIOS GUI Fallback Implementation Plan
+# Remove BIOS GUI Fallback Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -60,7 +60,7 @@
 - Delete: `src/main/java/com/example/vm/client/ComputerBiosClientStateHandler.java`
 - Delete: `src/main/java/com/example/vm/network/ComputerBiosStatePacket.java`
 - Delete: `src/main/java/com/example/vm/network/ComputerBiosStateRequestPacket.java`
-- Modify: `src/main/java/com/example/vm/ComputerInMinecraft.java`
+- Modify: `src/main/java/com/example/vm/MineVM.java`
 - Modify: `src/main/java/com/example/vm/client/ClientModEvents.java`
 - Modify: `src/main/java/com/example/vm/computer/ComputerBiosActions.java`
 
@@ -88,7 +88,7 @@
 ### Task 5: Laptop Screen Model
 
 **Files:**
-- Modify: `src/main/resources/assets/computer_in_minecraft/models/block/laptop_computer.json`
+- Modify: `src/main/resources/assets/minevm/models/block/laptop_computer.json`
 - Modify: `src/main/java/com/example/vm/client/ComputerScreenRenderer.java`
 
 **Interfaces:**

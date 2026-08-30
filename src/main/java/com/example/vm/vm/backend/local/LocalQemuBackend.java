@@ -1,6 +1,6 @@
 package com.example.vm.vm.backend.local;
 
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import com.example.vm.input.VirtualMachineInput;
 import com.example.vm.qmp.QmpClient;
 import com.example.vm.qmp.QmpCommand;
@@ -39,7 +39,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
     private final Map<String, ScheduledFuture<?>> qmpKeepAliveTasks = new ConcurrentHashMap<>();
     private final Map<String, Long> lastInputNanos = new ConcurrentHashMap<>();
     private final ScheduledExecutorService qmpKeepAliveExecutor = Executors.newSingleThreadScheduledExecutor(runnable -> {
-        Thread thread = new Thread(runnable, "computer-in-minecraft-qmp-keepalive");
+        Thread thread = new Thread(runnable, "minevm-qmp-keepalive");
         thread.setDaemon(true);
         return thread;
     });
@@ -99,7 +99,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
             registerProcessExitHandler(bootRequest.computerId(), process);
             waitForQmpReady(bootRequest.computerId(), process);
             scheduleQmpKeepAlive(bootRequest.computerId(), process);
-            ComputerInMinecraft.SCREEN_SERVICE.startVncReceiver(bootRequest.computerId(), VncEndpoint.forComputer(bootRequest.computerId()));
+            MineVM.SCREEN_SERVICE.startVncReceiver(bootRequest.computerId(), VncEndpoint.forComputer(bootRequest.computerId()));
             states.put(bootRequest.computerId(), VirtualMachineState.RUNNING);
             return new VirtualMachineHandle(bootRequest.computerId(), VirtualMachineState.RUNNING);
         } catch (IOException exception) {
@@ -107,7 +107,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
             if (process != null) {
                 process.destroy();
             }
-            ComputerInMinecraft.SCREEN_SERVICE.stopVncReceiver(bootRequest.computerId());
+            MineVM.SCREEN_SERVICE.stopVncReceiver(bootRequest.computerId());
             qmpClient.close(QmpEndpoint.forComputer(bootRequest.computerId()));
             states.put(bootRequest.computerId(), VirtualMachineState.ERROR);
             throw new IllegalStateException("Failed to start local QEMU VM: " + bootRequest.computerId(), exception);
@@ -129,7 +129,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
             processes.remove(computerId);
         }
 
-        ComputerInMinecraft.SCREEN_SERVICE.stopVncReceiver(computerId);
+        MineVM.SCREEN_SERVICE.stopVncReceiver(computerId);
         qmpClient.close(QmpEndpoint.forComputer(computerId));
         lastInputNanos.remove(computerId);
         states.put(computerId, VirtualMachineState.STOPPED);
@@ -166,7 +166,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
         if (process != null && !process.isAlive()) {
             processes.remove(computerId);
             cancelQmpKeepAlive(computerId);
-            ComputerInMinecraft.SCREEN_SERVICE.stopVncReceiver(computerId);
+            MineVM.SCREEN_SERVICE.stopVncReceiver(computerId);
             qmpClient.close(QmpEndpoint.forComputer(computerId));
             states.put(computerId, VirtualMachineState.STOPPED);
         }
@@ -195,7 +195,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
 
     @Override
     public void close() {
-        processes.keySet().forEach(ComputerInMinecraft.SCREEN_SERVICE::stopVncReceiver);
+        processes.keySet().forEach(MineVM.SCREEN_SERVICE::stopVncReceiver);
         qmpKeepAliveTasks.values().forEach(task -> task.cancel(false));
         qmpKeepAliveTasks.clear();
         qmpKeepAliveExecutor.shutdownNow();
@@ -235,7 +235,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
             Files.createDirectories(commandPath.getParent());
             Files.writeString(commandPath, String.join(System.lineSeparator(), command));
         } catch (IOException exception) {
-            ComputerInMinecraft.LOGGER.warn("Failed to write QEMU command log for {}", descriptor.computerId(), exception);
+            MineVM.LOGGER.warn("Failed to write QEMU command log for {}", descriptor.computerId(), exception);
         }
     }
 
@@ -278,7 +278,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
         try {
             qmpClient.sendJson(QmpEndpoint.forComputer(computerId), json);
         } catch (IOException exception) {
-            ComputerInMinecraft.LOGGER.warn("Ignored non-critical QMP failure for {}", computerId, exception);
+            MineVM.LOGGER.warn("Ignored non-critical QMP failure for {}", computerId, exception);
         }
     }
 
@@ -320,7 +320,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
         process.onExit().thenAccept(exitedProcess -> {
             if (processes.remove(computerId, exitedProcess)) {
                 cancelQmpKeepAlive(computerId);
-                ComputerInMinecraft.SCREEN_SERVICE.stopVncReceiver(computerId);
+                MineVM.SCREEN_SERVICE.stopVncReceiver(computerId);
                 qmpClient.close(QmpEndpoint.forComputer(computerId));
                 lastInputNanos.remove(computerId);
                 states.put(computerId, VirtualMachineState.STOPPED);
@@ -336,7 +336,7 @@ public final class LocalQemuBackend implements VirtualMachineBackend {
         long now = System.nanoTime();
         if (shouldResetInputQmpSession(lastInput, now)) {
             qmpClient.close(QmpEndpoint.forComputer(computerId));
-            ComputerInMinecraft.LOGGER.debug("Reset idle QMP input session for {}", computerId);
+            MineVM.LOGGER.debug("Reset idle QMP input session for {}", computerId);
         }
     }
 

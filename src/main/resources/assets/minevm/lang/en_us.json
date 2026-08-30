@@ -1,0 +1,18 @@
+{
+  "block.minevm.computer_block": "Legacy Computer",
+  "block.minevm.desktop_computer": "Computer Case",
+  "block.minevm.computer_monitor": "Computer Monitor",
+  "block.minevm.laptop_computer": "Laptop Computer",
+  "block.minevm.keyboard": "Keyboard",
+  "block.minevm.mouse": "Mouse",
+  "item.minevm.hdmi_cable": "HDMI Cable",
+  "item.minevm.usb_cable": "USB Cable",
+  "item.minevm.keyboard": "Keyboard",
+  "item.minevm.mouse": "Mouse",
+  "item.minevm.ubuntu_server_disc": "Ubuntu Server Disc",
+  "item.minevm.ubuntu_desktop_disc": "Ubuntu Desktop Disc",
+  "item.minevm.windows_xp_disc": "Windows XP Disc",
+  "item.minevm.windows_10_disc": "Windows 10 Disc",
+  "item.minevm.windows_11_disc": "Windows 11 Disc",
+  "itemGroup.minevm": "MineVM"
+}

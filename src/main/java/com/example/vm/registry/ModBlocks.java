@@ -1,6 +1,6 @@
 package com.example.vm.registry;
 
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import com.example.vm.block.ComputerBlock;
 import com.example.vm.block.ComputerMonitorBlock;
 import com.example.vm.block.ComputerOccupancyBlock;
@@ -15,7 +15,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 public final class ModBlocks {
     private static final DeferredRegister<Block> BLOCKS =
-            DeferredRegister.create(ForgeRegistries.BLOCKS, ComputerInMinecraft.MOD_ID);
+            DeferredRegister.create(ForgeRegistries.BLOCKS, MineVM.MOD_ID);
 
     public static final RegistryObject<Block> COMPUTER_BLOCK =
             BLOCKS.register("computer_block", ComputerBlock::new);

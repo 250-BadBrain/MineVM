@@ -1,6 +1,6 @@
 package com.example.vm.screen;
 
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import com.example.vm.input.KeyboardInput;
 import com.example.vm.input.MouseButtonInput;
 import com.example.vm.input.MouseMoveInput;
@@ -47,7 +47,7 @@ public final class VncFrameReceiver {
         } catch (IOException | IllegalArgumentException exception) {
             connections.remove(endpoint, connection);
             connection.closeQuietly();
-            ComputerInMinecraft.LOGGER.warn("VNC input failed for {}", endpoint.toDisplayAddress(), exception);
+            MineVM.LOGGER.warn("VNC input failed for {}", endpoint.toDisplayAddress(), exception);
             return false;
         }
     }
@@ -73,7 +73,7 @@ public final class VncFrameReceiver {
 
             handshake(input, output);
             Framebuffer framebuffer = readServerInit(input);
-            ComputerInMinecraft.LOGGER.info("Connected VNC framebuffer {} at {}x{}", endpoint.toDisplayAddress(), framebuffer.width(), framebuffer.height());
+            MineVM.LOGGER.info("Connected VNC framebuffer {} at {}x{}", endpoint.toDisplayAddress(), framebuffer.width(), framebuffer.height());
             connection = new ActiveConnection(socket, output, framebuffer.width(), framebuffer.height());
             connections.put(endpoint, connection);
             connection.setPixelFormat();
@@ -162,7 +162,7 @@ public final class VncFrameReceiver {
             if (encoding == DESKTOP_SIZE_ENCODING) {
                 currentFramebuffer = new Framebuffer(width, height);
                 connection.setFramebuffer(width, height);
-                ComputerInMinecraft.LOGGER.info("VNC framebuffer resized {} to {}x{}", endpoint.toDisplayAddress(), width, height);
+                MineVM.LOGGER.info("VNC framebuffer resized {} to {}x{}", endpoint.toDisplayAddress(), width, height);
                 continue;
             }
             if (encoding != RAW_ENCODING) {
@@ -172,7 +172,7 @@ public final class VncFrameReceiver {
             if (x + width > currentFramebuffer.width() || y + height > currentFramebuffer.height()) {
                 currentFramebuffer = new Framebuffer(Math.max(currentFramebuffer.width(), x + width), Math.max(currentFramebuffer.height(), y + height));
                 connection.setFramebuffer(currentFramebuffer.width(), currentFramebuffer.height());
-                ComputerInMinecraft.LOGGER.info("VNC framebuffer expanded {} to {}x{} from raw rectangle", endpoint.toDisplayAddress(), currentFramebuffer.width(), currentFramebuffer.height());
+                MineVM.LOGGER.info("VNC framebuffer expanded {} to {}x{} from raw rectangle", endpoint.toDisplayAddress(), currentFramebuffer.width(), currentFramebuffer.height());
             }
             frameConsumer.accept(new ScreenFrame(currentFramebuffer.width(), currentFramebuffer.height(), x, y, width, height, pixels));
         }

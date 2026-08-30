@@ -40,7 +40,7 @@ Items show safe placeholder messages and expose type methods.
 **Files:**
 - Modify: `src/main/java/com/example/vm/registry/ModItems.java`
 - Modify: `src/main/java/com/example/vm/registry/ModCreativeTabs.java`
-- Modify: `src/main/resources/assets/computer_in_minecraft/lang/en_us.json`
+- Modify: `src/main/resources/assets/minevm/lang/en_us.json`
 
 **Interfaces:**
 - Produces: `KEYBOARD`, `MOUSE`, and `USB_CABLE` registry objects.
@@ -53,7 +53,7 @@ Keep stack sizes sensible for cables and peripherals.
 ### Task 3: Add Distinctive Item Icons
 
 **Files:**
-- Create PNG textures under `src/main/resources/assets/computer_in_minecraft/textures/item/`
+- Create PNG textures under `src/main/resources/assets/minevm/textures/item/`
 - Modify item model JSON for HDMI, USB, keyboard, mouse, and all system discs.
 
 **Interfaces:**

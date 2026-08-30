@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "computer_in_minecraft:item/ubuntu_desktop_disc"
-  }
-}

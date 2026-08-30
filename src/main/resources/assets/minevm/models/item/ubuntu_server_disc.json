@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "minevm:item/ubuntu_server_disc"
+  }
+}

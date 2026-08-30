@@ -48,7 +48,7 @@ Build descriptors from computer hardware plus a guest OS selected from the inser
 **Files:**
 - Create: `src/main/java/com/example/vm/network/ModNetwork.java`
 - Create: `src/main/java/com/example/vm/network/ComputerBiosActionPacket.java`
-- Modify: `src/main/java/com/example/vm/ComputerInMinecraft.java`
+- Modify: `src/main/java/com/example/vm/MineVM.java`
 
 **Interfaces:**
 - Produces: `ModNetwork.register(): void`
@@ -57,7 +57,7 @@ Build descriptors from computer hardware plus a guest OS selected from the inser
 
 - [x] **Step 1: Register a `SimpleChannel`**
 
-Use mod id `computer_in_minecraft` and protocol version `1`.
+Use mod id `minevm` and protocol version `1`.
 
 - [x] **Step 2: Implement packet encode/decode/handle**
 

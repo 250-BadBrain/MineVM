@@ -1,6 +1,6 @@
 package com.example.vm.computer;
 
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import com.example.vm.blockentity.ComputerBlockEntity;
 import com.example.vm.network.ModNetwork;
 import com.example.vm.vm.VirtualMachineHandle;
@@ -30,7 +30,7 @@ public final class ComputerPowerActions {
             ModNetwork.stopScreenControl(serverPlayer, computerId);
         }
         ensureRegistered(computer)
-                .thenCompose(ignored -> ComputerInMinecraft.VM_MANAGER.getState(computerId))
+                .thenCompose(ignored -> MineVM.VM_MANAGER.getState(computerId))
                 .whenComplete((state, throwable) -> {
                     if (throwable != null) {
                         server.execute(() -> computer.setPowerTransitioning(false));
@@ -63,7 +63,7 @@ public final class ComputerPowerActions {
     }
 
     private static void stop(MinecraftServer server, Player player, BlockPos pos, String computerId, String actionLabel) {
-        ComputerInMinecraft.VM_MANAGER.stop(computerId)
+        MineVM.VM_MANAGER.stop(computerId)
                 .whenComplete((handle, throwable) -> server.execute(() -> {
                     if (throwable != null) {
                         player.sendSystemMessage(Component.literal("Computer " + computerId + " | " + actionLabel + " failed: " + rootMessage(throwable)));
@@ -83,7 +83,7 @@ public final class ComputerPowerActions {
         if (!com.example.vm.config.ComputerRuntimeConfig.vmDiskExists(computer)) {
             return java.util.concurrent.CompletableFuture.completedFuture(new VirtualMachineHandle(computer.getComputerId(), VirtualMachineState.NOT_CREATED));
         }
-        return ComputerInMinecraft.VM_MANAGER.create(com.example.vm.config.ComputerRuntimeConfig.descriptorFor(computer));
+        return MineVM.VM_MANAGER.create(com.example.vm.config.ComputerRuntimeConfig.descriptorFor(computer));
     }
 
     private static boolean isRunningOrStarting(VirtualMachineState state) {

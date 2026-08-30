@@ -40,7 +40,7 @@ public final class VirtualMachineManagerSelfTest {
             assertHandle(manager.stop("computer-test").get(10, TimeUnit.SECONDS), "computer-test", VirtualMachineState.STOPPED);
 
             String threadName = backend.lastThreadName.get();
-            if (threadName == null || !threadName.startsWith("computer-in-minecraft-vm-manager")) {
+            if (threadName == null || !threadName.startsWith("minevm-vm-manager")) {
                 throw new AssertionError("VM manager did not use its background executor: " + threadName);
             }
 

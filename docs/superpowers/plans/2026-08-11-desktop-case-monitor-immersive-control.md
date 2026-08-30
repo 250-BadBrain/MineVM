@@ -23,7 +23,7 @@
 
 **Files:**
 - Modify: `src/main/java/com/example/vm/registry/ModCreativeTabs.java`
-- Modify: `src/main/resources/assets/computer_in_minecraft/lang/en_us.json`
+- Modify: `src/main/resources/assets/minevm/lang/en_us.json`
 - Modify: `build.gradle`
 
 **Interfaces:**

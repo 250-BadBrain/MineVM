@@ -1,4 +1,4 @@
-﻿# Hardware Buttons And Input Capture Implementation Plan
+# Hardware Buttons And Input Capture Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -52,9 +52,9 @@
 ### Task 3: Models And Renderers
 
 **Files:**
-- Modify: `src/main/resources/assets/computer_in_minecraft/models/block/computer_monitor.json`
-- Modify: `src/main/resources/assets/computer_in_minecraft/models/block/desktop_computer.json`
-- Modify: `src/main/resources/assets/computer_in_minecraft/models/block/laptop_computer.json`
+- Modify: `src/main/resources/assets/minevm/models/block/computer_monitor.json`
+- Modify: `src/main/resources/assets/minevm/models/block/desktop_computer.json`
+- Modify: `src/main/resources/assets/minevm/models/block/laptop_computer.json`
 - Modify: `src/main/java/com/example/vm/client/ComputerMonitorRenderer.java`
 - Modify: `src/main/java/com/example/vm/client/ComputerScreenRenderer.java`
 - Modify: `src/main/java/com/example/vm/client/ScreenSurfaceRenderer.java`

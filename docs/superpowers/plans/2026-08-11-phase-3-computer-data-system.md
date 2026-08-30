@@ -22,7 +22,7 @@
 
 **Files:**
 - Create: `src/main/java/com/example/vm/computer/ComputerHardwareConfiguration.java`
-- Create: `src/main/resources/assets/computer_in_minecraft/defaults/computer.json`
+- Create: `src/main/resources/assets/minevm/defaults/computer.json`
 
 **Interfaces:**
 - Produces: `ComputerHardwareConfiguration.defaultConfiguration(String computerId)`
@@ -39,7 +39,7 @@
 - Create: `src/main/java/com/example/vm/blockentity/ComputerBlockEntity.java`
 - Create: `src/main/java/com/example/vm/registry/ModBlockEntities.java`
 - Modify: `src/main/java/com/example/vm/block/ComputerBlock.java`
-- Modify: `src/main/java/com/example/vm/ComputerInMinecraft.java`
+- Modify: `src/main/java/com/example/vm/MineVM.java`
 
 **Interfaces:**
 - Produces: `ComputerBlockEntity#getComputerId()`

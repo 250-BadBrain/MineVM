@@ -1,6 +1,6 @@
 package com.example.vm.test;
 
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import com.example.vm.blockentity.ComputerBlockEntity;
 import com.example.vm.registry.ModBlocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -9,7 +9,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraftforge.gametest.GameTestHolder;
 
-@GameTestHolder(ComputerInMinecraft.MOD_ID)
+@GameTestHolder(MineVM.MOD_ID)
 public final class ComputerBlockGameTests {
     private ComputerBlockGameTests() {
     }

@@ -1,6 +1,6 @@
 package com.example.vm.block;
 
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import com.example.vm.blockentity.ComputerBlockEntity;
 import com.example.vm.blockentity.ComputerOccupancyBlockEntity;
 import com.example.vm.computer.ComputerDiscActions;
@@ -214,7 +214,7 @@ public class ComputerBlock extends BaseEntityBlock {
         String computerId = computer.getComputerId();
         ComputerHardwareConfiguration configuration = computer.getHardwareConfiguration();
         ensureRegistered(computer)
-                .thenCompose(ignored -> ComputerInMinecraft.VM_MANAGER.getState(computerId))
+                .thenCompose(ignored -> MineVM.VM_MANAGER.getState(computerId))
                 .whenComplete((vmState, throwable) -> server.execute(() -> {
                     if (throwable != null) {
                         player.sendSystemMessage(Component.literal("Computer " + computerId + " | VM status failed: " + rootMessage(throwable)));
@@ -229,7 +229,7 @@ public class ComputerBlock extends BaseEntityBlock {
 
     private static void startLaptopControlAfterStateRefresh(ServerPlayer player, BlockPos pos, ComputerBlockEntity computer) {
         String computerId = computer.getComputerId();
-        ComputerInMinecraft.VM_MANAGER.getState(computerId)
+        MineVM.VM_MANAGER.getState(computerId)
                 .whenComplete((vmState, throwable) -> player.server.execute(() -> {
                     if (throwable != null) {
                         computer.setVmDisplayActive(false);
@@ -241,7 +241,7 @@ public class ComputerBlock extends BaseEntityBlock {
                         computer.setVmDisplayActive(false);
                     }
                     if (vmDisplayActive) {
-                        ComputerInMinecraft.SCREEN_SERVICE.refreshVncReceiver(computerId);
+                        MineVM.SCREEN_SERVICE.refreshVncReceiver(computerId);
                     }
                     ModNetwork.startScreenControl(player, pos, pos, computerId, true, vmDisplayActive);
                 }));
@@ -252,7 +252,7 @@ public class ComputerBlock extends BaseEntityBlock {
             return java.util.concurrent.CompletableFuture.completedFuture(ComputerRuntimeConfig.descriptorFor(computer));
         }
         VirtualMachineDescriptor descriptor = ComputerRuntimeConfig.descriptorFor(computer);
-        return ComputerInMinecraft.VM_MANAGER.create(descriptor).thenApply(ignored -> descriptor);
+        return MineVM.VM_MANAGER.create(descriptor).thenApply(ignored -> descriptor);
     }
 
     private static void insertSystemDisc(Player player, ComputerBlockEntity computer, ItemStack heldItem, SystemDiscItem systemDiscItem) {

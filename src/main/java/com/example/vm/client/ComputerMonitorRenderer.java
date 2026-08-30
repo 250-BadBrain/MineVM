@@ -1,6 +1,6 @@
 package com.example.vm.client;
 
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import com.example.vm.blockentity.ComputerBlockEntity;
 import com.example.vm.blockentity.ComputerMonitorBlockEntity;
 import com.example.vm.vm.GuestOperatingSystem;
@@ -48,7 +48,7 @@ public class ComputerMonitorRenderer implements BlockEntityRenderer<ComputerMoni
                             0.0112F,
                             linkedComputer.getComputerId(),
                             guestOperatingSystem != null && guestOperatingSystem.usesGraphicalPointer(),
-                            ComputerInMinecraft.SCREEN_SERVICE.latestFrameSnapshot(linkedComputer.getComputerId()),
+                            MineVM.SCREEN_SERVICE.latestFrameSnapshot(linkedComputer.getComputerId()),
                             packedLight
                     );
                     return;

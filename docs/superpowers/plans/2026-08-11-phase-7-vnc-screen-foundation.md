@@ -65,7 +65,7 @@ Assert frame storage/retrieval and executor thread use.
 **Files:**
 - Modify: `src/main/java/com/example/vm/vm/backend/local/QemuCommandBuilder.java`
 - Modify: `src/main/java/com/example/vm/block/ComputerBlock.java`
-- Modify: `src/main/java/com/example/vm/ComputerInMinecraft.java`
+- Modify: `src/main/java/com/example/vm/MineVM.java`
 - Modify: `src/main/java/com/example/vm/test/LocalQemuBackendSelfTest.java`
 - Modify: `build.gradle`
 

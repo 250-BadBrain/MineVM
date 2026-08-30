@@ -50,12 +50,12 @@ Return form-factor-specific rotated shapes.
 ### Task 3: Add Visible Models And Assets
 
 **Files:**
-- Create: `src/main/resources/assets/computer_in_minecraft/blockstates/desktop_computer.json`
-- Create: `src/main/resources/assets/computer_in_minecraft/blockstates/laptop_computer.json`
-- Create: `src/main/resources/assets/computer_in_minecraft/models/block/desktop_computer.json`
-- Create: `src/main/resources/assets/computer_in_minecraft/models/block/laptop_computer.json`
-- Create: `src/main/resources/assets/computer_in_minecraft/models/item/desktop_computer.json`
-- Create: `src/main/resources/assets/computer_in_minecraft/models/item/laptop_computer.json`
+- Create: `src/main/resources/assets/minevm/blockstates/desktop_computer.json`
+- Create: `src/main/resources/assets/minevm/blockstates/laptop_computer.json`
+- Create: `src/main/resources/assets/minevm/models/block/desktop_computer.json`
+- Create: `src/main/resources/assets/minevm/models/block/laptop_computer.json`
+- Create: `src/main/resources/assets/minevm/models/item/desktop_computer.json`
+- Create: `src/main/resources/assets/minevm/models/item/laptop_computer.json`
 - Modify: compatibility `computer_block` assets to point at desktop styling.
 
 **Interfaces:**
@@ -69,7 +69,7 @@ Use vanilla textures and cuboid elements.
 ### Task 4: Add Language And Creative Content
 
 **Files:**
-- Modify: `src/main/resources/assets/computer_in_minecraft/lang/en_us.json`
+- Modify: `src/main/resources/assets/minevm/lang/en_us.json`
 
 **Interfaces:**
 - Adds `Desktop Computer` and `Laptop Computer`.

@@ -1,6 +1,6 @@
 package com.example.vm.computer;
 
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import com.example.vm.blockentity.ComputerBlockEntity;
 import com.example.vm.registry.ModItems;
 import com.example.vm.vm.GuestOperatingSystem;
@@ -24,7 +24,7 @@ public final class ComputerDiscActions {
         }
 
         String computerId = computer.getComputerId();
-        ComputerInMinecraft.VM_MANAGER.getState(computerId)
+        MineVM.VM_MANAGER.getState(computerId)
                 .whenComplete((state, throwable) -> server.execute(() -> {
                     if (throwable != null) {
                         player.sendSystemMessage(Component.literal("Computer " + computerId + " | Disc eject failed: " + rootMessage(throwable)));
@@ -46,7 +46,7 @@ public final class ComputerDiscActions {
 
     private static void ejectRunningVmDisc(MinecraftServer server, Player player, ComputerBlockEntity computer) {
         String computerId = computer.getComputerId();
-        ComputerInMinecraft.VM_MANAGER.ejectSystemDisc(computerId)
+        MineVM.VM_MANAGER.ejectSystemDisc(computerId)
                 .whenComplete((handle, throwable) -> server.execute(() -> {
                     if (throwable != null) {
                         player.sendSystemMessage(Component.literal("Computer " + computerId + " | VM disc eject failed: " + rootMessage(throwable)));

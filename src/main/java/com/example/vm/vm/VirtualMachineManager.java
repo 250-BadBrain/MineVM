@@ -75,6 +75,6 @@ public final class VirtualMachineManager implements AutoCloseable {
     }
 
     private static ExecutorService newVmExecutor() {
-        return ComputerExecutors.singleThread("computer-in-minecraft-vm-manager", 128);
+        return ComputerExecutors.singleThread("minevm-vm-manager", 128);
     }
 }

@@ -6,7 +6,7 @@ import com.example.vm.blockentity.ComputerOccupancyBlockEntity;
 import com.example.vm.network.ModNetwork;
 import com.example.vm.registry.ModBlocks;
 import com.example.vm.item.SystemDiscItem;
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -155,7 +155,7 @@ public class ComputerMonitorBlock extends BaseEntityBlock {
 
     private static void startControlAfterStateRefresh(ServerPlayer player, BlockPos monitorPos, BlockPos computerPos, ComputerBlockEntity computer) {
         String computerId = computer.getComputerId();
-        ComputerInMinecraft.VM_MANAGER.getState(computerId)
+        MineVM.VM_MANAGER.getState(computerId)
                 .whenComplete((state, throwable) -> player.server.execute(() -> {
                     if (throwable != null) {
                         computer.setVmDisplayActive(false);
@@ -167,7 +167,7 @@ public class ComputerMonitorBlock extends BaseEntityBlock {
                         computer.setVmDisplayActive(false);
                     }
                     if (vmDisplayActive) {
-                        ComputerInMinecraft.SCREEN_SERVICE.refreshVncReceiver(computerId);
+                        MineVM.SCREEN_SERVICE.refreshVncReceiver(computerId);
                     }
                     ModNetwork.startScreenControl(player, monitorPos, computerPos, computerId, false, vmDisplayActive);
                 }));

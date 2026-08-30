@@ -64,7 +64,7 @@ Use button and absolute motion events with stable JSON.
 - Modify: `src/main/java/com/example/vm/vm/backend/NoopVirtualMachineBackend.java`
 - Modify: `src/main/java/com/example/vm/vm/VirtualMachineManager.java`
 - Modify: `src/main/java/com/example/vm/vm/backend/local/LocalQemuBackend.java`
-- Modify: `src/main/java/com/example/vm/ComputerInMinecraft.java`
+- Modify: `src/main/java/com/example/vm/MineVM.java`
 - Modify: `src/main/java/com/example/vm/test/VirtualMachineManagerSelfTest.java`
 - Create: `src/main/java/com/example/vm/test/InputServiceSelfTest.java`
 - Modify: `build.gradle`
@@ -79,7 +79,7 @@ Noop accepts input without external side effects; Local QEMU sends QMP input JSO
 
 - [x] **Step 2: Add async input service**
 
-Input queue uses daemon thread `computer-in-minecraft-input-sender`.
+Input queue uses daemon thread `minevm-input-sender`.
 
 - [x] **Step 3: Add verification task**
 

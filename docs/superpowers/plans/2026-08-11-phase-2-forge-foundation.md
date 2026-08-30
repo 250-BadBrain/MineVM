@@ -25,9 +25,9 @@
 - Modify: `src/main/resources/META-INF/mods.toml`
 
 **Interfaces:**
-- Produces: `mod_id=computer_in_minecraft`, `mod_group_id=com.example.vm`
+- Produces: `mod_id=minevm`, `mod_group_id=com.example.vm`
 
-- [x] Update Gradle mod metadata to the Computer in Minecraft identity.
+- [x] Update Gradle mod metadata to the MineVM identity.
 - [x] Keep Forge and Minecraft version values unchanged.
 
 ### Task 2: Register Computer Block
@@ -35,14 +35,14 @@
 **Files:**
 - Delete: `src/main/java/com/example/examplemod/ExampleMod.java`
 - Delete: `src/main/java/com/example/examplemod/Config.java`
-- Create: `src/main/java/com/example/vm/ComputerInMinecraft.java`
+- Create: `src/main/java/com/example/vm/MineVM.java`
 - Create: `src/main/java/com/example/vm/block/ComputerBlock.java`
 - Create: `src/main/java/com/example/vm/registry/ModBlocks.java`
 - Create: `src/main/java/com/example/vm/registry/ModItems.java`
 - Create: `src/main/java/com/example/vm/registry/ModCreativeTabs.java`
 
 **Interfaces:**
-- Produces: `ComputerInMinecraft.MOD_ID`
+- Produces: `MineVM.MOD_ID`
 - Produces: `ModBlocks.COMPUTER_BLOCK`
 - Produces: `ModItems.COMPUTER_BLOCK_ITEM`
 
@@ -53,14 +53,14 @@
 ### Task 3: Add Resources
 
 **Files:**
-- Create: `src/main/resources/assets/computer_in_minecraft/lang/en_us.json`
-- Create: `src/main/resources/assets/computer_in_minecraft/blockstates/computer_block.json`
-- Create: `src/main/resources/assets/computer_in_minecraft/models/block/computer_block.json`
-- Create: `src/main/resources/assets/computer_in_minecraft/models/item/computer_block.json`
-- Create: `src/main/resources/data/computer_in_minecraft/loot_tables/blocks/computer_block.json`
+- Create: `src/main/resources/assets/minevm/lang/en_us.json`
+- Create: `src/main/resources/assets/minevm/blockstates/computer_block.json`
+- Create: `src/main/resources/assets/minevm/models/block/computer_block.json`
+- Create: `src/main/resources/assets/minevm/models/item/computer_block.json`
+- Create: `src/main/resources/data/minevm/loot_tables/blocks/computer_block.json`
 
 **Interfaces:**
-- Consumes: `computer_in_minecraft:computer_block`
+- Consumes: `minevm:computer_block`
 
 - [x] Provide simple cube model and item model.
 - [x] Provide loot table so breaking the block drops itself.

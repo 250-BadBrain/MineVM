@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "minevm:block/computer_monitor"
+    },
+    "facing=east": {
+      "model": "minevm:block/computer_monitor",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "minevm:block/computer_monitor",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "minevm:block/computer_monitor",
+      "y": 270
+    }
+  }
+}

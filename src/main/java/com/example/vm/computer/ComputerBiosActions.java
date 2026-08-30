@@ -1,6 +1,6 @@
 package com.example.vm.computer;
 
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import com.example.vm.blockentity.ComputerBlockEntity;
 import com.example.vm.config.ComputerRuntimeConfig;
 import com.example.vm.config.ComputerRuntimePreflight;
@@ -70,7 +70,7 @@ public final class ComputerBiosActions {
         }
 
         ensureRegistered(computer)
-                .thenCompose(ignored -> ComputerInMinecraft.VM_MANAGER.getState(computerId))
+                .thenCompose(ignored -> MineVM.VM_MANAGER.getState(computerId))
                 .whenComplete((state, throwable) -> {
                     if (throwable != null) {
                         send(server, player, "Computer " + computerId + " | Disc boot failed: " + rootMessage(throwable));
@@ -99,7 +99,7 @@ public final class ComputerBiosActions {
 
         String computerId = computer.getComputerId();
         ensureRegistered(computer)
-                .thenCompose(ignored -> ComputerInMinecraft.VM_MANAGER.getState(computerId))
+                .thenCompose(ignored -> MineVM.VM_MANAGER.getState(computerId))
                 .whenComplete((state, throwable) -> {
                     if (throwable != null) {
                         send(server, player, "Computer " + computerId + " | Disk boot failed: " + rootMessage(throwable));
@@ -152,8 +152,8 @@ public final class ComputerBiosActions {
     }
 
     private static void createThenStart(MinecraftServer server, ServerPlayer player, BlockPos pos, VirtualMachineDescriptor descriptor, GuestOperatingSystem guestOperatingSystem, VirtualMachineBootRequest bootRequest, String actionLabel, boolean persistGuest) {
-        ComputerInMinecraft.VM_MANAGER.create(descriptor)
-                .thenCompose(handle -> ComputerInMinecraft.VM_MANAGER.start(bootRequest))
+        MineVM.VM_MANAGER.create(descriptor)
+                .thenCompose(handle -> MineVM.VM_MANAGER.start(bootRequest))
                 .whenComplete((handle, throwable) -> server.execute(() -> {
                     if (throwable != null) {
                         setComputerVmDisplay(player, pos, false);
@@ -167,12 +167,12 @@ public final class ComputerBiosActions {
     }
 
     private static void start(MinecraftServer server, ServerPlayer player, BlockPos pos, GuestOperatingSystem guestOperatingSystem, String computerId, String actionLabel, boolean persistGuest) {
-        ComputerInMinecraft.VM_MANAGER.start(computerId)
+        MineVM.VM_MANAGER.start(computerId)
                 .whenComplete((handle, throwable) -> sendHandle(server, player, pos, computerId, guestOperatingSystem, actionLabel, handle, throwable, true, persistGuest));
     }
 
     private static void start(MinecraftServer server, ServerPlayer player, BlockPos pos, GuestOperatingSystem guestOperatingSystem, VirtualMachineBootRequest bootRequest, String actionLabel, boolean persistGuest) {
-        ComputerInMinecraft.VM_MANAGER.start(bootRequest)
+        MineVM.VM_MANAGER.start(bootRequest)
                 .whenComplete((handle, throwable) -> sendHandle(server, player, pos, bootRequest.computerId(), guestOperatingSystem, actionLabel, handle, throwable, true, persistGuest));
     }
 
@@ -212,7 +212,7 @@ public final class ComputerBiosActions {
         if (!ComputerRuntimeConfig.vmDiskExists(computer)) {
             return java.util.concurrent.CompletableFuture.completedFuture(new VirtualMachineHandle(computer.getComputerId(), VirtualMachineState.NOT_CREATED));
         }
-        return ComputerInMinecraft.VM_MANAGER.create(descriptor);
+        return MineVM.VM_MANAGER.create(descriptor);
     }
 
     private static void send(MinecraftServer server, ServerPlayer player, String message) {

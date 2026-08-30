@@ -1,4 +1,4 @@
-﻿# Wiring Display Input Fixes Implementation Plan
+# Wiring Display Input Fixes Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -23,12 +23,12 @@
 - Create: `src/main/java/com/example/vm/block/ComputerPeripheralBlock.java`
 - Modify: `src/main/java/com/example/vm/registry/ModBlocks.java`
 - Modify: `src/main/java/com/example/vm/registry/ModItems.java`
-- Modify: `src/main/resources/assets/computer_in_minecraft/blockstates/keyboard.json`
-- Modify: `src/main/resources/assets/computer_in_minecraft/blockstates/mouse.json`
-- Modify: `src/main/resources/assets/computer_in_minecraft/models/block/keyboard.json`
-- Modify: `src/main/resources/assets/computer_in_minecraft/models/block/mouse.json`
-- Modify: `src/main/resources/assets/computer_in_minecraft/models/item/keyboard.json`
-- Modify: `src/main/resources/assets/computer_in_minecraft/models/item/mouse.json`
+- Modify: `src/main/resources/assets/minevm/blockstates/keyboard.json`
+- Modify: `src/main/resources/assets/minevm/blockstates/mouse.json`
+- Modify: `src/main/resources/assets/minevm/models/block/keyboard.json`
+- Modify: `src/main/resources/assets/minevm/models/block/mouse.json`
+- Modify: `src/main/resources/assets/minevm/models/item/keyboard.json`
+- Modify: `src/main/resources/assets/minevm/models/item/mouse.json`
 
 **Interfaces:**
 - Produces: `ComputerPeripheralBlock.peripheralType(): ComputerPeripheralType`
@@ -85,7 +85,7 @@
 - Modify: `src/main/java/com/example/vm/client/ComputerMonitorRenderer.java`
 - Modify: `src/main/java/com/example/vm/client/ComputerScreenRenderer.java`
 - Modify: `src/main/java/com/example/vm/client/ScreenSurfaceRenderer.java`
-- Modify: `src/main/resources/assets/computer_in_minecraft/models/block/computer_monitor.json`
+- Modify: `src/main/resources/assets/minevm/models/block/computer_monitor.json`
 
 **Interfaces:**
 - Consumes: existing `ScreenSurfaceRenderer.renderText(...)`

@@ -1,6 +1,6 @@
 package com.example.vm.registry;
 
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -10,11 +10,11 @@ import net.minecraftforge.registries.RegistryObject;
 
 public final class ModCreativeTabs {
     private static final DeferredRegister<CreativeModeTab> CREATIVE_TABS =
-            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ComputerInMinecraft.MOD_ID);
+            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MineVM.MOD_ID);
 
     public static final RegistryObject<CreativeModeTab> COMPUTER_TAB = CREATIVE_TABS.register("computer_tab",
             () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup.computer_in_minecraft"))
+                    .title(Component.translatable("itemGroup.minevm"))
                     .icon(() -> ModItems.DESKTOP_COMPUTER.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.DESKTOP_COMPUTER.get());

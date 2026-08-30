@@ -1,6 +1,6 @@
 package com.example.vm.network;
 
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import com.example.vm.input.KeyboardInput;
 import com.example.vm.input.MouseButtonInput;
 import com.example.vm.input.MouseMoveInput;
@@ -65,8 +65,8 @@ public record ComputerInputPacket(String computerId, InputKind kind, String key,
                 case MOUSE_MOVE -> new MouseMoveInput(packet.computerId, packet.x, packet.y, packet.screenWidth, packet.screenHeight);
                 case MOUSE_WHEEL -> new MouseWheelInput(packet.computerId, packet.button);
             };
-            if (!ComputerInMinecraft.SCREEN_SERVICE.sendVncInput(packet.computerId, input)) {
-                ComputerInMinecraft.INPUT_SERVICE.send(input);
+            if (!MineVM.SCREEN_SERVICE.sendVncInput(packet.computerId, input)) {
+                MineVM.INPUT_SERVICE.send(input);
             }
         });
         context.setPacketHandled(true);

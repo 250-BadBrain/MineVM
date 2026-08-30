@@ -38,6 +38,6 @@ public final class InputService implements AutoCloseable {
     }
 
     private static ExecutorService newInputExecutor() {
-        return ComputerExecutors.singleThread("computer-in-minecraft-input-sender", 256);
+        return ComputerExecutors.singleThread("minevm-input-sender", 256);
     }
 }

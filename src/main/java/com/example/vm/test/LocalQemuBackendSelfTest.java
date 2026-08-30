@@ -1,6 +1,6 @@
 package com.example.vm.test;
 
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import com.example.vm.qmp.QmpEndpoint;
 import com.example.vm.screen.VncEndpoint;
 import com.example.vm.vm.VirtualMachineBootRequest;
@@ -183,7 +183,7 @@ public final class LocalQemuBackendSelfTest {
     }
 
     private static void assertDefaultBackendRemainsSafe() {
-        String managerClassName = ComputerInMinecraft.VM_MANAGER.getClass().getName();
+        String managerClassName = MineVM.VM_MANAGER.getClass().getName();
         if (!managerClassName.endsWith("VirtualMachineManager")) {
             throw new AssertionError("Unexpected VM manager type: " + managerClassName);
         }

@@ -191,18 +191,18 @@ tasks.register('verifyPhase2ComputerBlock') {
 
     doLast {
         def requiredFiles = [
-                'src/main/resources/assets/computer_in_minecraft/blockstates/computer_block.json',
-                'src/main/resources/assets/computer_in_minecraft/models/block/computer_block.json',
-                'src/main/resources/assets/computer_in_minecraft/models/item/computer_block.json',
-                'src/main/resources/assets/computer_in_minecraft/models/item/desktop_computer.json',
-                'src/main/resources/assets/computer_in_minecraft/models/item/laptop_computer.json',
-                'src/main/resources/assets/computer_in_minecraft/models/item/computer_monitor.json',
-                'src/main/resources/assets/computer_in_minecraft/models/item/hdmi_cable.json',
-                'src/main/resources/assets/computer_in_minecraft/lang/en_us.json',
-                'src/main/resources/data/computer_in_minecraft/loot_tables/blocks/computer_block.json',
-                'src/main/resources/data/computer_in_minecraft/loot_tables/blocks/desktop_computer.json',
-                'src/main/resources/data/computer_in_minecraft/loot_tables/blocks/laptop_computer.json',
-                'src/main/resources/data/computer_in_minecraft/loot_tables/blocks/computer_monitor.json',
+                'src/main/resources/assets/minevm/blockstates/computer_block.json',
+                'src/main/resources/assets/minevm/models/block/computer_block.json',
+                'src/main/resources/assets/minevm/models/item/computer_block.json',
+                'src/main/resources/assets/minevm/models/item/desktop_computer.json',
+                'src/main/resources/assets/minevm/models/item/laptop_computer.json',
+                'src/main/resources/assets/minevm/models/item/computer_monitor.json',
+                'src/main/resources/assets/minevm/models/item/hdmi_cable.json',
+                'src/main/resources/assets/minevm/lang/en_us.json',
+                'src/main/resources/data/minevm/loot_tables/blocks/computer_block.json',
+                'src/main/resources/data/minevm/loot_tables/blocks/desktop_computer.json',
+                'src/main/resources/data/minevm/loot_tables/blocks/laptop_computer.json',
+                'src/main/resources/data/minevm/loot_tables/blocks/computer_monitor.json',
                 'build/classes/java/main/com/example/vm/test/ComputerBlockGameTests.class'
         ]
 
@@ -214,16 +214,16 @@ tasks.register('verifyPhase2ComputerBlock') {
 
         def jarFile = tasks.named('jar', Jar).get().archiveFile.get().asFile
         def jarEntries = zipTree(jarFile).matching {
-            include 'com/example/vm/ComputerInMinecraft.class'
+            include 'com/example/vm/MineVM.class'
             include 'com/example/vm/block/ComputerBlock.class'
-            include 'assets/computer_in_minecraft/blockstates/computer_block.json'
-            include 'assets/computer_in_minecraft/blockstates/desktop_computer.json'
-            include 'assets/computer_in_minecraft/blockstates/laptop_computer.json'
-            include 'assets/computer_in_minecraft/blockstates/computer_monitor.json'
-            include 'data/computer_in_minecraft/loot_tables/blocks/computer_block.json'
-            include 'data/computer_in_minecraft/loot_tables/blocks/desktop_computer.json'
-            include 'data/computer_in_minecraft/loot_tables/blocks/laptop_computer.json'
-            include 'data/computer_in_minecraft/loot_tables/blocks/computer_monitor.json'
+            include 'assets/minevm/blockstates/computer_block.json'
+            include 'assets/minevm/blockstates/desktop_computer.json'
+            include 'assets/minevm/blockstates/laptop_computer.json'
+            include 'assets/minevm/blockstates/computer_monitor.json'
+            include 'data/minevm/loot_tables/blocks/computer_block.json'
+            include 'data/minevm/loot_tables/blocks/desktop_computer.json'
+            include 'data/minevm/loot_tables/blocks/laptop_computer.json'
+            include 'data/minevm/loot_tables/blocks/computer_monitor.json'
         }.files*.path
 
         if (jarEntries.size() != 10) {
@@ -246,7 +246,7 @@ tasks.register('verifyPhase3ComputerDataSystem') {
                 'src/main/java/com/example/vm/blockentity/ComputerBlockEntity.java',
                 'src/main/java/com/example/vm/computer/ComputerHardwareConfiguration.java',
                 'src/main/java/com/example/vm/registry/ModBlockEntities.java',
-                'src/main/resources/assets/computer_in_minecraft/defaults/computer.json',
+                'src/main/resources/assets/minevm/defaults/computer.json',
                 'build/classes/java/main/com/example/vm/blockentity/ComputerBlockEntity.class',
                 'build/classes/java/main/com/example/vm/computer/ComputerHardwareConfiguration.class',
                 'build/classes/java/main/com/example/vm/registry/ModBlockEntities.class'
@@ -258,7 +258,7 @@ tasks.register('verifyPhase3ComputerDataSystem') {
             }
         }
 
-        def defaultConfig = new groovy.json.JsonSlurper().parse(file('src/main/resources/assets/computer_in_minecraft/defaults/computer.json'))
+        def defaultConfig = new groovy.json.JsonSlurper().parse(file('src/main/resources/assets/minevm/defaults/computer.json'))
         if (defaultConfig.id != 'computer001' || defaultConfig.cpu != 4 || defaultConfig.memory != 4096 || defaultConfig.disk != 'computer001.qcow2') {
             throw new GradleException('Default computer.json does not match the Phase 3 data contract.')
         }
@@ -282,7 +282,7 @@ tasks.register('verifyPhase3ComputerDataSystem') {
             include 'com/example/vm/blockentity/ComputerBlockEntity.class'
             include 'com/example/vm/computer/ComputerHardwareConfiguration.class'
             include 'com/example/vm/registry/ModBlockEntities.class'
-            include 'assets/computer_in_minecraft/defaults/computer.json'
+            include 'assets/minevm/defaults/computer.json'
         }.files*.path
 
         if (jarEntries.size() != 4) {
@@ -391,7 +391,7 @@ tasks.register('verifyPhase5LocalQemuBackend') {
             }
         }
 
-        def entryPointText = file('src/main/java/com/example/vm/ComputerInMinecraft.java').text
+        def entryPointText = file('src/main/java/com/example/vm/MineVM.java').text
         if (entryPointText.contains('LocalQemuBackend')) {
             throw new GradleException('LocalQemuBackend must not be the default mod backend in Phase 5.')
         }
@@ -630,7 +630,7 @@ tasks.register('verifyComputerDeviceInteractionArchitecture') {
             throw new GradleException('Computer occupancy must be registered as a block/entity without a public item.')
         }
 
-        def blockStateText = file('src/main/resources/assets/computer_in_minecraft/blockstates/computer_block.json').text
+        def blockStateText = file('src/main/resources/assets/minevm/blockstates/computer_block.json').text
         ['facing=north', 'facing=east', 'facing=south', 'facing=west'].each { variant ->
             if (!blockStateText.contains(variant)) {
                 throw new GradleException("Computer blockstate must include ${variant}.")
@@ -811,7 +811,7 @@ tasks.register('verifyPhase7VncScreenFoundation') {
         }
 
         def screenServiceText = file('src/main/java/com/example/vm/screen/ScreenService.java').text
-        if (!screenServiceText.contains('CompletableFuture') || !screenServiceText.contains('startVncReceiver') || !screenServiceText.contains('stopVncReceiver') || !screenServiceText.contains('computer-in-minecraft-screen-receiver') || !screenServiceText.contains('computer-in-minecraft-vnc-receiver')) {
+        if (!screenServiceText.contains('CompletableFuture') || !screenServiceText.contains('startVncReceiver') || !screenServiceText.contains('stopVncReceiver') || !screenServiceText.contains('minevm-screen-receiver') || !screenServiceText.contains('minevm-vnc-receiver')) {
             throw new GradleException('ScreenService must keep screen work asynchronous and off the Minecraft thread.')
         }
         def vncReceiverText = file('src/main/java/com/example/vm/screen/VncFrameReceiver.java').text
@@ -946,7 +946,7 @@ tasks.register('verifyPhase8InputSystem') {
         }
 
         def inputServiceText = file('src/main/java/com/example/vm/input/InputService.java').text
-        if (!inputServiceText.contains('CompletableFuture') || !inputServiceText.contains('computer-in-minecraft-input-sender')) {
+        if (!inputServiceText.contains('CompletableFuture') || !inputServiceText.contains('minevm-input-sender')) {
             throw new GradleException('InputService must queue input asynchronously off the Minecraft thread.')
         }
 
@@ -1137,11 +1137,11 @@ tasks.register('verifySystemDiscInstallationFoundation') {
                 'src/main/java/com/example/vm/item/SystemDiscItem.java',
                 'src/main/java/com/example/vm/item/SystemDiscDefinition.java',
                 'src/main/java/com/example/vm/test/SystemDiscItemSelfTest.java',
-                'src/main/resources/assets/computer_in_minecraft/models/item/ubuntu_server_disc.json',
-                'src/main/resources/assets/computer_in_minecraft/models/item/ubuntu_desktop_disc.json',
-                'src/main/resources/assets/computer_in_minecraft/models/item/windows_xp_disc.json',
-                'src/main/resources/assets/computer_in_minecraft/models/item/windows_10_disc.json',
-                'src/main/resources/assets/computer_in_minecraft/models/item/windows_11_disc.json',
+                'src/main/resources/assets/minevm/models/item/ubuntu_server_disc.json',
+                'src/main/resources/assets/minevm/models/item/ubuntu_desktop_disc.json',
+                'src/main/resources/assets/minevm/models/item/windows_xp_disc.json',
+                'src/main/resources/assets/minevm/models/item/windows_10_disc.json',
+                'src/main/resources/assets/minevm/models/item/windows_11_disc.json',
                 'build/classes/java/main/com/example/vm/item/SystemDiscItem.class',
                 'build/classes/java/main/com/example/vm/item/SystemDiscDefinition.class',
                 'build/classes/java/main/com/example/vm/test/SystemDiscItemSelfTest.class'
@@ -1182,7 +1182,7 @@ tasks.register('verifySystemDiscInstallationFoundation') {
             throw new GradleException('Computer status must expose inserted disc state.')
         }
 
-        def langText = file('src/main/resources/assets/computer_in_minecraft/lang/en_us.json').text
+        def langText = file('src/main/resources/assets/minevm/lang/en_us.json').text
         ['Ubuntu Server Disc', 'Ubuntu Desktop Disc', 'Windows XP Disc', 'Windows 10 Disc', 'Windows 11 Disc'].each { text ->
             if (!langText.contains(text)) {
                 throw new GradleException("Missing disc language entry ${text}.")
@@ -1193,11 +1193,11 @@ tasks.register('verifySystemDiscInstallationFoundation') {
         def jarEntries = zipTree(jarFile).matching {
             include 'com/example/vm/item/SystemDiscItem.class'
             include 'com/example/vm/item/SystemDiscDefinition.class'
-            include 'assets/computer_in_minecraft/models/item/ubuntu_server_disc.json'
-            include 'assets/computer_in_minecraft/models/item/ubuntu_desktop_disc.json'
-            include 'assets/computer_in_minecraft/models/item/windows_xp_disc.json'
-            include 'assets/computer_in_minecraft/models/item/windows_10_disc.json'
-            include 'assets/computer_in_minecraft/models/item/windows_11_disc.json'
+            include 'assets/minevm/models/item/ubuntu_server_disc.json'
+            include 'assets/minevm/models/item/ubuntu_desktop_disc.json'
+            include 'assets/minevm/models/item/windows_xp_disc.json'
+            include 'assets/minevm/models/item/windows_10_disc.json'
+            include 'assets/minevm/models/item/windows_11_disc.json'
         }.files*.path
 
         if (jarEntries.size() != 7) {
@@ -1235,7 +1235,7 @@ tasks.register('verifyBiosMenuFoundation') {
             }
         }
 
-        def modText = file('src/main/java/com/example/vm/ComputerInMinecraft.java').text
+        def modText = file('src/main/java/com/example/vm/MineVM.java').text
         if (modText.contains('ModMenus.register')) {
             throw new GradleException('Mod entry must not register BIOS GUI menus.')
         }
@@ -1288,19 +1288,19 @@ tasks.register('verifyBiosMenuFoundation') {
         }
 
         ['keyboard', 'mouse', 'hdmi_cable', 'usb_cable', 'ubuntu_server_disc', 'ubuntu_desktop_disc', 'windows_10_disc', 'windows_11_disc'].each { textureName ->
-            if (!file("src/main/resources/assets/computer_in_minecraft/textures/item/${textureName}.png").isFile()) {
+            if (!file("src/main/resources/assets/minevm/textures/item/${textureName}.png").isFile()) {
                 throw new GradleException("Missing custom item icon texture ${textureName}.png")
             }
-            if (!file("src/main/resources/assets/computer_in_minecraft/models/item/${textureName}.json").text.contains("computer_in_minecraft:item/${textureName}")) {
+            if (!file("src/main/resources/assets/minevm/models/item/${textureName}.json").text.contains("minevm:item/${textureName}")) {
                 throw new GradleException("Item model ${textureName}.json must use its custom icon texture.")
             }
         }
 
         ['keyboard', 'mouse'].each { peripheralName ->
             [
-                    "src/main/resources/assets/computer_in_minecraft/blockstates/${peripheralName}.json",
-                    "src/main/resources/assets/computer_in_minecraft/models/block/${peripheralName}.json",
-                    "src/main/resources/data/computer_in_minecraft/loot_tables/blocks/${peripheralName}.json"
+                    "src/main/resources/assets/minevm/blockstates/${peripheralName}.json",
+                    "src/main/resources/assets/minevm/models/block/${peripheralName}.json",
+                    "src/main/resources/data/minevm/loot_tables/blocks/${peripheralName}.json"
             ].each { path ->
                 if (!file(path).isFile()) {
                     throw new GradleException("Missing placeable peripheral resource ${path}")
@@ -1410,9 +1410,9 @@ tasks.register('verifyBiosMenuFoundation') {
             }
         }
 
-        def monitorModelText = file('src/main/resources/assets/computer_in_minecraft/models/block/computer_monitor.json').text
-        def desktopModelText = file('src/main/resources/assets/computer_in_minecraft/models/block/desktop_computer.json').text
-        def laptopModelText = file('src/main/resources/assets/computer_in_minecraft/models/block/laptop_computer.json').text
+        def monitorModelText = file('src/main/resources/assets/minevm/models/block/computer_monitor.json').text
+        def desktopModelText = file('src/main/resources/assets/minevm/models/block/desktop_computer.json').text
+        def laptopModelText = file('src/main/resources/assets/minevm/models/block/laptop_computer.json').text
         if (!monitorModelText.contains('"button"') || !desktopModelText.contains('"button"') || !laptopModelText.contains('"button"')) {
             throw new GradleException('Monitor, desktop case, and laptop models must expose visible power buttons.')
         }
@@ -1423,7 +1423,7 @@ tasks.register('verifyBiosMenuFoundation') {
             throw new GradleException('Laptop model must use the enlarged 3x2x2 visual body.')
         }
         ['computer_monitor', 'desktop_computer', 'laptop_computer', 'keyboard', 'mouse'].each { modelName ->
-            if (!file("src/main/resources/assets/computer_in_minecraft/models/block/${modelName}.json").text.contains('"particle"')) {
+            if (!file("src/main/resources/assets/minevm/models/block/${modelName}.json").text.contains('"particle"')) {
                 throw new GradleException("Block model ${modelName} must define a particle texture.")
             }
         }
@@ -1440,7 +1440,7 @@ tasks.register('verifyBiosMenuFoundation') {
                 throw new GradleException("ComputerPowerActions must own physical and BIOS power-off lifecycle marker ${marker}.")
             }
         }
-        if (computerBlockSourceText.contains('thenCompose(handle -> ComputerInMinecraft.VM_MANAGER.start') || computerBlockSourceText.contains('VM started | State')) {
+        if (computerBlockSourceText.contains('thenCompose(handle -> MineVM.VM_MANAGER.start') || computerBlockSourceText.contains('VM started | State')) {
             throw new GradleException('Physical power button must open BIOS without starting QEMU directly.')
         }
         def biosActionsText = file('src/main/java/com/example/vm/computer/ComputerBiosActions.java').text
@@ -1562,22 +1562,22 @@ tasks.register('verifyBiosMenuFoundation') {
             include 'com/example/vm/vm/VirtualMachineBootRequest.class'
             include 'com/example/vm/vm/backend/local/LocalQemuPreflight.class'
             include 'com/example/vm/vm/backend/local/LocalVmPaths.class'
-            include 'assets/computer_in_minecraft/blockstates/desktop_computer.json'
-            include 'assets/computer_in_minecraft/blockstates/laptop_computer.json'
-            include 'assets/computer_in_minecraft/models/block/desktop_computer.json'
-            include 'assets/computer_in_minecraft/models/block/laptop_computer.json'
-            include 'assets/computer_in_minecraft/blockstates/keyboard.json'
-            include 'assets/computer_in_minecraft/blockstates/mouse.json'
-            include 'assets/computer_in_minecraft/models/block/keyboard.json'
-            include 'assets/computer_in_minecraft/models/block/mouse.json'
-            include 'assets/computer_in_minecraft/models/item/desktop_computer.json'
-            include 'assets/computer_in_minecraft/models/item/laptop_computer.json'
-            include 'assets/computer_in_minecraft/textures/item/keyboard.png'
-            include 'assets/computer_in_minecraft/textures/item/mouse.png'
-            include 'assets/computer_in_minecraft/textures/item/hdmi_cable.png'
-            include 'assets/computer_in_minecraft/textures/item/usb_cable.png'
-            include 'data/computer_in_minecraft/loot_tables/blocks/keyboard.json'
-            include 'data/computer_in_minecraft/loot_tables/blocks/mouse.json'
+            include 'assets/minevm/blockstates/desktop_computer.json'
+            include 'assets/minevm/blockstates/laptop_computer.json'
+            include 'assets/minevm/models/block/desktop_computer.json'
+            include 'assets/minevm/models/block/laptop_computer.json'
+            include 'assets/minevm/blockstates/keyboard.json'
+            include 'assets/minevm/blockstates/mouse.json'
+            include 'assets/minevm/models/block/keyboard.json'
+            include 'assets/minevm/models/block/mouse.json'
+            include 'assets/minevm/models/item/desktop_computer.json'
+            include 'assets/minevm/models/item/laptop_computer.json'
+            include 'assets/minevm/textures/item/keyboard.png'
+            include 'assets/minevm/textures/item/mouse.png'
+            include 'assets/minevm/textures/item/hdmi_cable.png'
+            include 'assets/minevm/textures/item/usb_cable.png'
+            include 'data/minevm/loot_tables/blocks/keyboard.json'
+            include 'data/minevm/loot_tables/blocks/mouse.json'
         }.files*.path
 
         if (jarEntries.size() != 38) {

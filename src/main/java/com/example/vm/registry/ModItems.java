@@ -1,6 +1,6 @@
 package com.example.vm.registry;
 
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import com.example.vm.item.HdmiCableItem;
 import com.example.vm.item.SystemDiscItem;
 import com.example.vm.item.UsbCableItem;
@@ -14,7 +14,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 public final class ModItems {
     private static final DeferredRegister<Item> ITEMS =
-            DeferredRegister.create(ForgeRegistries.ITEMS, ComputerInMinecraft.MOD_ID);
+            DeferredRegister.create(ForgeRegistries.ITEMS, MineVM.MOD_ID);
 
     public static final RegistryObject<Item> COMPUTER_BLOCK_ITEM =
             ITEMS.register("computer_block", () -> new BlockItem(ModBlocks.COMPUTER_BLOCK.get(), new Item.Properties()));
@@ -43,35 +43,35 @@ public final class ModItems {
     public static final RegistryObject<Item> UBUNTU_SERVER_DISC =
             ITEMS.register("ubuntu_server_disc", () -> new SystemDiscItem(
                     GuestOperatingSystem.UBUNTU_SERVER,
-                    "item.computer_in_minecraft.ubuntu_server_disc",
+                    "item.minevm.ubuntu_server_disc",
                     new Item.Properties().stacksTo(1)
             ));
 
     public static final RegistryObject<Item> UBUNTU_DESKTOP_DISC =
             ITEMS.register("ubuntu_desktop_disc", () -> new SystemDiscItem(
                     GuestOperatingSystem.UBUNTU_DESKTOP,
-                    "item.computer_in_minecraft.ubuntu_desktop_disc",
+                    "item.minevm.ubuntu_desktop_disc",
                     new Item.Properties().stacksTo(1)
             ));
 
     public static final RegistryObject<Item> WINDOWS_10_DISC =
             ITEMS.register("windows_10_disc", () -> new SystemDiscItem(
                     GuestOperatingSystem.WINDOWS_10,
-                    "item.computer_in_minecraft.windows_10_disc",
+                    "item.minevm.windows_10_disc",
                     new Item.Properties().stacksTo(1)
             ));
 
     public static final RegistryObject<Item> WINDOWS_XP_DISC =
             ITEMS.register("windows_xp_disc", () -> new SystemDiscItem(
                     GuestOperatingSystem.WINDOWS_XP,
-                    "item.computer_in_minecraft.windows_xp_disc",
+                    "item.minevm.windows_xp_disc",
                     new Item.Properties().stacksTo(1)
             ));
 
     public static final RegistryObject<Item> WINDOWS_11_DISC =
             ITEMS.register("windows_11_disc", () -> new SystemDiscItem(
                     GuestOperatingSystem.WINDOWS_11,
-                    "item.computer_in_minecraft.windows_11_disc",
+                    "item.minevm.windows_11_disc",
                     new Item.Properties().stacksTo(1)
             ));
 

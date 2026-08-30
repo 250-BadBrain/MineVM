@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "minevm:block/mouse",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "minevm:block/mouse",
+      "y": 270
+    },
+    "facing=south": {
+      "model": "minevm:block/mouse"
+    },
+    "facing=west": {
+      "model": "minevm:block/mouse",
+      "y": 90
+    }
+  }
+}

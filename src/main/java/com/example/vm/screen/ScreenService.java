@@ -1,7 +1,7 @@
 package com.example.vm.screen;
 
 import com.example.vm.concurrent.ComputerExecutors;
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import com.example.vm.input.VirtualMachineInput;
 
 import java.io.IOException;
@@ -108,7 +108,7 @@ public final class ScreenService implements AutoCloseable {
                 return;
             } catch (IOException exception) {
                 if (attempt == CONNECT_RETRY_COUNT) {
-                    ComputerInMinecraft.LOGGER.warn("VNC receiver failed for {} at {}", computerId, endpoint.toDisplayAddress(), exception);
+                    MineVM.LOGGER.warn("VNC receiver failed for {} at {}", computerId, endpoint.toDisplayAddress(), exception);
                     return;
                 }
                 sleepBeforeRetry();
@@ -143,10 +143,10 @@ public final class ScreenService implements AutoCloseable {
     }
 
     private static ExecutorService newScreenExecutor() {
-        return ComputerExecutors.singleThread("computer-in-minecraft-screen-receiver", 16);
+        return ComputerExecutors.singleThread("minevm-screen-receiver", 16);
     }
 
     private static ExecutorService newReceiverExecutor() {
-        return ComputerExecutors.singleThread("computer-in-minecraft-vnc-receiver", 16);
+        return ComputerExecutors.singleThread("minevm-vnc-receiver", 16);
     }
 }

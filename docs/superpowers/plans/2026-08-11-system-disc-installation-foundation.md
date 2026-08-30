@@ -41,7 +41,7 @@ Assert Linux/Windows disc metadata.
 **Files:**
 - Modify: `src/main/java/com/example/vm/registry/ModItems.java`
 - Modify: `src/main/java/com/example/vm/registry/ModCreativeTabs.java`
-- Modify: `src/main/resources/assets/computer_in_minecraft/lang/en_us.json`
+- Modify: `src/main/resources/assets/minevm/lang/en_us.json`
 - Create: item model JSON files for the three discs.
 
 **Interfaces:**

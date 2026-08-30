@@ -1,7 +1,0 @@
-{
-  "variants": {
-    "": {
-      "model": "computer_in_minecraft:block/computer_occupancy"
-    }
-  }
-}

@@ -45,11 +45,11 @@ Add a JavaExec task and include it in `check`.
 
 **Files:**
 - Modify: `src/main/java/com/example/vm/block/ComputerBlock.java`
-- Modify: `src/main/resources/assets/computer_in_minecraft/lang/en_us.json`
+- Modify: `src/main/resources/assets/minevm/lang/en_us.json`
 - Modify: `build.gradle`
 
 **Interfaces:**
-- Consumes: `ComputerInMinecraft.VM_MANAGER`, `VirtualMachineDescriptor.from(ComputerBlockEntity)`, `ComputerStatusMessage.describe(...)`
+- Consumes: `MineVM.VM_MANAGER`, `VirtualMachineDescriptor.from(ComputerBlockEntity)`, `ComputerStatusMessage.describe(...)`
 - Produces: right-click behavior:
   - Normal right-click: async `getState`, then sends status message.
   - Shift-right-click: async `create`, then sends registration message with resulting state.

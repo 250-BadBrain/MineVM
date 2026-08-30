@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "minevm:block/computer_occupancy"
+    }
+  }
+}

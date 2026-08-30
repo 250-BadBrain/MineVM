@@ -10,35 +10,35 @@ public final class SystemDiscItemSelfTest {
     public static void main(String[] args) {
         SystemDiscDefinition ubuntuDisc = new SystemDiscDefinition(
                 GuestOperatingSystem.UBUNTU_SERVER,
-                "item.computer_in_minecraft.ubuntu_server_disc"
+                "item.minevm.ubuntu_server_disc"
         );
         assertEquals(ubuntuDisc.guestOperatingSystem(), GuestOperatingSystem.UBUNTU_SERVER);
-        assertEquals(ubuntuDisc.displayNameKey(), "item.computer_in_minecraft.ubuntu_server_disc");
+        assertEquals(ubuntuDisc.displayNameKey(), "item.minevm.ubuntu_server_disc");
 
         SystemDiscDefinition ubuntuDesktopDisc = new SystemDiscDefinition(
                 GuestOperatingSystem.UBUNTU_DESKTOP,
-                "item.computer_in_minecraft.ubuntu_desktop_disc"
+                "item.minevm.ubuntu_desktop_disc"
         );
         assertEquals(ubuntuDesktopDisc.guestOperatingSystem(), GuestOperatingSystem.UBUNTU_DESKTOP);
-        assertEquals(ubuntuDesktopDisc.displayNameKey(), "item.computer_in_minecraft.ubuntu_desktop_disc");
+        assertEquals(ubuntuDesktopDisc.displayNameKey(), "item.minevm.ubuntu_desktop_disc");
 
         SystemDiscDefinition windows10Disc = new SystemDiscDefinition(
                 GuestOperatingSystem.WINDOWS_10,
-                "item.computer_in_minecraft.windows_10_disc"
+                "item.minevm.windows_10_disc"
         );
         assertEquals(windows10Disc.guestOperatingSystem(), GuestOperatingSystem.WINDOWS_10);
-        assertEquals(windows10Disc.displayNameKey(), "item.computer_in_minecraft.windows_10_disc");
+        assertEquals(windows10Disc.displayNameKey(), "item.minevm.windows_10_disc");
 
         SystemDiscDefinition windowsXpDisc = new SystemDiscDefinition(
                 GuestOperatingSystem.WINDOWS_XP,
-                "item.computer_in_minecraft.windows_xp_disc"
+                "item.minevm.windows_xp_disc"
         );
         assertEquals(windowsXpDisc.guestOperatingSystem(), GuestOperatingSystem.WINDOWS_XP);
-        assertEquals(windowsXpDisc.displayNameKey(), "item.computer_in_minecraft.windows_xp_disc");
+        assertEquals(windowsXpDisc.displayNameKey(), "item.minevm.windows_xp_disc");
 
         SystemDiscDefinition windows11Disc = new SystemDiscDefinition(
                 GuestOperatingSystem.WINDOWS_11,
-                "item.computer_in_minecraft.windows_11_disc"
+                "item.minevm.windows_11_disc"
         );
         assertEquals(windows11Disc.guestOperatingSystem(), GuestOperatingSystem.WINDOWS_11);
     }

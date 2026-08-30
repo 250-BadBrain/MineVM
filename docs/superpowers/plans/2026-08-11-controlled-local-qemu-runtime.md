@@ -22,7 +22,7 @@
 
 **Files:**
 - Create: `src/main/java/com/example/vm/config/ComputerRuntimeConfig.java`
-- Modify: `src/main/java/com/example/vm/ComputerInMinecraft.java`
+- Modify: `src/main/java/com/example/vm/MineVM.java`
 - Test: `src/main/java/com/example/vm/test/ComputerRuntimeConfigSelfTest.java`
 
 **Interfaces:**
@@ -32,7 +32,7 @@
 
 - [x] **Step 1: Define safe Forge config defaults**
 
-Defaults: `enableLocalQemu=false`, `qemuSystemPath=D:\qemu\qemu-system-x86_64.exe`, `qemuImgPath=D:\qemu\qemu-img.exe`, `vmStorageDirectory=run\computer-vms`, `accelerator=whpx`, `diskSizeGb=20`, `isoPath=""`.
+Defaults: `enableLocalQemu=false`, `qemuSystemPath=D:\qemu\qemu-system-x86_64.exe`, `qemuImgPath=D:\qemu\qemu-img.exe`, `vmStorageDirectory=run\minevm-vms`, `accelerator=whpx`, `diskSizeGb=20`, `isoPath=""`.
 
 - [x] **Step 2: Register config in the mod entry**
 

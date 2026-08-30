@@ -1,6 +1,6 @@
 package com.example.vm.client;
 
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import com.example.vm.blockentity.ComputerBlockEntity;
 import com.example.vm.registry.ModBlocks;
 import com.example.vm.vm.GuestOperatingSystem;
@@ -37,7 +37,7 @@ public class ComputerScreenRenderer implements BlockEntityRenderer<ComputerBlock
                     SCREEN_SCALE,
                     computer.getComputerId(),
                     guestOperatingSystem != null && guestOperatingSystem.usesGraphicalPointer(),
-                    ComputerInMinecraft.SCREEN_SERVICE.latestFrameSnapshot(computer.getComputerId()),
+                    MineVM.SCREEN_SERVICE.latestFrameSnapshot(computer.getComputerId()),
                     packedLight
             );
             return;

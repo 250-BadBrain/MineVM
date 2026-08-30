@@ -1,6 +1,6 @@
 package com.example.vm.client;
 
-import com.example.vm.ComputerInMinecraft;
+import com.example.vm.MineVM;
 import com.example.vm.screen.ScreenFrame;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
@@ -74,7 +74,7 @@ public final class ScreenFrameTextureCache {
         private static CachedScreenTexture create(String computerId, int sourceWidth, int sourceHeight, int width, int height) {
             DynamicTexture texture = new DynamicTexture(width, height, true);
             ResourceLocation location = Minecraft.getInstance().getTextureManager().register(
-                    ComputerInMinecraft.MOD_ID + "/vm_screen/" + safeTextureId(computerId),
+                    MineVM.MOD_ID + "/vm_screen/" + safeTextureId(computerId),
                     texture
             );
             return new CachedScreenTexture(sourceWidth, sourceHeight, width, height, texture, location);

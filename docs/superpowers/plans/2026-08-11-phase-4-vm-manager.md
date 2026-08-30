@@ -43,14 +43,14 @@
 **Files:**
 - Create: `src/main/java/com/example/vm/vm/VirtualMachineManager.java`
 - Create: `src/main/java/com/example/vm/vm/backend/NoopVirtualMachineBackend.java`
-- Modify: `src/main/java/com/example/vm/ComputerInMinecraft.java`
+- Modify: `src/main/java/com/example/vm/MineVM.java`
 
 **Interfaces:**
 - Produces: `VirtualMachineManager#create(VirtualMachineDescriptor)`
 - Produces: `VirtualMachineManager#start(String)`
 - Produces: `VirtualMachineManager#stop(String)`
 - Produces: `VirtualMachineManager#getState(String)`
-- Produces: `ComputerInMinecraft.VM_MANAGER`
+- Produces: `MineVM.VM_MANAGER`
 
 - [x] Run all backend work on one named background executor.
 - [x] Register lifecycle shutdown hook on Forge server stopping event.

@@ -19,7 +19,7 @@ public final class ComputerRuntimeConfig {
     public static final boolean DEFAULT_ENABLE_LOCAL_QEMU = false;
     public static final String DEFAULT_QEMU_SYSTEM_PATH = "D:\\qemu\\qemu-system-x86_64.exe";
     public static final String DEFAULT_QEMU_IMG_PATH = "D:\\qemu\\qemu-img.exe";
-    public static final String DEFAULT_VM_STORAGE_DIRECTORY = "run\\computer-vms";
+    public static final String DEFAULT_VM_STORAGE_DIRECTORY = "run\\minevm-vms";
     public static final String DEFAULT_ACCELERATOR = "whpx";
     public static final int DEFAULT_DISK_SIZE_GB = 20;
     public static final int DEFAULT_UBUNTU_DESKTOP_DISK_SIZE_GB = 25;
