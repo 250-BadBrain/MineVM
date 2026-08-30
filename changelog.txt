@@ -1,6 +1,6 @@
 # MineVM Changelog
 
-## Unreleased
+## 1.0.0
 
 - Renamed the project, mod id, resource namespace, and release artifact to MineVM.
 - Added stable in-world virtual computer hardware for Forge 1.20.1.
