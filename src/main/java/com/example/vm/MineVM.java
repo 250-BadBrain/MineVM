@@ -48,12 +48,43 @@ public class MineVM {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         VM_MANAGER.replaceBackend(ComputerRuntimeConfig.createBackend());
+        com.example.vm.network.MultiplayerScreens.start();
     }
 
     @SubscribeEvent
     public void onServerStopping(ServerStoppingEvent event) {
+        com.example.vm.network.MultiplayerScreens.close();
         VM_MANAGER.close();
         SCREEN_SERVICE.close();
         INPUT_SERVICE.close();
+        com.example.vm.screen.FrameMetrics.clear();
+    }
+
+    @SubscribeEvent
+    public void onServerTick(net.minecraftforge.event.TickEvent.ServerTickEvent event) {
+        if (event.phase == net.minecraftforge.event.TickEvent.Phase.END)
+            com.example.vm.network.MultiplayerScreens.tick(event.getServer());
+    }
+
+    @SubscribeEvent
+    public void onPlayerLogout(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof net.minecraft.server.level.ServerPlayer player)
+            com.example.vm.network.MultiplayerScreens.disconnected(player);
+    }
+
+    @SubscribeEvent
+    public void onRegisterCommands(net.minecraftforge.event.RegisterCommandsEvent event) {
+        com.example.vm.computer.ComputerCommands.register(event);
+    }
+
+    @SubscribeEvent
+    public void onPlayerLogin(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof net.minecraft.server.level.ServerPlayer player
+                && !player.getPersistentData().getBoolean("MineVMWelcome")) {
+            player.getPersistentData().putBoolean("MineVMWelcome", true);
+            player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.minevm.welcome")
+                    .withStyle(style -> style.withClickEvent(new net.minecraft.network.chat.ClickEvent(
+                            net.minecraft.network.chat.ClickEvent.Action.SUGGEST_COMMAND, "/minevm help"))));
+        }
     }
 }

@@ -18,7 +18,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-public class ComputerPeripheralBlock extends Block {
+public class ComputerPeripheralBlock extends Block implements net.minecraft.world.level.block.EntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     private static final VoxelShape KEYBOARD_SHAPE = Block.box(1.0D, 0.0D, 4.0D, 15.0D, 1.0D, 12.0D);
     private static final VoxelShape MOUSE_SHAPE = Block.box(5.0D, 0.0D, 4.0D, 11.0D, 2.0D, 12.0D);
@@ -35,6 +35,24 @@ public class ComputerPeripheralBlock extends Block {
 
     public ComputerPeripheralType peripheralType() {
         return peripheralType;
+    }
+
+    @Override
+    public net.minecraft.world.level.block.entity.BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return new com.example.vm.blockentity.ComputerPeripheralBlockEntity(pos, state);
+    }
+
+    @Override
+    public void onRemove(BlockState state, net.minecraft.world.level.Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+        if (!level.isClientSide && !state.is(newState.getBlock())
+                && level.getBlockEntity(pos) instanceof com.example.vm.blockentity.ComputerPeripheralBlockEntity device) {
+            device.computerPos().filter(level::hasChunkAt).map(level::getBlockEntity)
+                    .filter(com.example.vm.blockentity.ComputerBlockEntity.class::isInstance)
+                    .map(com.example.vm.blockentity.ComputerBlockEntity.class::cast)
+                    .filter(computer -> computer.getComputerId().equals(device.computerId()))
+                    .ifPresent(computer -> computer.disconnectPeripheral(pos));
+        }
+        super.onRemove(state, level, pos, newState, movedByPiston);
     }
 
     @Override

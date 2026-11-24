@@ -25,16 +25,16 @@ public class ComputerMonitorRenderer implements BlockEntityRenderer<ComputerMoni
             return;
         }
         if (monitor.linkedComputerId().isEmpty()) {
-            ScreenSurfaceRenderer.renderText(poseStack, buffer, monitor.getBlockState(), SCREEN_Y, SCREEN_Z, TEXT_SCALE, "MONITOR", "NO HDMI", packedLight);
+            ScreenSurfaceRenderer.renderText(poseStack, buffer, monitor.getBlockState(), SCREEN_Y, SCREEN_Z, TEXT_SCALE, ScreenSurfaceRenderer.text("block.minevm.computer_monitor"), ScreenSurfaceRenderer.text("screen.minevm.no_hdmi"), packedLight);
             return;
         }
 
         String computer = monitor.linkedComputerId().get();
-        if (monitor.getLevel() != null && monitor.linkedComputerPos().isPresent()) {
+        if (monitor.getLevel() != null && monitor.linkedComputerPos().filter(monitor.getLevel()::hasChunkAt).isPresent()) {
             BlockEntity linkedEntity = monitor.getLevel().getBlockEntity(monitor.linkedComputerPos().get());
-            if (linkedEntity instanceof ComputerBlockEntity linkedComputer) {
+            if (linkedEntity instanceof ComputerBlockEntity linkedComputer && linkedComputer.getComputerId().equals(computer)) {
                 if (!linkedComputer.poweredOn()) {
-                    ScreenSurfaceRenderer.renderText(poseStack, buffer, monitor.getBlockState(), SCREEN_Y, SCREEN_Z, TEXT_SCALE, "MONITOR", "NO SIGNAL", packedLight);
+                    ScreenSurfaceRenderer.renderText(poseStack, buffer, monitor.getBlockState(), SCREEN_Y, SCREEN_Z, TEXT_SCALE, ScreenSurfaceRenderer.text("block.minevm.computer_monitor"), ScreenSurfaceRenderer.text("screen.minevm.no_signal"), packedLight);
                     return;
                 }
                 if (linkedComputer.vmDisplayActive()) {
@@ -47,8 +47,8 @@ public class ComputerMonitorRenderer implements BlockEntityRenderer<ComputerMoni
                             SCREEN_Z,
                             0.0112F,
                             linkedComputer.getComputerId(),
-                            guestOperatingSystem != null && guestOperatingSystem.usesGraphicalPointer(),
-                            MineVM.SCREEN_SERVICE.latestFrameSnapshot(linkedComputer.getComputerId()),
+                            false,
+                            ClientScreenFrames.snapshot(linkedComputer.getComputerId(), monitor.getBlockPos()),
                             packedLight
                     );
                     return;
@@ -61,7 +61,7 @@ public class ComputerMonitorRenderer implements BlockEntityRenderer<ComputerMoni
                         SCREEN_Y,
                         SCREEN_Z,
                         0.0112F,
-                        "Computer BIOS",
+                        ScreenSurfaceRenderer.text("screen.minevm.computer_bios"),
                         linkedComputer.getComputerId(),
                         discLabel(linkedComputer),
                         active,
@@ -71,7 +71,7 @@ public class ComputerMonitorRenderer implements BlockEntityRenderer<ComputerMoni
             }
         }
 
-        ScreenSurfaceRenderer.renderText(poseStack, buffer, monitor.getBlockState(), SCREEN_Y, SCREEN_Z, TEXT_SCALE, "MONITOR", "LINKED CASE MISSING", packedLight);
+        ScreenSurfaceRenderer.renderText(poseStack, buffer, monitor.getBlockState(), SCREEN_Y, SCREEN_Z, TEXT_SCALE, ScreenSurfaceRenderer.text("block.minevm.computer_monitor"), ScreenSurfaceRenderer.text("screen.minevm.case_missing"), packedLight);
     }
 
     @Override

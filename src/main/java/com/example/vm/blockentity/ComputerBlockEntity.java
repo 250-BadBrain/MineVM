@@ -22,6 +22,7 @@ public class ComputerBlockEntity extends BlockEntity {
     private static final String TAG_DISK_FILE = "DiskFile";
     private static final String TAG_INSERTED_DISC = "InsertedDisc";
     private static final String TAG_LINKED_MONITOR_POS = "LinkedMonitorPos";
+    private static final String TAG_LINKED_FLOPPY_DRIVE_POS = "LinkedFloppyDrivePos";
     private static final String TAG_KEYBOARD_CONNECTED = "KeyboardConnected";
     private static final String TAG_MOUSE_CONNECTED = "MouseConnected";
     private static final String TAG_POWERED_ON = "PoweredOn";
@@ -37,11 +38,66 @@ public class ComputerBlockEntity extends BlockEntity {
     @Nullable
     private GuestOperatingSystem diskGuestOperatingSystem;
     private BlockPos linkedMonitorPos;
+    private BlockPos linkedFloppyDrivePos;
     private boolean keyboardConnected;
     private boolean mouseConnected;
     private boolean poweredOn;
     private boolean vmDisplayActive;
     private boolean powerTransitioning;
+    private BlockPos keyboardPos;
+    private BlockPos mousePos;
+    private String keyboardId = "";
+    private String mouseId = "";
+    private UUID owner;
+    private final java.util.Set<UUID> trustedPlayers = new java.util.HashSet<>();
+
+    public Optional<UUID> owner() { return Optional.ofNullable(owner); }
+
+    public boolean canManage(net.minecraft.world.entity.player.Player player) {
+        return owner == null || owner.equals(player.getUUID()) || player.hasPermissions(2);
+    }
+
+    public boolean canControl(net.minecraft.world.entity.player.Player player) {
+        return canManage(player) || trustedPlayers.contains(player.getUUID());
+    }
+
+    public void setTrusted(UUID player, boolean trusted) {
+        if (trusted) trustedPlayers.add(player); else trustedPlayers.remove(player);
+        markUpdated();
+    }
+
+    public void claimOwner(UUID playerId) {
+        if (owner == null) { owner = playerId; markUpdated(); }
+    }
+
+    public void connectPeripheral(com.example.vm.item.ComputerPeripheralType type, ComputerPeripheralBlockEntity device) {
+        BlockPos oldPos = type == com.example.vm.item.ComputerPeripheralType.KEYBOARD ? keyboardPos : mousePos;
+        if (level != null && oldPos != null && !oldPos.equals(device.getBlockPos()) && level.hasChunkAt(oldPos)
+                && level.getBlockEntity(oldPos) instanceof ComputerPeripheralBlockEntity old
+                && old.computerId().equals(computerId)) old.link("", null);
+        if (type == com.example.vm.item.ComputerPeripheralType.KEYBOARD) {
+            keyboardPos = device.getBlockPos(); keyboardId = device.deviceId(); keyboardConnected = true;
+        } else {
+            mousePos = device.getBlockPos(); mouseId = device.deviceId(); mouseConnected = true;
+        }
+        device.link(computerId, worldPosition);
+        markUpdated();
+    }
+
+    public void disconnectPeripheral(BlockPos pos) {
+        if (pos.equals(keyboardPos)) { keyboardPos = null; keyboardId = ""; keyboardConnected = false; }
+        if (pos.equals(mousePos)) { mousePos = null; mouseId = ""; mouseConnected = false; }
+        markUpdated();
+    }
+
+    private boolean validPeripheral(BlockPos pos, String id, com.example.vm.item.ComputerPeripheralType type) {
+        return level != null && pos != null && level.hasChunkAt(pos)
+                && level.getBlockState(pos).getBlock() instanceof com.example.vm.block.ComputerPeripheralBlock block
+                && block.peripheralType() == type
+                && level.getBlockEntity(pos) instanceof ComputerPeripheralBlockEntity device
+                && device.deviceId().equals(id) && device.computerId().equals(computerId)
+                && device.computerPos().filter(worldPosition::equals).isPresent();
+    }
 
     public ComputerBlockEntity(BlockPos pos, BlockState blockState) {
         super(ModBlockEntities.COMPUTER_BLOCK_ENTITY.get(), pos, blockState);
@@ -125,26 +181,25 @@ public class ComputerBlockEntity extends BlockEntity {
         markUpdated();
     }
 
+    public Optional<BlockPos> linkedFloppyDrivePos() {
+        return Optional.ofNullable(linkedFloppyDrivePos);
+    }
+
+    public void linkFloppyDrive(BlockPos floppyDrivePos) {
+        linkedFloppyDrivePos = floppyDrivePos;
+        markUpdated();
+    }
+
     public boolean keyboardConnected() {
-        return keyboardConnected;
+        return validPeripheral(keyboardPos, keyboardId, com.example.vm.item.ComputerPeripheralType.KEYBOARD);
     }
 
     public boolean mouseConnected() {
-        return mouseConnected;
-    }
-
-    public void connectKeyboard() {
-        keyboardConnected = true;
-        markUpdated();
-    }
-
-    public void connectMouse() {
-        mouseConnected = true;
-        markUpdated();
+        return validPeripheral(mousePos, mouseId, com.example.vm.item.ComputerPeripheralType.MOUSE);
     }
 
     public boolean hasDesktopInputDevices() {
-        return keyboardConnected && mouseConnected;
+        return keyboardConnected() && mouseConnected();
     }
 
     public boolean poweredOn() {
@@ -217,6 +272,7 @@ public class ComputerBlockEntity extends BlockEntity {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putString(TAG_COMPUTER_ID, computerId);
+        saveOwnerAndWiring(tag);
         tag.putInt(TAG_CPU_CORES, hardwareConfiguration.cpuCores());
         tag.putInt(TAG_MEMORY_MB, hardwareConfiguration.memoryMb());
         tag.putString(TAG_DISK_FILE, hardwareConfiguration.diskFile());
@@ -232,6 +288,9 @@ public class ComputerBlockEntity extends BlockEntity {
         if (linkedMonitorPos != null) {
             tag.putLong(TAG_LINKED_MONITOR_POS, linkedMonitorPos.asLong());
         }
+        if (linkedFloppyDrivePos != null) {
+            tag.putLong(TAG_LINKED_FLOPPY_DRIVE_POS, linkedFloppyDrivePos.asLong());
+        }
         tag.putBoolean(TAG_KEYBOARD_CONNECTED, keyboardConnected);
         tag.putBoolean(TAG_MOUSE_CONNECTED, mouseConnected);
         tag.putBoolean(TAG_POWERED_ON, poweredOn);
@@ -242,7 +301,12 @@ public class ComputerBlockEntity extends BlockEntity {
         super.load(tag);
 
         loadIdentity(tag);
+        keyboardPos = tag.contains("KeyboardPos") ? BlockPos.of(tag.getLong("KeyboardPos")) : null;
+        mousePos = tag.contains("MousePos") ? BlockPos.of(tag.getLong("MousePos")) : null;
+        keyboardId = tag.getString("KeyboardId");
+        mouseId = tag.getString("MouseId");
         linkedMonitorPos = tag.contains(TAG_LINKED_MONITOR_POS) ? BlockPos.of(tag.getLong(TAG_LINKED_MONITOR_POS)) : null;
+        linkedFloppyDrivePos = tag.contains(TAG_LINKED_FLOPPY_DRIVE_POS) ? BlockPos.of(tag.getLong(TAG_LINKED_FLOPPY_DRIVE_POS)) : null;
         keyboardConnected = tag.getBoolean(TAG_KEYBOARD_CONNECTED);
         mouseConnected = tag.getBoolean(TAG_MOUSE_CONNECTED);
         poweredOn = tag.getBoolean(TAG_POWERED_ON);
@@ -277,6 +341,8 @@ public class ComputerBlockEntity extends BlockEntity {
 
     private CompoundTag saveIdentity() {
         CompoundTag tag = new CompoundTag();
+        saveTrusted(tag);
+        if (owner != null) tag.putUUID("Owner", owner);
         tag.putString(TAG_COMPUTER_ID, computerId);
         tag.putInt(TAG_CPU_CORES, hardwareConfiguration.cpuCores());
         tag.putInt(TAG_MEMORY_MB, hardwareConfiguration.memoryMb());
@@ -294,17 +360,27 @@ public class ComputerBlockEntity extends BlockEntity {
     }
 
     private void loadIdentity(CompoundTag tag) {
+        trustedPlayers.clear();
+        for (net.minecraft.nbt.Tag value : tag.getList("TrustedPlayers", 8)) {
+            try { trustedPlayers.add(UUID.fromString(value.getAsString())); }
+            catch (IllegalArgumentException invalid) { /* Ignore malformed legacy data. */ }
+        }
+        owner = tag.hasUUID("Owner") ? tag.getUUID("Owner") : null;
         if (tag.contains(TAG_COMPUTER_ID)) {
             computerId = tag.getString(TAG_COMPUTER_ID);
         }
-        if (computerId == null || computerId.isBlank()) {
+        if (computerId == null || !computerId.matches("[A-Za-z0-9_-]{1,128}")) {
             computerId = createComputerId();
         }
 
         int cpuCores = tag.contains(TAG_CPU_CORES) ? tag.getInt(TAG_CPU_CORES) : ComputerHardwareConfiguration.DEFAULT_CPU_CORES;
         int memoryMb = tag.contains(TAG_MEMORY_MB) ? tag.getInt(TAG_MEMORY_MB) : ComputerHardwareConfiguration.DEFAULT_MEMORY_MB;
         String diskFile = tag.contains(TAG_DISK_FILE) ? tag.getString(TAG_DISK_FILE) : computerId + ".qcow2";
-        hardwareConfiguration = new ComputerHardwareConfiguration(cpuCores, memoryMb, diskFile);
+        try {
+            hardwareConfiguration = new ComputerHardwareConfiguration(cpuCores, memoryMb, diskFile);
+        } catch (IllegalArgumentException exception) {
+            hardwareConfiguration = ComputerHardwareConfiguration.defaultConfiguration(computerId);
+        }
         insertedDisc = tag.contains(TAG_INSERTED_DISC) ? GuestOperatingSystem.parse(tag.getString(TAG_INSERTED_DISC)) : null;
         activeGuestOperatingSystem = tag.contains(TAG_ACTIVE_GUEST_OPERATING_SYSTEM) ? GuestOperatingSystem.parse(tag.getString(TAG_ACTIVE_GUEST_OPERATING_SYSTEM)) : null;
         diskGuestOperatingSystem = tag.contains(TAG_DISK_GUEST_OPERATING_SYSTEM) ? GuestOperatingSystem.parse(tag.getString(TAG_DISK_GUEST_OPERATING_SYSTEM)) : null;
@@ -312,5 +388,20 @@ public class ComputerBlockEntity extends BlockEntity {
 
     private static String createComputerId() {
         return "computer-" + UUID.randomUUID();
+    }
+
+    private void saveOwnerAndWiring(CompoundTag tag) {
+        saveTrusted(tag);
+        if (owner != null) tag.putUUID("Owner", owner);
+        if (keyboardPos != null) tag.putLong("KeyboardPos", keyboardPos.asLong());
+        if (mousePos != null) tag.putLong("MousePos", mousePos.asLong());
+        tag.putString("KeyboardId", keyboardId);
+        tag.putString("MouseId", mouseId);
+    }
+
+    private void saveTrusted(CompoundTag tag) {
+        net.minecraft.nbt.ListTag trusted = new net.minecraft.nbt.ListTag();
+        trustedPlayers.forEach(player -> trusted.add(net.minecraft.nbt.StringTag.valueOf(player.toString())));
+        tag.put("TrustedPlayers", trusted);
     }
 }

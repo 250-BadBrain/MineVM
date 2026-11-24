@@ -1,8 +1,8 @@
 package com.example.vm.qmp;
 
 public record QmpEndpoint(String host, int port) {
-    private static final int FIRST_DYNAMIC_PORT = 42000;
-    private static final int PORT_COUNT = 1000;
+    private static final int FIRST_DYNAMIC_PORT = 43000;
+    private static final int PORT_COUNT = 20_000;
 
     public QmpEndpoint {
         if (host == null || host.isBlank()) {

@@ -18,16 +18,30 @@ public final class LocalVmPaths {
     }
 
     public Path vmDirectory(VirtualMachineDescriptor descriptor) {
-        Path directory = storageRoot.resolve(descriptor.computerId()).normalize();
+        Path computerId = Path.of(descriptor.computerId());
+        if (computerId.isAbsolute() || computerId.getNameCount() != 1
+                || descriptor.computerId().equals(".") || descriptor.computerId().equals("..")) {
+            throw new IllegalArgumentException("Computer id must be a managed directory name: " + descriptor.computerId());
+        }
+        Path directory = storageRoot.resolve(computerId).normalize();
         if (!directory.startsWith(storageRoot)) {
             throw new IllegalArgumentException("Computer id escapes VM storage root: " + descriptor.computerId());
         }
         return directory;
     }
 
+    public Path floppyDirectory() {
+        Path directory = storageRoot.resolve("floppies").normalize();
+        if (!directory.startsWith(storageRoot)) {
+            throw new IllegalStateException("Floppy storage escapes VM storage root");
+        }
+        return directory;
+    }
+
     public Path diskPath(VirtualMachineDescriptor descriptor) {
         Path diskFile = Path.of(descriptor.diskFile());
-        if (diskFile.isAbsolute() || diskFile.getNameCount() != 1) {
+        if (diskFile.isAbsolute() || diskFile.getNameCount() != 1
+                || descriptor.diskFile().equals(".") || descriptor.diskFile().equals("..")) {
             throw new IllegalArgumentException("VM disk file must be a managed file name: " + descriptor.diskFile());
         }
         return vmDirectory(descriptor).resolve(diskFile).normalize();

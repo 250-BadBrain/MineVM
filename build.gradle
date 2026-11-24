@@ -95,6 +95,7 @@ minecraft {
         // By default, the server will crash when no gametests are provided.
         // The gametest system is also enabled by default for other run configs under the /test command.
         gameTestServer {
+            workingDirectory project.file('run-gametest')
             property 'forge.enabledGameTestNamespaces', mod_id
         }
 
@@ -334,6 +335,7 @@ tasks.register('verifyPhase4VmManager') {
             exclude 'com/example/vm/config/ComputerRuntimeConfig.java'
             exclude 'com/example/vm/config/ComputerRuntimePreflight.java'
             exclude 'com/example/vm/test/LocalQemuBackendSelfTest.java'
+            exclude 'com/example/vm/test/QemuMediaIntegrationSelfTest.java'
         }.files.each { sourceFile ->
             def text = sourceFile.text
             forbiddenPatterns.each { pattern ->
@@ -657,6 +659,35 @@ tasks.named('check') {
     dependsOn 'verifyComputerDeviceInteractionArchitecture'
 }
 
+tasks.register('runQemuMediaIntegrationSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Check removable media with real QEMU using disposable disks.'
+    dependsOn 'classes'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.example.vm.test.QemuMediaIntegrationSelfTest'
+    doFirst {
+        args providers.gradleProperty('qemuSystemPath').get()
+    }
+}
+
+tasks.register('runImprovementSelfTest', JavaExec) {
+    group = 'verification'
+    dependsOn 'classes'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.example.vm.test.ImprovementSelfTest'
+}
+
+tasks.register('prepareMineVmGameTestStructure', JavaExec) {
+    dependsOn 'classes'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.example.vm.test.GameTestStructureWriter'
+    args layout.buildDirectory.dir('resources/main/data/minevm/structures').get().asFile.absolutePath
+}
+
+tasks.matching { it.name == 'runGameTestServer' }.configureEach { dependsOn 'prepareMineVmGameTestStructure' }
+
+tasks.named('check') { dependsOn 'runImprovementSelfTest' }
+
 tasks.register('runQmpCommandSelfTest', JavaExec) {
     group = 'verification'
     description = 'Verifies Phase 6 QMP command JSON and endpoint mapping without opening QMP sockets.'
@@ -827,7 +858,7 @@ tasks.register('verifyPhase7VncScreenFoundation') {
             }
         }
         def surfaceRendererText = file('src/main/java/com/example/vm/client/ScreenSurfaceRenderer.java').text
-        ['ScreenFrameTextureCache.updateAndGet', 'RenderType.text', 'drawTextureQuad', 'VM_SCREEN_WIDTH', 'VM_SCREEN_HEIGHT', 'VertexConsumer', 'WAITING FOR FRAME'].each { marker ->
+        ['ScreenFrameTextureCache.updateAndGet', 'RenderType.text', 'drawTextureQuad', 'VM_SCREEN_WIDTH', 'VM_SCREEN_HEIGHT', 'VertexConsumer', 'screen.minevm.waiting_frame'].each { marker ->
             if (!surfaceRendererText.contains(marker)) {
                 throw new GradleException("Screen surface renderer missing dynamic VM texture marker ${marker}.")
             }
@@ -1344,7 +1375,7 @@ tasks.register('verifyBiosMenuFoundation') {
         }
 
         def usbText = file('src/main/java/com/example/vm/item/UsbCableItem.java').text
-        ['UsbPeripheralPos', 'connectKeyboard', 'connectMouse', 'ComputerPeripheralItem', 'ComputerPeripheralBlock'].each { marker ->
+        ['UsbPeripheralPos', 'connectPeripheral', 'deviceId', 'ComputerPeripheralBlockEntity', 'ComputerPeripheralBlock'].each { marker ->
             if (!usbText.contains(marker)) {
                 throw new GradleException("USB cable missing peripheral marker ${marker}.")
             }
@@ -1394,21 +1425,21 @@ tasks.register('verifyBiosMenuFoundation') {
         }
 
         def monitorBlockText = file('src/main/java/com/example/vm/block/ComputerMonitorBlock.java').text
-        ['startScreenControl', 'hasDesktopInputDevices', 'poweredOn', 'displayPowered', 'Connect HDMI', 'SystemDiscItem', 'not the monitor', 'toggleDisplayPower', 'isDisplayPowerButton'].each { marker ->
+        ['startScreenControl', 'hasDesktopInputDevices', 'poweredOn', 'displayPowered', 'connect_hdmi_first', 'SystemDiscItem', 'insert_disc_in_case', 'toggleDisplayPower', 'isDisplayPowerButton'].each { marker ->
             if (!monitorBlockText.contains(marker)) {
                 throw new GradleException("ComputerMonitorBlock missing immersive control marker ${marker}.")
             }
         }
 
         def surfaceRendererText = file('src/main/java/com/example/vm/client/ScreenSurfaceRenderer.java').text
-        ['renderBiosPanel', 'renderVmDisplay', 'Boot Disc', 'Boot Disk', 'CLICK/ENTER ACTIVATE', 'WAITING FOR FRAME', 'optionLabel'].each { marker ->
+        ['renderBiosPanel', 'renderVmDisplay', 'Boot Disc', 'Boot Disk', 'screen.minevm.active_hint', 'screen.minevm.waiting_frame', 'optionLabel'].each { marker ->
             if (!surfaceRendererText.contains(marker)) {
                 throw new GradleException("Screen surface renderer missing BIOS panel marker ${marker}.")
             }
         }
 
         def rendererText = file('src/main/java/com/example/vm/client/ComputerMonitorRenderer.java').text + file('src/main/java/com/example/vm/client/ComputerScreenRenderer.java').text
-        ['ScreenSurfaceRenderer.renderBiosPanel', 'ScreenSurfaceRenderer.renderVmDisplay', 'latestFrameSnapshot', 'vmDisplayActive', 'linkedComputerPos', 'displayPowered', 'poweredOn', 'NO SIGNAL', 'Computer BIOS', 'Laptop BIOS'].each { marker ->
+        ['ScreenSurfaceRenderer.renderBiosPanel', 'ScreenSurfaceRenderer.renderVmDisplay', 'ClientScreenFrames.snapshot', 'vmDisplayActive', 'linkedComputerPos', 'displayPowered', 'poweredOn', 'screen.minevm.no_signal', 'screen.minevm.computer_bios', 'screen.minevm.laptop_bios'].each { marker ->
             if (!rendererText.contains(marker)) {
                 throw new GradleException("Screen renderers missing in-world screen marker ${marker}.")
             }

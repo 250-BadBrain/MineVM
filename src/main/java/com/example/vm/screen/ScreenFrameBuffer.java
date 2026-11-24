@@ -17,8 +17,10 @@ final class ScreenFrameBuffer {
     private boolean dirty;
     private ScreenFrame lastSnapshot;
     private int framesSinceKeyframe;
+    private long revision;
 
     synchronized void apply(ScreenFrame frame) {
+        revision++;
         boolean resized = false;
         if (frame.width() != width || frame.height() != height || pixels.length != frame.width() * frame.height()) {
             width = frame.width();
@@ -54,6 +56,12 @@ final class ScreenFrameBuffer {
             dirty = false;
         }
         return Optional.ofNullable(lastSnapshot);
+    }
+
+    synchronized long revision() { return revision; }
+
+    synchronized Optional<ScreenFrame> fullSnapshot() {
+        return width == 0 ? Optional.empty() : Optional.of(new ScreenFrame(width, height, 0, 0, width, height, pixels));
     }
 
     private void includeDirtyRectangle(int x, int y, int rectangleWidth, int rectangleHeight) {

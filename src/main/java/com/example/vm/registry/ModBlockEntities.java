@@ -4,6 +4,8 @@ import com.example.vm.MineVM;
 import com.example.vm.blockentity.ComputerBlockEntity;
 import com.example.vm.blockentity.ComputerMonitorBlockEntity;
 import com.example.vm.blockentity.ComputerOccupancyBlockEntity;
+import com.example.vm.blockentity.FloppyDriveBlockEntity;
+import com.example.vm.blockentity.ComputerPeripheralBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -37,8 +39,19 @@ public final class ModBlockEntities {
                             ModBlocks.COMPUTER_OCCUPANCY.get()
                     ).build(null));
 
+    public static final RegistryObject<BlockEntityType<FloppyDriveBlockEntity>> FLOPPY_DRIVE_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("floppy_drive_block_entity",
+                    () -> BlockEntityType.Builder.of(
+                            FloppyDriveBlockEntity::new,
+                            ModBlocks.FLOPPY_DRIVE.get()
+                    ).build(null));
+
     private ModBlockEntities() {
     }
+
+    public static final RegistryObject<BlockEntityType<ComputerPeripheralBlockEntity>> COMPUTER_PERIPHERAL_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("computer_peripheral_block_entity", () -> BlockEntityType.Builder.of(
+                    ComputerPeripheralBlockEntity::new, ModBlocks.KEYBOARD.get(), ModBlocks.MOUSE.get()).build(null));
 
     public static void register(IEventBus modEventBus) {
         BLOCK_ENTITIES.register(modEventBus);

@@ -65,10 +65,10 @@ public final class ScreenSurfaceRenderer {
         Matrix4f matrix = poseStack.last().pose();
         drawCentered(font, matrix, buffer, title, -42.0F, 0x66CCFF, packedLight);
         drawCentered(font, matrix, buffer, "ID " + shortId(computerId), -28.0F, 0xD7E8FF, packedLight);
-        drawCentered(font, matrix, buffer, "DISC " + discLabel, -14.0F, 0xD7E8FF, packedLight);
+        drawCentered(font, matrix, buffer, net.minecraft.network.chat.Component.translatable("screen.minevm.disc", discLabel).getString(), -14.0F, 0xD7E8FF, packedLight);
         drawCentered(font, matrix, buffer, optionLabel(ComputerBiosAction.BOOT_FROM_DISC, "Boot Disc") + " " + optionLabel(ComputerBiosAction.BOOT_VM_DISK, "Boot Disk"), 4.0F, 0xFFCC66, packedLight);
         drawCentered(font, matrix, buffer, optionLabel(ComputerBiosAction.POWER_OFF, "Power Off") + " " + optionLabel(ComputerBiosAction.EJECT_DISC, "Eject"), 18.0F, 0xC9D4E2, packedLight);
-        drawCentered(font, matrix, buffer, active ? "CLICK/ENTER ACTIVATE  CTRL+ALT EXIT" : "RIGHT CLICK TO CONTROL", 46.0F, active ? 0xA9C7FF : 0xA9C7FF, packedLight);
+        drawCentered(font, matrix, buffer, text(active ? "screen.minevm.active_hint" : "screen.minevm.control_hint"), 46.0F, 0xA9C7FF, packedLight);
         poseStack.popPose();
     }
 
@@ -110,10 +110,10 @@ public final class ScreenSurfaceRenderer {
                 drawCursor(matrix, buffer, -fitted[0] / 2.0F + cursor[0], -fitted[1] / 2.0F + cursor[1]);
             }
         } else {
-            drawCentered(font, matrix, buffer, "VM RUNNING", -26.0F, 0x66FF99, packedLight);
+            drawCentered(font, matrix, buffer, text("screen.minevm.vm_running"), -26.0F, 0x66FF99, packedLight);
             drawCentered(font, matrix, buffer, "VNC " + VncEndpoint.forComputer(computerId).toDisplayAddress(), -9.0F, 0xD7E8FF, packedLight);
-            drawCentered(font, matrix, buffer, "WAITING FOR FRAME", 8.0F, 0xFFCC66, packedLight);
-            drawCentered(font, matrix, buffer, "CTRL+ALT EXIT", 29.0F, 0xA9C7FF, packedLight);
+            drawCentered(font, matrix, buffer, text("screen.minevm.waiting_frame"), 8.0F, 0xFFCC66, packedLight);
+            drawCentered(font, matrix, buffer, text("screen.minevm.exit_hint"), 29.0F, 0xA9C7FF, packedLight);
         }
         poseStack.popPose();
     }
@@ -161,6 +161,7 @@ public final class ScreenSurfaceRenderer {
     }
 
     private static String optionLabel(ComputerBiosAction action, String label) {
+        label = net.minecraft.network.chat.Component.translatable("screen.minevm." + action.name().toLowerCase(java.util.Locale.ROOT)).getString();
         boolean selected = ImmersiveControlClient.active()
                 ? ImmersiveControlClient.selectedAction() == action
                 : action == ComputerBiosAction.BOOT_FROM_DISC;
@@ -170,6 +171,8 @@ public final class ScreenSurfaceRenderer {
     private static void drawCentered(Font font, Matrix4f matrix, MultiBufferSource buffer, String text, float y, int color, int packedLight) {
         font.drawInBatch(text, -font.width(text) / 2.0F, y, color, false, matrix, buffer, Font.DisplayMode.NORMAL, 0, packedLight);
     }
+
+    public static String text(String key) { return net.minecraft.network.chat.Component.translatable(key).getString(); }
 
     private static String shortId(String computerId) {
         if (computerId == null || computerId.isBlank()) {

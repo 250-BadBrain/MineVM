@@ -3,6 +3,7 @@ package com.example.vm.test;
 import com.example.vm.MineVM;
 import com.example.vm.qmp.QmpEndpoint;
 import com.example.vm.screen.VncEndpoint;
+import com.example.vm.floppy.FloppyMedia;
 import com.example.vm.vm.VirtualMachineBootRequest;
 import com.example.vm.vm.FirmwareConfiguration;
 import com.example.vm.vm.GuestOperatingSystem;
@@ -41,6 +42,7 @@ public final class LocalQemuBackendSelfTest {
         assertDiskStartCommand(builder.startCommand(descriptor));
         assertFreeDosCommand(builder);
         assertWindows95Command(builder);
+        assertExperimentalGuestCommands(builder);
         assertWindowsXpCommand(builder);
         assertWindows10Command(builder);
         assertWindows11Command(builder);
@@ -126,6 +128,18 @@ public final class LocalQemuBackendSelfTest {
         assertContains(discCommand, "user,model=e1000e");
     }
 
+    private static void assertExperimentalGuestCommands(QemuCommandBuilder builder) {
+        for (GuestOperatingSystem guest : new GuestOperatingSystem[] {GuestOperatingSystem.WINDOWS_98, GuestOperatingSystem.WINDOWS_VISTA}) {
+            VirtualMachineDescriptor descriptor = new VirtualMachineDescriptor("experimental-" + guest.name(), 4, 4096, "disk.qcow2", 32, guest, FirmwareConfiguration.forGuest(guest));
+            List<String> command = builder.startCommand(descriptor);
+            assertContains(command, "if=floppy,index=0,id=boot_floppy");
+            assertContains(command, "file=" + builder.diskPath(descriptor) + ",format=qcow2,if=ide,index=0,media=disk,id=vm_disk");
+            assertNotContains(command, "q35");
+            assertNotContains(command, "virtio");
+            assertValueAfter(command, "-smp", guest == GuestOperatingSystem.WINDOWS_98 ? "1" : "2");
+        }
+    }
+
     private static void assertWindowsXpCommand(QemuCommandBuilder builder) {
         VirtualMachineDescriptor descriptor = new VirtualMachineDescriptor(
                 "computer-windows-xp",
@@ -176,11 +190,13 @@ public final class LocalQemuBackendSelfTest {
                 FirmwareConfiguration.forGuest(GuestOperatingSystem.WINDOWS_95)
         );
         List<String> command = builder.startCommand(descriptor);
-        assertNotContains(command, "-machine");
+        assertContains(command, "-machine");
+        assertContains(command, "pc");
+        assertContains(command, "if=floppy,index=0,id=boot_floppy");
         assertContains(command, "-accel");
-        assertContains(command, "tcg,thread=multi");
+        assertContains(command, "tcg,thread=single");
         assertContains(command, "-cpu");
-        assertContains(command, "qemu32");
+        assertContains(command, "pentium");
         assertValueAfter(command, "-m", "256");
         assertValueAfter(command, "-smp", "1");
         assertContains(command, "file=E:\\MinecraftVMs\\computer-windows-95\\computer-windows-95.qcow2,format=qcow2,if=ide,index=0,media=disk,id=vm_disk");
@@ -200,8 +216,7 @@ public final class LocalQemuBackendSelfTest {
 
         List<String> floppyBootCommand = builder.startCommand(descriptor, VirtualMachineBootRequest.systemDiscWithBootFloppy("computer-windows-95", "E:\\Downloads\\Win95.iso", "E:\\Downloads\\Win95Boot.img"));
         assertContains(floppyBootCommand, "file=E:\\Downloads\\Win95.iso,media=cdrom,readonly=on,if=ide,index=2,id=system_disc");
-        assertContains(floppyBootCommand, "-fda");
-        assertContains(floppyBootCommand, "E:\\Downloads\\Win95Boot.img");
+        assertContains(floppyBootCommand, "file=E:\\Downloads\\Win95Boot.img,format=raw,if=floppy,index=0,readonly=on,id=boot_floppy");
         assertContains(floppyBootCommand, "-boot");
         assertContains(floppyBootCommand, "order=a");
 
@@ -209,6 +224,22 @@ public final class LocalQemuBackendSelfTest {
         assertContains(secondStageCommand, "file=E:\\Downloads\\Win95.iso,media=cdrom,readonly=on,if=ide,index=2,id=system_disc");
         assertContains(secondStageCommand, "-boot");
         assertContains(secondStageCommand, "order=c");
+
+        String mediaId = "fca6d5ca-5a1c-4c81-89a1-d611c3aab919";
+        List<String> writableCommand = builder.startCommand(descriptor,
+                VirtualMachineBootRequest.vmDisk(descriptor.computerId()).withFloppyMedia(FloppyMedia.blank(mediaId), ""));
+        assertContains(writableCommand, "file=E:\\MinecraftVMs\\floppies\\" + mediaId + ".img,format=raw,if=floppy,index=0,readonly=off,id=boot_floppy");
+        assertContains(writableCommand, "order=c");
+        List<String> attachedBootCommand = builder.startCommand(descriptor,
+                VirtualMachineBootRequest.vmDisk(descriptor.computerId())
+                        .withFloppyMedia(FloppyMedia.windows95Boot(), "E:\\Downloads\\Win95Boot.img"));
+        assertContains(attachedBootCommand, "file=E:\\Downloads\\Win95Boot.img,format=raw,if=floppy,index=0,readonly=on,id=boot_floppy");
+        assertContains(attachedBootCommand, "order=c");
+
+        assertEquals(
+                builder.blankFloppyPath("fca6d5ca-5a1c-4c81-89a1-d611c3aab919").toString(),
+                "E:\\MinecraftVMs\\floppies\\fca6d5ca-5a1c-4c81-89a1-d611c3aab919.img"
+        );
     }
 
     private static void assertFreeDosCommand(QemuCommandBuilder builder) {
@@ -327,4 +358,5 @@ public final class LocalQemuBackendSelfTest {
             throw new AssertionError("Expected text to contain " + expected + " but got " + actual);
         }
     }
+
 }

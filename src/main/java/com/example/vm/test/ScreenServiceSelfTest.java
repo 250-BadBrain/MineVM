@@ -5,6 +5,14 @@ import com.example.vm.screen.ScreenService;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import com.example.vm.screen.VncEndpoint;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.FutureTask;
 
 public final class ScreenServiceSelfTest {
     private ScreenServiceSelfTest() {
@@ -80,5 +88,73 @@ public final class ScreenServiceSelfTest {
                 throw new AssertionError("ScreenService must recover after close");
             }
         }
+        assertConcurrentReceivers();
+    }
+
+    private static void assertConcurrentReceivers() throws Exception {
+        CountDownLatch bothReady = new CountDownLatch(2);
+        CountDownLatch release = new CountDownLatch(1);
+        try (ServerSocket first = openVncServer(); ServerSocket second = openVncServer();
+             ScreenService service = new ScreenService()) {
+            FutureTask<Void> firstTask = startIdleVncServer(first, bothReady, release);
+            FutureTask<Void> secondTask = startIdleVncServer(second, bothReady, release);
+            try {
+                service.startVncReceiver("first", VncEndpoint.localPort(first.getLocalPort()));
+                service.startVncReceiver("second", VncEndpoint.localPort(second.getLocalPort()));
+                if (!bothReady.await(5, TimeUnit.SECONDS)) {
+                    throw new AssertionError("Two running VMs must receive frames concurrently");
+                }
+            } finally {
+                release.countDown();
+            }
+            firstTask.get(5, TimeUnit.SECONDS);
+            secondTask.get(5, TimeUnit.SECONDS);
+        }
+    }
+
+    private static ServerSocket openVncServer() throws java.io.IOException {
+        for (int port = 6300; port < 6400; port++) {
+            try {
+                return new ServerSocket(port);
+            } catch (java.net.BindException occupied) {
+                // Try the next VNC-compatible test port.
+            }
+        }
+        throw new java.io.IOException("No free VNC-compatible test port");
+    }
+
+    private static FutureTask<Void> startIdleVncServer(ServerSocket server, CountDownLatch ready, CountDownLatch release) {
+        FutureTask<Void> task = new FutureTask<>(() -> {
+            server.setSoTimeout(6000);
+            try (Socket socket = server.accept()) {
+                socket.setSoTimeout(4000);
+                DataInputStream input = new DataInputStream(socket.getInputStream());
+                DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+                output.write("RFB 003.008\n".getBytes(StandardCharsets.US_ASCII));
+                output.flush();
+                input.readNBytes(12);
+                output.write(new byte[] {1, 1});
+                output.flush();
+                input.readUnsignedByte();
+                output.writeInt(0);
+                output.flush();
+                input.readUnsignedByte();
+                output.writeShort(1);
+                output.writeShort(1);
+                output.write(new byte[16]);
+                output.writeInt(0);
+                output.flush();
+                input.readNBytes(20 + 12 + 10);
+                ready.countDown();
+                if (!release.await(6, TimeUnit.SECONDS)) {
+                    throw new AssertionError("Concurrent receiver test did not release");
+                }
+            }
+            return null;
+        });
+        Thread thread = new Thread(task, "screen-service-vnc-self-test-server");
+        thread.setDaemon(true);
+        thread.start();
+        return task;
     }
 }

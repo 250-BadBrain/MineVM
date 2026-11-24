@@ -15,6 +15,18 @@ public final class ComputerRuntimeConfigSelfTest {
         assertDefaultBackendIsSafe();
         assertDescriptorUsesConfiguredRuntimeDefaults();
         assertDiscIsoDefaultsAreSafe();
+        assertInvalidDiskNamesRejected();
+    }
+
+    private static void assertInvalidDiskNamesRejected() {
+        for (String name : new String[] {".", "..", "../outside.qcow2"}) {
+            try {
+                new ComputerHardwareConfiguration(1, 512, name);
+                throw new AssertionError("Managed disks must reject " + name);
+            } catch (IllegalArgumentException expected) {
+                // A disk filename must name one file inside its own VM directory.
+            }
+        }
     }
 
     private static void assertDiscIsoDefaultsAreSafe() {

@@ -1,0 +1,45 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_redstone": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "minecraft:redstone"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_redstone"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "minevm:desktop_computer",
+      "minevm:laptop_computer",
+      "minevm:computer_monitor",
+      "minevm:keyboard",
+      "minevm:mouse",
+      "minevm:usb_cable",
+      "minevm:hdmi_cable",
+      "minevm:floppy_drive",
+      "minevm:blank_floppy",
+      "minevm:ubuntu_server_disc",
+      "minevm:ubuntu_desktop_disc",
+      "minevm:freedos_disc",
+      "minevm:windows_95_disc",
+      "minevm:windows_98_disc",
+      "minevm:windows_xp_disc",
+      "minevm:windows_vista_disc",
+      "minevm:windows_10_disc",
+      "minevm:windows_11_disc",
+      "minevm:windows_95_boot_floppy"
+    ]
+  }
+}

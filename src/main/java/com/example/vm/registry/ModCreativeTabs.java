@@ -23,12 +23,17 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.USB_CABLE.get());
                         output.accept(ModItems.KEYBOARD.get());
                         output.accept(ModItems.MOUSE.get());
+                        output.accept(ModItems.FLOPPY_DRIVE.get());
                         output.accept(ModItems.LAPTOP_COMPUTER.get());
                         output.accept(ModItems.UBUNTU_SERVER_DISC.get());
                         output.accept(ModItems.UBUNTU_DESKTOP_DISC.get());
                         output.accept(ModItems.FREEDOS_DISC.get());
                         output.accept(ModItems.WINDOWS_95_DISC.get());
+                        output.accept(ModItems.WINDOWS_95_BOOT_FLOPPY.get());
+                        output.accept(ModItems.BLANK_FLOPPY.get());
                         output.accept(ModItems.WINDOWS_XP_DISC.get());
+                        output.accept(ModItems.WINDOWS_98_DISC.get());
+                        output.accept(ModItems.WINDOWS_VISTA_DISC.get());
                         output.accept(ModItems.WINDOWS_10_DISC.get());
                         output.accept(ModItems.WINDOWS_11_DISC.get());
                     })

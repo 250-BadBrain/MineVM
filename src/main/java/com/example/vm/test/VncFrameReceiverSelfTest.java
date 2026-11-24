@@ -26,6 +26,7 @@ public final class VncFrameReceiverSelfTest {
     public static void main(String[] args) throws Exception {
         assertFrameAndInputFlow();
         assertIdleReadTimeoutKeepsConnectionAlive();
+        assertCloseReleasesActiveConnection();
     }
 
     private static void assertFrameAndInputFlow() throws Exception {
@@ -139,6 +140,36 @@ public final class VncFrameReceiverSelfTest {
         }
     }
 
+    private static void assertCloseReleasesActiveConnection() throws Exception {
+        try (ServerSocket serverSocket = openVncLikeServerSocket()) {
+            CountDownLatch inputReady = new CountDownLatch(1);
+            Thread serverThread = new Thread(() -> runCloseableServer(serverSocket, inputReady), "vnc-frame-receiver-close-self-test-server");
+            serverThread.setDaemon(true);
+            serverThread.start();
+
+            VncFrameReceiver receiver = new VncFrameReceiver();
+            VncEndpoint endpoint = VncEndpoint.localPort(serverSocket.getLocalPort());
+            Thread receiverThread = new Thread(() -> {
+                try {
+                    receiver.receive(endpoint, ignored -> { });
+                } catch (java.io.IOException expected) {
+                    // Closing the active connection intentionally interrupts the blocking receiver.
+                }
+            }, "vnc-frame-receiver-close-self-test-client");
+            receiverThread.setDaemon(true);
+            receiverThread.start();
+
+            if (!inputReady.await(5, TimeUnit.SECONDS) || !receiver.hasActiveConnection(endpoint)) {
+                throw new AssertionError("Expected close test to establish a VNC connection");
+            }
+            receiver.close(endpoint);
+            receiverThread.join(5000L);
+            if (receiverThread.isAlive() || receiver.hasActiveConnection(endpoint)) {
+                throw new AssertionError("VNC close must release the active connection");
+            }
+        }
+    }
+
     private static ServerSocket openVncLikeServerSocket() throws java.io.IOException {
         for (int port = 6200; port < 6300; port++) {
             try {
@@ -182,6 +213,18 @@ public final class VncFrameReceiverSelfTest {
             inputReady.countDown();
             assertPointerEvent(input);
             assertCtrlWKeyEvents(input);
+
+            // Non-frame messages may arrive between framebuffer updates.
+            output.writeByte(2);
+            output.writeByte(1);
+            output.writeByte(0);
+            output.writeShort(0);
+            output.writeShort(1);
+            output.write(new byte[6]);
+            output.writeByte(3);
+            output.write(new byte[3]);
+            output.writeInt(4);
+            output.write("text".getBytes(StandardCharsets.US_ASCII));
 
             output.writeByte(0);
             output.writeByte(0);
@@ -251,6 +294,22 @@ public final class VncFrameReceiverSelfTest {
             done.countDown();
         } catch (Exception exception) {
             throw new AssertionError("Idle fake VNC server failed", exception);
+        }
+    }
+
+    private static void runCloseableServer(ServerSocket serverSocket, CountDownLatch inputReady) {
+        try (Socket socket = serverSocket.accept()) {
+            DataInputStream input = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+            DataOutputStream output = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+            performHandshake(input, output, 1, 1);
+            readClientStartupMessages(input);
+            readFramebufferUpdateRequest(input);
+            inputReady.countDown();
+            while (input.read() != -1) {
+                // Hold the server side open until the receiver closes its socket.
+            }
+        } catch (java.io.IOException expected) {
+            // The client-side close ends this intentionally idle connection.
         }
     }
 

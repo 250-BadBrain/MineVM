@@ -1,0 +1,26 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "minecraft:block/black_concrete",
+    "up": "minecraft:block/gray_concrete",
+    "north": "minecraft:block/black_concrete",
+    "south": "minecraft:block/gray_concrete",
+    "east": "minecraft:block/gray_concrete",
+    "west": "minecraft:block/gray_concrete",
+    "particle": "minecraft:block/gray_concrete"
+  },
+  "elements": [
+    {
+      "from": [3, 0, 4],
+      "to": [13, 4, 12],
+      "faces": {
+        "down": { "texture": "#down", "cullface": "down" },
+        "up": { "texture": "#up" },
+        "north": { "texture": "#north" },
+        "south": { "texture": "#south" },
+        "east": { "texture": "#east" },
+        "west": { "texture": "#west" }
+      }
+    }
+  ]
+}

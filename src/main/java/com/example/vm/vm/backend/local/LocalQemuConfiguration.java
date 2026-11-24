@@ -31,4 +31,12 @@ public record LocalQemuConfiguration(
                 "whpx"
         );
     }
+
+    public Path qemuIoPath() {
+        Path parent = qemuImgPath.toAbsolutePath().normalize().getParent();
+        if (parent == null) {
+            return Path.of("qemu-io");
+        }
+        return parent.resolve("qemu-io.exe").normalize();
+    }
 }

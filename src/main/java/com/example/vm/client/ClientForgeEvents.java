@@ -29,6 +29,11 @@ public final class ClientForgeEvents {
     }
 
     @SubscribeEvent
+    public static void onClientCommands(net.minecraftforge.client.event.RegisterClientCommandsEvent event) {
+        ClientDiagnosticCommands.register(event);
+    }
+
+    @SubscribeEvent
     public static void onKey(InputEvent.Key event) {
         if (event.getAction() == GLFW.GLFW_PRESS && ImmersiveControlClient.shouldRelease(event.getKey())) {
             ImmersiveControlClient.stop();
@@ -139,6 +144,7 @@ public final class ClientForgeEvents {
             ImmersiveControlClient.suppressMinecraftBindings();
             ImmersiveControlClient.releaseMouseForScreenControl();
             ImmersiveControlClient.syncVmMousePosition();
+            ImmersiveControlClient.renewControlLease();
             Minecraft minecraft = Minecraft.getInstance();
             if (minecraft.screen != null && !(minecraft.screen instanceof net.minecraft.client.gui.screens.PauseScreen)) {
                 minecraft.setScreen(null);
@@ -200,6 +206,7 @@ public final class ClientForgeEvents {
     @SubscribeEvent
     public static void onClientLogout(ClientPlayerNetworkEvent.LoggingOut event) {
         ScreenFrameTextureCache.clearAll();
+        ClientScreenFrames.clear();
         ImmersiveControlClient.stop();
     }
 

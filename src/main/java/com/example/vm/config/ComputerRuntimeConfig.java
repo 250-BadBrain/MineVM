@@ -51,9 +51,15 @@ public final class ComputerRuntimeConfig {
     private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_95_ISO_PATH;
     private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_95_BOOT_FLOPPY_PATH;
     private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_XP_ISO_PATH;
+    private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_98_ISO_PATH;
+    private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_VISTA_ISO_PATH;
     private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_10_ISO_PATH;
     private static final ForgeConfigSpec.ConfigValue<String> WINDOWS_11_ISO_PATH;
     private static final ForgeConfigSpec.ConfigValue<String> GUEST_OPERATING_SYSTEM;
+    private static final ForgeConfigSpec.BooleanValue SHARED_VIEWING;
+    private static final ForgeConfigSpec.IntValue STREAM_FPS;
+    private static final ForgeConfigSpec.IntValue STREAM_BYTES;
+    private static final ForgeConfigSpec.ConfigValue<String> STREAM_CODEC;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -98,6 +104,8 @@ public final class ComputerRuntimeConfig {
         WINDOWS_XP_ISO_PATH = builder
                 .comment("ISO path used when booting an inserted Windows XP system disc.")
                 .define("windowsXpIsoPath", DEFAULT_WINDOWS_XP_ISO_PATH);
+        WINDOWS_98_ISO_PATH = builder.comment("Experimental Windows 98 installation ISO; not installation-verified.").define("windows98IsoPath", "");
+        WINDOWS_VISTA_ISO_PATH = builder.comment("Experimental Windows Vista installation ISO; not installation-verified.").define("windowsVistaIsoPath", "");
         WINDOWS_10_ISO_PATH = builder
                 .comment("ISO path used when booting an inserted Windows 10 system disc.")
                 .define("windows10IsoPath", DEFAULT_WINDOWS_10_ISO_PATH);
@@ -105,8 +113,12 @@ public final class ComputerRuntimeConfig {
                 .comment("ISO path used when booting an inserted Windows 11 system disc.")
                 .define("windows11IsoPath", DEFAULT_WINDOWS_11_ISO_PATH);
         GUEST_OPERATING_SYSTEM = builder
-                .comment("Guest OS profile: UBUNTU_SERVER, UBUNTU_DESKTOP, FREEDOS, WINDOWS_95, WINDOWS_XP, WINDOWS_10, or WINDOWS_11. Legacy LINUX maps to UBUNTU_SERVER.")
+                .comment("Guest OS profile: UBUNTU_SERVER, UBUNTU_DESKTOP, FREEDOS, WINDOWS_95, WINDOWS_98, WINDOWS_XP, WINDOWS_VISTA, WINDOWS_10, or WINDOWS_11. Legacy LINUX maps to UBUNTU_SERVER.")
                 .define("guestOperatingSystem", DEFAULT_GUEST_OPERATING_SYSTEM);
+        SHARED_VIEWING = builder.comment("Allow nearby players to watch running VM screens; control remains restricted to owners, trusted players and operators.").define("sharedViewing", true);
+        STREAM_FPS = builder.comment("Maximum network screen frames per second per VM.").defineInRange("networkFramesPerSecond", 5, 1, 20);
+        STREAM_BYTES = builder.comment("Per-player screen bandwidth budget in bytes/second, with a two-second burst.").defineInRange("networkBytesPerSecond", 524288, 327680, 4194304);
+        STREAM_CODEC = builder.comment("Network frame codec: deflate (default) or raw, for comparison. VNC remains the VM capture transport.").defineInList("networkFrameCodec", "deflate", java.util.List.of("deflate", "raw"));
 
         builder.pop();
         SPEC = builder.build();
@@ -114,6 +126,11 @@ public final class ComputerRuntimeConfig {
 
     private ComputerRuntimeConfig() {
     }
+
+    public static boolean sharedViewing() { return valueOrDefault(SHARED_VIEWING, true); }
+    public static int networkFramesPerSecond() { return valueOrDefault(STREAM_FPS, 5); }
+    public static int networkBytesPerSecond() { return valueOrDefault(STREAM_BYTES, 524288); }
+    public static String networkFrameCodec() { return valueOrDefault(STREAM_CODEC, "deflate"); }
 
     public static VirtualMachineBackend createBackend() {
         if (!localQemuEnabled()) {
@@ -186,6 +203,8 @@ public final class ComputerRuntimeConfig {
             case WINDOWS_95 -> DEFAULT_WINDOWS_95_DISK_SIZE_GB;
             case UBUNTU_DESKTOP -> DEFAULT_UBUNTU_DESKTOP_DISK_SIZE_GB;
             case WINDOWS_XP -> DEFAULT_WINDOWS_XP_DISK_SIZE_GB;
+            case WINDOWS_98 -> 2;
+            case WINDOWS_VISTA -> 32;
             case WINDOWS_10, WINDOWS_11 -> DEFAULT_WINDOWS_DISK_SIZE_GB;
             case UBUNTU_SERVER, LINUX -> DEFAULT_DISK_SIZE_GB;
         };
@@ -213,6 +232,8 @@ public final class ComputerRuntimeConfig {
             case FREEDOS -> valueOrDefault(FREEDOS_ISO_PATH, DEFAULT_FREEDOS_ISO_PATH);
             case WINDOWS_95 -> valueOrDefault(WINDOWS_95_ISO_PATH, DEFAULT_WINDOWS_95_ISO_PATH);
             case WINDOWS_XP -> valueOrDefault(WINDOWS_XP_ISO_PATH, DEFAULT_WINDOWS_XP_ISO_PATH);
+            case WINDOWS_98 -> valueOrDefault(WINDOWS_98_ISO_PATH, "");
+            case WINDOWS_VISTA -> valueOrDefault(WINDOWS_VISTA_ISO_PATH, "");
             case WINDOWS_10 -> valueOrDefault(WINDOWS_10_ISO_PATH, DEFAULT_WINDOWS_10_ISO_PATH);
             case WINDOWS_11 -> valueOrDefault(WINDOWS_11_ISO_PATH, DEFAULT_WINDOWS_11_ISO_PATH);
             case UBUNTU_SERVER, LINUX -> valueOrDefault(UBUNTU_SERVER_ISO_PATH, DEFAULT_UBUNTU_SERVER_ISO_PATH);

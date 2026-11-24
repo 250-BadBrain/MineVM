@@ -60,6 +60,9 @@ public final class ScreenFrameTextureCache {
         private final DynamicTexture texture;
         private final ResourceLocation location;
         private long lastUploadNanos;
+        private String computerId;
+        private ScreenFrame lastFrame;
+        private boolean uploadPending;
 
         private CachedScreenTexture(int sourceWidth, int sourceHeight, int width, int height, DynamicTexture texture, ResourceLocation location) {
             this.sourceWidth = sourceWidth;
@@ -77,11 +80,18 @@ public final class ScreenFrameTextureCache {
                     MineVM.MOD_ID + "/vm_screen/" + safeTextureId(computerId),
                     texture
             );
-            return new CachedScreenTexture(sourceWidth, sourceHeight, width, height, texture, location);
+            CachedScreenTexture result = new CachedScreenTexture(sourceWidth, sourceHeight, width, height, texture, location);
+            result.computerId = computerId;
+            return result;
         }
 
         private void apply(ScreenFrame frame) {
-            mergeChangedFrame(frame);
+            if (frame != lastFrame) {
+                mergeChangedFrame(frame);
+                lastFrame = frame;
+                uploadPending = true;
+            }
+            if (!uploadPending) return;
 
             long now = System.nanoTime();
             if (lastUploadNanos != 0L && now - lastUploadNanos < MIN_UPLOAD_INTERVAL_NANOS) {
@@ -101,6 +111,8 @@ public final class ScreenFrameTextureCache {
                 }
             }
             texture.upload();
+            uploadPending = false;
+            com.example.vm.screen.FrameMetrics.forComputer(computerId).upload(System.nanoTime() - now);
             lastUploadNanos = now;
         }
 

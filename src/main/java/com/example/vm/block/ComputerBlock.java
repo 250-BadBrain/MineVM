@@ -118,6 +118,7 @@ public class ComputerBlock extends BaseEntityBlock {
         BlockEntity blockEntity = level.getBlockEntity(pos);
         if (blockEntity instanceof ComputerBlockEntity computer) {
             computer.loadFromItemStack(stack);
+            if (placer instanceof Player player) computer.claimOwner(player.getUUID());
         }
         if (formFactor == ComputerFormFactor.LAPTOP) {
             placeOccupancy(level, pos, ComputerFootprint.laptopOffsets(state.getValue(FACING)));
@@ -167,6 +168,19 @@ public class ComputerBlock extends BaseEntityBlock {
         if (!(blockEntity instanceof ComputerBlockEntity computer)) {
             return InteractionResult.PASS;
         }
+        ComputerInteractionTarget target = ComputerInteractionResolver.resolve(formFactor, state.getValue(FACING), pos, hit);
+        if (!computer.canManage(player)) {
+            if (computer.canControl(player) && formFactor == ComputerFormFactor.LAPTOP
+                    && !player.isShiftKeyDown() && player.getItemInHand(hand).isEmpty()
+                    && target == ComputerInteractionTarget.DISPLAY && computer.poweredOn()
+                    && player instanceof ServerPlayer serverPlayer) {
+                startLaptopControlAfterStateRefresh(serverPlayer, pos, computer);
+                return InteractionResult.CONSUME;
+            }
+            player.sendSystemMessage(Component.translatable("message.minevm.not_owner"));
+            return InteractionResult.CONSUME;
+        }
+        computer.claimOwner(player.getUUID());
 
         MinecraftServer server = level.getServer();
         if (server == null) {
@@ -184,7 +198,6 @@ public class ComputerBlock extends BaseEntityBlock {
             return InteractionResult.CONSUME;
         }
 
-        ComputerInteractionTarget target = ComputerInteractionResolver.resolve(formFactor, state.getValue(FACING), pos, hit);
         if (!player.isShiftKeyDown() && heldItem.isEmpty()) {
             if (player instanceof ServerPlayer serverPlayer) {
                 if (target == ComputerInteractionTarget.POWER_BUTTON) {

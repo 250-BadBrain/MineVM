@@ -26,6 +26,9 @@ public final class ComputerDiscActions {
         String computerId = computer.getComputerId();
         MineVM.VM_MANAGER.getState(computerId)
                 .whenComplete((state, throwable) -> server.execute(() -> {
+                    if (!isCurrentComputer(computer)) {
+                        return;
+                    }
                     if (throwable != null) {
                         player.sendSystemMessage(Component.literal("Computer " + computerId + " | Disc eject failed: " + rootMessage(throwable)));
                         return;
@@ -48,6 +51,9 @@ public final class ComputerDiscActions {
         String computerId = computer.getComputerId();
         MineVM.VM_MANAGER.ejectSystemDisc(computerId)
                 .whenComplete((handle, throwable) -> server.execute(() -> {
+                    if (!isCurrentComputer(computer)) {
+                        return;
+                    }
                     if (throwable != null) {
                         player.sendSystemMessage(Component.literal("Computer " + computerId + " | VM disc eject failed: " + rootMessage(throwable)));
                         return;
@@ -61,7 +67,10 @@ public final class ComputerDiscActions {
         computer.ejectDisc()
                 .ifPresentOrElse(
                         guestOperatingSystem -> {
-                            player.addItem(new ItemStack(discItemFor(guestOperatingSystem)));
+                            ItemStack disc = new ItemStack(discItemFor(guestOperatingSystem));
+                            if (!player.addItem(disc)) {
+                                player.drop(disc, false);
+                            }
                             player.sendSystemMessage(Component.literal("Computer " + computerId + " | " + actionLabel + ": " + guestOperatingSystem + " | Power on, then Boot Disk to start the installed system."));
                         },
                         () -> player.sendSystemMessage(Component.literal("Computer " + computerId + " | Disc slot empty"))
@@ -74,11 +83,19 @@ public final class ComputerDiscActions {
                 || state == VirtualMachineState.STOPPING;
     }
 
+    private static boolean isCurrentComputer(ComputerBlockEntity computer) {
+        return !computer.isRemoved() && computer.getLevel() != null
+                && computer.getLevel().hasChunkAt(computer.getBlockPos())
+                && computer.getLevel().getBlockEntity(computer.getBlockPos()) == computer;
+    }
+
     private static Item discItemFor(GuestOperatingSystem guestOperatingSystem) {
         return switch (guestOperatingSystem) {
             case FREEDOS -> ModItems.FREEDOS_DISC.get();
             case WINDOWS_95 -> ModItems.WINDOWS_95_DISC.get();
             case WINDOWS_XP -> ModItems.WINDOWS_XP_DISC.get();
+            case WINDOWS_98 -> ModItems.WINDOWS_98_DISC.get();
+            case WINDOWS_VISTA -> ModItems.WINDOWS_VISTA_DISC.get();
             case WINDOWS_10 -> ModItems.WINDOWS_10_DISC.get();
             case WINDOWS_11 -> ModItems.WINDOWS_11_DISC.get();
             case UBUNTU_DESKTOP -> ModItems.UBUNTU_DESKTOP_DISC.get();

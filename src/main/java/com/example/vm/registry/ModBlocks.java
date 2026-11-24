@@ -5,6 +5,7 @@ import com.example.vm.block.ComputerBlock;
 import com.example.vm.block.ComputerMonitorBlock;
 import com.example.vm.block.ComputerOccupancyBlock;
 import com.example.vm.block.ComputerPeripheralBlock;
+import com.example.vm.block.FloppyDriveBlock;
 import com.example.vm.computer.ComputerFormFactor;
 import com.example.vm.item.ComputerPeripheralType;
 import net.minecraft.world.level.block.Block;
@@ -37,6 +38,9 @@ public final class ModBlocks {
 
     public static final RegistryObject<Block> MOUSE =
             BLOCKS.register("mouse", () -> new ComputerPeripheralBlock(ComputerPeripheralType.MOUSE));
+
+    public static final RegistryObject<Block> FLOPPY_DRIVE =
+            BLOCKS.register("floppy_drive", FloppyDriveBlock::new);
 
     private ModBlocks() {
     }

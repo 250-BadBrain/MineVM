@@ -4,16 +4,21 @@ import com.example.vm.vm.VirtualMachineBootDevice;
 import com.example.vm.vm.VirtualMachineBootRequest;
 import com.example.vm.vm.VirtualMachineDescriptor;
 import com.example.vm.vm.GuestOperatingSystem;
+import com.example.vm.MineVM;
 import com.example.vm.qmp.QmpEndpoint;
 import com.example.vm.screen.VncEndpoint;
 
+import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
 public final class QemuCommandBuilder {
     public static final String SYSTEM_DISC_DEVICE_ID = "system_disc";
+    public static final String BOOT_FLOPPY_DEVICE_ID = "boot_floppy";
     private static final String VM_DISK_DEVICE_ID = "vm_disk";
+    private static final String WINDOWS_95_WORKING_BOOT_FLOPPY = "windows95-boot-working.img";
 
     private final LocalQemuConfiguration configuration;
     private final LocalVmPaths paths;
@@ -29,6 +34,15 @@ public final class QemuCommandBuilder {
 
     public Path vmDirectory(VirtualMachineDescriptor descriptor) {
         return paths.vmDirectory(descriptor);
+    }
+
+    public Path blankFloppyPath(String mediaId) {
+        java.util.UUID.fromString(mediaId);
+        return paths.floppyDirectory().resolve(mediaId + ".img").normalize();
+    }
+
+    public Path preparedBootFloppyPath(VirtualMachineDescriptor descriptor, String bootFloppyPath) {
+        return effectiveBootFloppyPath(descriptor, bootFloppyPath);
     }
 
     public List<String> createDiskCommand(VirtualMachineDescriptor descriptor) {
@@ -53,12 +67,15 @@ public final class QemuCommandBuilder {
 
         List<String> command = new ArrayList<>();
         command.add(configuration.qemuSystemPath().toString());
-        command.add("-accel");
-        command.add(accelerator(descriptor));
-        if (descriptor.firmwareConfiguration().requiresUefi()) {
+        if (descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_95 || descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_98) {
+            command.add("-machine");
+            command.add("pc");
+        } else if (descriptor.firmwareConfiguration().requiresUefi()) {
             command.add("-machine");
             command.add("q35");
         }
+        command.add("-accel");
+        command.add(accelerator(descriptor));
         addCpuArgs(command, descriptor);
         command.add("-m");
         command.add(Integer.toString(effectiveMemoryMb(descriptor)));
@@ -70,12 +87,12 @@ public final class QemuCommandBuilder {
             command.add("ich9-ahci,id=sata");
         }
         addDiskArgs(command, descriptor, bootRequest.bootDevice());
+        if (usesLegacyIdeStorage(descriptor) || bootRequest.floppyMedia() != null) {
+            addFloppyArgs(command, descriptor, bootRequest);
+        }
 
         if (bootRequest.bootDevice() == VirtualMachineBootDevice.SYSTEM_DISC) {
             addSystemDiscArgs(command, descriptor, bootRequest);
-            if (bootRequest.hasBootFloppy()) {
-                addBootFloppyArgs(command, bootRequest.bootFloppyPath());
-            }
             command.add("-boot");
             command.add(bootRequest.hasBootFloppy() ? "order=a" : "order=d");
         } else {
@@ -103,9 +120,13 @@ public final class QemuCommandBuilder {
 
     private void addCpuArgs(List<String> command, VirtualMachineDescriptor descriptor) {
         switch (descriptor.guestOperatingSystem()) {
-            case FREEDOS, WINDOWS_95, WINDOWS_XP -> {
+            case FREEDOS, WINDOWS_XP, WINDOWS_VISTA -> {
                 command.add("-cpu");
                 command.add("qemu32");
+            }
+            case WINDOWS_95, WINDOWS_98 -> {
+                command.add("-cpu");
+                command.add("pentium");
             }
             case WINDOWS_10, WINDOWS_11 -> {
                 command.add("-cpu");
@@ -118,8 +139,8 @@ public final class QemuCommandBuilder {
 
     private int effectiveCpuCores(VirtualMachineDescriptor descriptor) {
         return switch (descriptor.guestOperatingSystem()) {
-            case FREEDOS, WINDOWS_95 -> 1;
-            case WINDOWS_XP -> Math.min(descriptor.cpuCores(), 2);
+            case FREEDOS, WINDOWS_95, WINDOWS_98 -> 1;
+            case WINDOWS_XP, WINDOWS_VISTA -> Math.min(descriptor.cpuCores(), 2);
             case WINDOWS_10, WINDOWS_11 -> Math.min(descriptor.cpuCores(), 2);
             case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> descriptor.cpuCores();
         };
@@ -127,7 +148,8 @@ public final class QemuCommandBuilder {
 
     private String accelerator(VirtualMachineDescriptor descriptor) {
         return switch (descriptor.guestOperatingSystem()) {
-            case FREEDOS, WINDOWS_95, WINDOWS_XP -> "tcg,thread=multi";
+            case WINDOWS_95, WINDOWS_98 -> "tcg,thread=single";
+            case FREEDOS, WINDOWS_XP, WINDOWS_VISTA -> "tcg,thread=multi";
             case WINDOWS_10, WINDOWS_11 -> "tcg,thread=multi";
             case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> configuration.accelerator();
         };
@@ -136,7 +158,8 @@ public final class QemuCommandBuilder {
     private String vgaDevice(VirtualMachineDescriptor descriptor) {
         return switch (descriptor.guestOperatingSystem()) {
             case FREEDOS -> "std";
-            case WINDOWS_95, WINDOWS_XP -> "cirrus";
+            case WINDOWS_95, WINDOWS_98, WINDOWS_XP -> "cirrus";
+            case WINDOWS_VISTA -> "std";
             case WINDOWS_10, WINDOWS_11 -> "std";
             case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> "virtio";
         };
@@ -148,7 +171,9 @@ public final class QemuCommandBuilder {
         }
 
         if (descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_95
-                || descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_XP) {
+                || descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_98
+                || descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_XP
+                || descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_VISTA) {
             command.add("-usb");
             command.add("-device");
             command.add("usb-tablet");
@@ -168,7 +193,8 @@ public final class QemuCommandBuilder {
 
     private String networkModel(VirtualMachineDescriptor descriptor) {
         return switch (descriptor.guestOperatingSystem()) {
-            case FREEDOS, WINDOWS_95, WINDOWS_XP -> "rtl8139";
+            case FREEDOS, WINDOWS_95, WINDOWS_98, WINDOWS_XP -> "rtl8139";
+            case WINDOWS_VISTA -> "e1000";
             case WINDOWS_10, WINDOWS_11 -> "e1000e";
             case UBUNTU_SERVER, UBUNTU_DESKTOP, LINUX -> "virtio-net-pci";
         };
@@ -202,9 +228,77 @@ public final class QemuCommandBuilder {
         addSystemDiscArgs(command, descriptor, bootRequest.attachedIsoPath(), false);
     }
 
-    private void addBootFloppyArgs(List<String> command, String bootFloppyPath) {
-        command.add("-fda");
-        command.add(bootFloppyPath);
+    private void addFloppyArgs(List<String> command, VirtualMachineDescriptor descriptor, VirtualMachineBootRequest bootRequest) {
+        command.add("-drive");
+        if (bootRequest.hasBootFloppy()) {
+            command.add("file=" + effectiveBootFloppyPath(descriptor, bootRequest.bootFloppyPath()) + ",format=raw,if=floppy,index=0,readonly=on,id=" + BOOT_FLOPPY_DEVICE_ID);
+        } else if (bootRequest.floppyMedia() != null && bootRequest.floppyMedia().isWritable()) {
+            command.add("file=" + blankFloppyPath(bootRequest.floppyMedia().mediaId()) + ",format=raw,if=floppy,index=0,readonly=off,id=" + BOOT_FLOPPY_DEVICE_ID);
+        } else {
+            command.add("if=floppy,index=0,id=" + BOOT_FLOPPY_DEVICE_ID);
+        }
+    }
+
+    private Path effectiveBootFloppyPath(VirtualMachineDescriptor descriptor, String bootFloppyPath) {
+        Path source = Path.of(bootFloppyPath);
+        if (descriptor.guestOperatingSystem() != GuestOperatingSystem.WINDOWS_95 || !Files.isRegularFile(source)) {
+            return source;
+        }
+
+        Path workingCopy = vmDirectory(descriptor).resolve(WINDOWS_95_WORKING_BOOT_FLOPPY).normalize();
+        try {
+            Files.createDirectories(workingCopy.getParent());
+            byte[] bytes = Files.readAllBytes(source);
+            patchWindows95BootFloppyCdDriveLetter(bytes);
+            Files.write(workingCopy, bytes);
+            return workingCopy;
+        } catch (IOException exception) {
+            if (Files.isRegularFile(workingCopy)) {
+                MineVM.LOGGER.warn("Using existing patched Windows 95 boot floppy for {}", descriptor.computerId(), exception);
+                return workingCopy;
+            }
+            MineVM.LOGGER.warn("Failed to prepare patched Windows 95 boot floppy for {}", descriptor.computerId(), exception);
+            return source;
+        }
+    }
+
+    private static void patchWindows95BootFloppyCdDriveLetter(byte[] bytes) {
+        replaceAsciiPadded(bytes, "LH A:\\MSCDEX.EXE /D:mscd001 /L:%CDROM%", "LH A:\\MSCDEX.EXE /D:mscd001 /L:D");
+        replaceAsciiPadded(bytes, "LH A:\\MSCDEX.EXE /D:MSCD001 /L:%CDROM%", "LH A:\\MSCDEX.EXE /D:MSCD001 /L:D");
+        replaceAsciiPadded(bytes, "LH A:\\MSCDEX.EXE /D:mscd001", "MSCDEX /D:mscd001 /L:D");
+        replaceAsciiPadded(bytes, "LH A:\\MSCDEX.EXE /D:MSCD001", "MSCDEX /D:MSCD001 /L:D");
+        replaceAscii(bytes, "/L:C", "/L:D");
+        replaceAscii(bytes, "/L:c", "/L:D");
+        replaceAscii(bytes, "/l:C", "/L:D");
+        replaceAscii(bytes, "/l:c", "/L:D");
+    }
+
+    private static void replaceAscii(byte[] bytes, String needle, String replacement) {
+        byte[] needleBytes = needle.getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        byte[] replacementBytes = replacement.getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        if (needleBytes.length != replacementBytes.length) {
+            throw new IllegalArgumentException("Replacement must preserve boot floppy size");
+        }
+
+        for (int index = 0; index <= bytes.length - needleBytes.length; index++) {
+            boolean matches = true;
+            for (int offset = 0; offset < needleBytes.length; offset++) {
+                if (bytes[index + offset] != needleBytes[offset]) {
+                    matches = false;
+                    break;
+                }
+            }
+            if (matches) {
+                System.arraycopy(replacementBytes, 0, bytes, index, replacementBytes.length);
+            }
+        }
+    }
+
+    private static void replaceAsciiPadded(byte[] bytes, String needle, String replacement) {
+        if (replacement.length() > needle.length()) {
+            throw new IllegalArgumentException("Replacement must not grow boot floppy files");
+        }
+        replaceAscii(bytes, needle, replacement + " ".repeat(needle.length() - replacement.length()));
     }
 
     private void addSystemDiscArgs(List<String> command, VirtualMachineDescriptor descriptor, String isoPath, boolean bootable) {
@@ -230,11 +324,13 @@ public final class QemuCommandBuilder {
     private boolean usesLegacyIdeStorage(VirtualMachineDescriptor descriptor) {
         return descriptor.guestOperatingSystem() == GuestOperatingSystem.FREEDOS
                 || descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_95
+                || descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_98
+                || descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_VISTA
                 || descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_XP;
     }
 
     private int effectiveMemoryMb(VirtualMachineDescriptor descriptor) {
-        if (descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_95) {
+        if (descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_95 || descriptor.guestOperatingSystem() == GuestOperatingSystem.WINDOWS_98) {
             return Math.min(descriptor.memoryMb(), 256);
         }
         return descriptor.memoryMb();

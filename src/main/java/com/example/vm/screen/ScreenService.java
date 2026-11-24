@@ -18,7 +18,7 @@ public final class ScreenService implements AutoCloseable {
 
     private final Map<String, ScreenFrameBuffer> frameBuffers = new ConcurrentHashMap<>();
     private final Map<String, Future<?>> receivers = new ConcurrentHashMap<>();
-    private final VncFrameReceiver vncFrameReceiver;
+    private final ScreenTransport vncFrameReceiver;
     private ExecutorService executor;
     private ExecutorService receiverExecutor;
 
@@ -30,7 +30,7 @@ public final class ScreenService implements AutoCloseable {
         this(executor, new VncFrameReceiver());
     }
 
-    ScreenService(ExecutorService executor, VncFrameReceiver vncFrameReceiver) {
+    public ScreenService(ExecutorService executor, ScreenTransport vncFrameReceiver) {
         this.executor = executor;
         this.receiverExecutor = newReceiverExecutor();
         this.vncFrameReceiver = vncFrameReceiver;
@@ -48,6 +48,18 @@ public final class ScreenService implements AutoCloseable {
         ScreenFrameBuffer frameBuffer = frameBuffers.get(requireComputerId(computerId));
         return frameBuffer == null ? Optional.empty() : frameBuffer.snapshot();
     }
+
+    public Optional<ScreenFrame> fullFrameSnapshot(String computerId) {
+        ScreenFrameBuffer buffer = frameBuffers.get(requireComputerId(computerId));
+        return buffer == null ? Optional.empty() : buffer.fullSnapshot();
+    }
+
+    public long frameRevision(String computerId) {
+        ScreenFrameBuffer buffer = frameBuffers.get(requireComputerId(computerId));
+        return buffer == null ? 0 : buffer.revision();
+    }
+
+    public String transportName() { return vncFrameReceiver.name(); }
 
     public boolean sendVncInput(String computerId, VirtualMachineInput input) {
         return vncFrameReceiver.sendInput(VncEndpoint.forComputer(requireComputerId(computerId)), input);
@@ -80,6 +92,7 @@ public final class ScreenService implements AutoCloseable {
         if (receiver != null) {
             receiver.cancel(true);
         }
+        vncFrameReceiver.close(VncEndpoint.forComputer(id));
         if (removeFrameBuffer) {
             frameBuffers.remove(id);
         }
@@ -91,6 +104,7 @@ public final class ScreenService implements AutoCloseable {
         receivers.clear();
         receiverExecutor.shutdownNow();
         executor.shutdownNow();
+        vncFrameReceiver.close();
         frameBuffers.clear();
     }
 
@@ -132,7 +146,9 @@ public final class ScreenService implements AutoCloseable {
     }
 
     private void applyFrame(String computerId, ScreenFrame frame) {
+        long started = System.nanoTime();
         frameBuffers.computeIfAbsent(computerId, ignored -> new ScreenFrameBuffer()).apply(frame);
+        FrameMetrics.forComputer(computerId).frame((long) frame.changedWidth() * frame.changedHeight(), System.nanoTime() - started);
     }
 
     private static String requireComputerId(String computerId) {
@@ -147,6 +163,6 @@ public final class ScreenService implements AutoCloseable {
     }
 
     private static ExecutorService newReceiverExecutor() {
-        return ComputerExecutors.singleThread("minevm-vnc-receiver", 16);
+        return ComputerExecutors.fixedThreads("minevm-vnc-receiver", 16, 16);
     }
 }

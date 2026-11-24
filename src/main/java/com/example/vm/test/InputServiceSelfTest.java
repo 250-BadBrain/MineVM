@@ -3,6 +3,7 @@ package com.example.vm.test;
 import com.example.vm.input.InputService;
 import com.example.vm.input.KeyboardInput;
 import com.example.vm.input.VirtualMachineInput;
+import com.example.vm.floppy.FloppyMedia;
 import com.example.vm.vm.VirtualMachineBootRequest;
 import com.example.vm.vm.VirtualMachineDescriptor;
 import com.example.vm.vm.VirtualMachineHandle;
@@ -70,6 +71,16 @@ public final class InputServiceSelfTest {
         @Override
         public VirtualMachineHandle ejectSystemDisc(String computerId) {
             return delegate.ejectSystemDisc(computerId);
+        }
+
+        @Override
+        public VirtualMachineHandle ejectBootFloppy(String computerId) {
+            return delegate.ejectBootFloppy(computerId);
+        }
+
+        @Override
+        public VirtualMachineHandle changeBootFloppyMedium(String computerId, FloppyMedia media) {
+            return delegate.changeBootFloppyMedium(computerId, media);
         }
 
         @Override

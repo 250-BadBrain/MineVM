@@ -1,5 +1,7 @@
 package com.example.vm.qmp;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -32,7 +34,7 @@ public final class QmpClient implements AutoCloseable {
         sendJson(endpoint, QmpCommand.execute(execute));
     }
 
-    public void sendJson(QmpEndpoint endpoint, String commandJson) throws IOException {
+    public JsonObject sendJson(QmpEndpoint endpoint, String commandJson) throws IOException {
         if (endpoint == null) {
             throw new IllegalArgumentException("endpoint must not be null");
         }
@@ -42,14 +44,18 @@ public final class QmpClient implements AutoCloseable {
 
         IOException failure = null;
         for (int attempt = 0; attempt < 2; attempt++) {
-            Session session = session(endpoint);
+            Session session = null;
             try {
-                session.send(commandJson);
-                return;
+                session = session(endpoint);
+                return session.send(commandJson);
+            } catch (CommandException exception) {
+                throw exception;
             } catch (IOException exception) {
                 failure = exception;
-                sessions.remove(endpoint, session);
-                session.closeQuietly();
+                if (session != null) {
+                    sessions.remove(endpoint, session);
+                    session.closeQuietly();
+                }
             }
         }
         throw failure == null ? new IOException("Failed to send QMP command") : failure;
@@ -92,25 +98,33 @@ public final class QmpClient implements AutoCloseable {
         writer.flush();
     }
 
-    private static void readRequiredLine(BufferedReader reader, String description) throws IOException {
+    private static JsonObject readObject(BufferedReader reader, String description) throws IOException {
         String line = reader.readLine();
         if (line == null || line.isBlank()) {
             throw new IOException("Missing " + description);
         }
+        try {
+            return JsonParser.parseString(line).getAsJsonObject();
+        } catch (RuntimeException exception) {
+            throw new IOException("Invalid JSON in " + description, exception);
+        }
     }
 
-    private static void readCommandResponse(BufferedReader reader, String description) throws IOException {
+    private static JsonObject readCommandResponse(BufferedReader reader, String description) throws IOException {
         while (true) {
-            String line = reader.readLine();
-            if (line == null || line.isBlank()) {
-                throw new IOException("Missing " + description);
+            JsonObject response = readObject(reader, description);
+            if (response.has("error")) {
+                throw new CommandException(description + " failed: " + response.get("error"));
             }
-            if (line.contains("\"return\"")) {
-                return;
+            if (response.has("return")) {
+                return response;
             }
-            if (line.contains("\"error\"")) {
-                throw new IOException(description + " failed: " + line);
-            }
+        }
+    }
+
+    public static final class CommandException extends IOException {
+        private CommandException(String message) {
+            super(message);
         }
     }
 
@@ -127,23 +141,34 @@ public final class QmpClient implements AutoCloseable {
 
         private static Session open(QmpEndpoint endpoint, Duration timeout) throws IOException {
             Socket socket = new Socket();
-            int timeoutMillis = Math.toIntExact(timeout.toMillis());
-            socket.connect(new InetSocketAddress(endpoint.host(), endpoint.port()), timeoutMillis);
-            socket.setSoTimeout(timeoutMillis);
-            socket.setKeepAlive(true);
-            socket.setTcpNoDelay(true);
+            try {
+                int timeoutMillis = Math.toIntExact(timeout.toMillis());
+                socket.connect(new InetSocketAddress(endpoint.host(), endpoint.port()), timeoutMillis);
+                socket.setSoTimeout(timeoutMillis);
+                socket.setKeepAlive(true);
+                socket.setTcpNoDelay(true);
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
-            readRequiredLine(reader, "QMP greeting");
-            writeLine(writer, QmpCommand.capabilities());
-            readCommandResponse(reader, "QMP capabilities response");
-            return new Session(socket, reader, writer);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
+                if (!readObject(reader, "QMP greeting").has("QMP")) {
+                    throw new IOException("Invalid QMP greeting");
+                }
+                writeLine(writer, QmpCommand.capabilities());
+                readCommandResponse(reader, "QMP capabilities response");
+                return new Session(socket, reader, writer);
+            } catch (IOException | RuntimeException exception) {
+                try {
+                    socket.close();
+                } catch (IOException closeFailure) {
+                    exception.addSuppressed(closeFailure);
+                }
+                throw exception;
+            }
         }
 
-        private synchronized void send(String commandJson) throws IOException {
+        private synchronized JsonObject send(String commandJson) throws IOException {
             writeLine(writer, commandJson);
-            readCommandResponse(reader, "QMP command response");
+            return readCommandResponse(reader, "QMP command response");
         }
 
         private void closeQuietly() {

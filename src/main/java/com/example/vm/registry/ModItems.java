@@ -1,6 +1,8 @@
 package com.example.vm.registry;
 
 import com.example.vm.MineVM;
+import com.example.vm.item.BootFloppyItem;
+import com.example.vm.item.BlankFloppyItem;
 import com.example.vm.item.HdmiCableItem;
 import com.example.vm.item.SystemDiscItem;
 import com.example.vm.item.UsbCableItem;
@@ -40,6 +42,15 @@ public final class ModItems {
     public static final RegistryObject<Item> MOUSE =
             ITEMS.register("mouse", () -> new BlockItem(ModBlocks.MOUSE.get(), new Item.Properties().stacksTo(1)));
 
+    public static final RegistryObject<Item> FLOPPY_DRIVE =
+            ITEMS.register("floppy_drive", () -> new BlockItem(ModBlocks.FLOPPY_DRIVE.get(), new Item.Properties().stacksTo(1)));
+
+    public static final RegistryObject<Item> WINDOWS_95_BOOT_FLOPPY =
+            ITEMS.register("windows_95_boot_floppy", () -> new BootFloppyItem(new Item.Properties().stacksTo(1)));
+
+    public static final RegistryObject<Item> BLANK_FLOPPY =
+            ITEMS.register("blank_floppy", () -> new BlankFloppyItem(new Item.Properties().stacksTo(1)));
+
     public static final RegistryObject<Item> UBUNTU_SERVER_DISC =
             ITEMS.register("ubuntu_server_disc", () -> new SystemDiscItem(
                     GuestOperatingSystem.UBUNTU_SERVER,
@@ -67,6 +78,11 @@ public final class ModItems {
                     "item.minevm.windows_95_disc",
                     new Item.Properties().stacksTo(1)
             ));
+
+    public static final RegistryObject<Item> WINDOWS_98_DISC = ITEMS.register("windows_98_disc",
+            () -> new SystemDiscItem(GuestOperatingSystem.WINDOWS_98, "item.minevm.windows_98_disc", new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> WINDOWS_VISTA_DISC = ITEMS.register("windows_vista_disc",
+            () -> new SystemDiscItem(GuestOperatingSystem.WINDOWS_VISTA, "item.minevm.windows_vista_disc", new Item.Properties().stacksTo(1)));
 
     public static final RegistryObject<Item> WINDOWS_10_DISC =
             ITEMS.register("windows_10_disc", () -> new SystemDiscItem(

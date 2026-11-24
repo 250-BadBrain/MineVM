@@ -11,11 +11,18 @@ public final class ComputerExecutors {
     }
 
     public static ExecutorService singleThread(String threadName, int queueCapacity) {
+        return fixedThreads(threadName, 1, queueCapacity);
+    }
+
+    public static ExecutorService fixedThreads(String threadName, int threadCount, int queueCapacity) {
         if (threadName == null || threadName.isBlank()) {
             throw new IllegalArgumentException("threadName must not be blank");
         }
         if (queueCapacity < 1) {
             throw new IllegalArgumentException("queueCapacity must be positive");
+        }
+        if (threadCount < 1) {
+            throw new IllegalArgumentException("threadCount must be positive");
         }
 
         ThreadFactory threadFactory = runnable -> {
@@ -25,8 +32,8 @@ public final class ComputerExecutors {
         };
 
         return new ThreadPoolExecutor(
-                1,
-                1,
+                threadCount,
+                threadCount,
                 0L,
                 TimeUnit.MILLISECONDS,
                 new ArrayBlockingQueue<>(queueCapacity),

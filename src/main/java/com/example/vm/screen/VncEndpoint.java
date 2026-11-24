@@ -1,8 +1,8 @@
 package com.example.vm.screen;
 
 public record VncEndpoint(String host, int displayNumber) {
-    private static final int FIRST_DISPLAY = 10;
-    private static final int DISPLAY_COUNT = 1000;
+    private static final int FIRST_DISPLAY = 4100;
+    private static final int DISPLAY_COUNT = 20_000;
 
     public VncEndpoint {
         if (host == null || host.isBlank()) {

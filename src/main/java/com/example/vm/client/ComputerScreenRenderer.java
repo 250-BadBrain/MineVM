@@ -36,8 +36,8 @@ public class ComputerScreenRenderer implements BlockEntityRenderer<ComputerBlock
                     SCREEN_Z,
                     SCREEN_SCALE,
                     computer.getComputerId(),
-                    guestOperatingSystem != null && guestOperatingSystem.usesGraphicalPointer(),
-                    MineVM.SCREEN_SERVICE.latestFrameSnapshot(computer.getComputerId()),
+                    false,
+                    ClientScreenFrames.snapshot(computer.getComputerId(), computer.getBlockPos()),
                     packedLight
             );
             return;
@@ -51,7 +51,7 @@ public class ComputerScreenRenderer implements BlockEntityRenderer<ComputerBlock
                 SCREEN_Y,
                 SCREEN_Z,
                 SCREEN_SCALE,
-                "Laptop BIOS",
+                ScreenSurfaceRenderer.text("screen.minevm.laptop_bios"),
                 computer.getComputerId(),
                 discLabel(computer),
                 active,

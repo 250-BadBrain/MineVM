@@ -2,6 +2,7 @@ package com.example.vm.test;
 
 import com.example.vm.input.KeyboardInput;
 import com.example.vm.input.VirtualMachineInput;
+import com.example.vm.floppy.FloppyMedia;
 import com.example.vm.vm.VirtualMachineDescriptor;
 import com.example.vm.vm.VirtualMachineBootRequest;
 import com.example.vm.vm.VirtualMachineHandle;
@@ -13,6 +14,11 @@ import com.example.vm.vm.backend.VirtualMachineBackend;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class VirtualMachineManagerSelfTest {
     private VirtualMachineManagerSelfTest() {
@@ -36,6 +42,8 @@ public final class VirtualMachineManagerSelfTest {
             assertHandle(manager.restart("computer-test").get(10, TimeUnit.SECONDS), "computer-test", VirtualMachineState.RUNNING);
             assertHandle(manager.start(VirtualMachineBootRequest.vmDisk("computer-test")).get(10, TimeUnit.SECONDS), "computer-test", VirtualMachineState.RUNNING);
             assertHandle(manager.ejectSystemDisc("computer-test").get(10, TimeUnit.SECONDS), "computer-test", VirtualMachineState.RUNNING);
+            assertHandle(manager.ejectBootFloppy("computer-test").get(10, TimeUnit.SECONDS), "computer-test", VirtualMachineState.RUNNING);
+            assertHandle(manager.changeBootFloppyMedium("computer-test", FloppyMedia.blank("fca6d5ca-5a1c-4c81-89a1-d611c3aab919")).get(10, TimeUnit.SECONDS), "computer-test", VirtualMachineState.RUNNING);
             manager.sendInput(new KeyboardInput("computer-test", "a", true)).get(10, TimeUnit.SECONDS);
             assertHandle(manager.stop("computer-test").get(10, TimeUnit.SECONDS), "computer-test", VirtualMachineState.STOPPED);
 
@@ -51,6 +59,37 @@ public final class VirtualMachineManagerSelfTest {
             manager.replaceBackend(new RecordingBackend());
             assertState(manager.getState("computer-test").get(10, TimeUnit.SECONDS), VirtualMachineState.NOT_CREATED);
             assertHandle(manager.create(descriptor).get(10, TimeUnit.SECONDS), "computer-test", VirtualMachineState.STOPPED);
+        }
+        assertSaturationAndShutdownCompleteFutures();
+    }
+
+    private static void assertSaturationAndShutdownCompleteFutures() throws Exception {
+        RecordingBackend backend = new RecordingBackend();
+        backend.blockStateReads = true;
+        try (VirtualMachineManager manager = new VirtualMachineManager(backend)) {
+            CompletableFuture<VirtualMachineState> running = manager.getState("blocked");
+            if (!backend.stateReadStarted.await(5, TimeUnit.SECONDS)) {
+                throw new AssertionError("Worker did not begin blocking state read");
+            }
+            List<CompletableFuture<VirtualMachineState>> queued = new ArrayList<>();
+            for (int index = 0; index < 128; index++) {
+                queued.add(manager.getState("queued"));
+            }
+            try {
+                manager.getState("overflow").get(1, TimeUnit.SECONDS);
+                throw new AssertionError("Saturated manager must reject via its future");
+            } catch (ExecutionException expected) {
+                if (!(expected.getCause() instanceof RejectedExecutionException)) {
+                    throw expected;
+                }
+            }
+            manager.close();
+            backend.releaseStateRead.countDown();
+            if (!running.isDone() || queued.stream().anyMatch(future -> !future.isDone())) {
+                throw new AssertionError("Shutdown must settle all pending VM futures");
+            }
+        } finally {
+            backend.releaseStateRead.countDown();
         }
     }
 
@@ -69,6 +108,9 @@ public final class VirtualMachineManagerSelfTest {
     private static final class RecordingBackend implements VirtualMachineBackend {
         private final NoopVirtualMachineBackend delegate = new NoopVirtualMachineBackend();
         private final AtomicReference<String> lastThreadName = new AtomicReference<>();
+        private boolean blockStateReads;
+        private final CountDownLatch stateReadStarted = new CountDownLatch(1);
+        private final CountDownLatch releaseStateRead = new CountDownLatch(1);
 
         @Override
         public VirtualMachineHandle create(VirtualMachineDescriptor descriptor) {
@@ -107,8 +149,28 @@ public final class VirtualMachineManagerSelfTest {
         }
 
         @Override
+        public VirtualMachineHandle ejectBootFloppy(String computerId) {
+            recordThread();
+            return delegate.ejectBootFloppy(computerId);
+        }
+
+        @Override
+        public VirtualMachineHandle changeBootFloppyMedium(String computerId, FloppyMedia media) {
+            recordThread();
+            return delegate.changeBootFloppyMedium(computerId, media);
+        }
+
+        @Override
         public VirtualMachineState getState(String computerId) {
             recordThread();
+            if (blockStateReads) {
+                stateReadStarted.countDown();
+                try {
+                    releaseStateRead.await(5, TimeUnit.SECONDS);
+                } catch (InterruptedException exception) {
+                    Thread.currentThread().interrupt();
+                }
+            }
             return delegate.getState(computerId);
         }
 

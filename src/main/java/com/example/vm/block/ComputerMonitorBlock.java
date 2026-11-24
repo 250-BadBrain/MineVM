@@ -109,7 +109,7 @@ public class ComputerMonitorBlock extends BaseEntityBlock {
                 return InteractionResult.CONSUME;
             }
             if (player.getItemInHand(hand).getItem() instanceof SystemDiscItem) {
-                player.sendSystemMessage(Component.literal("Monitor | Insert system discs into the computer case, not the monitor."));
+                player.sendSystemMessage(Component.translatable("message.minevm.insert_disc_in_case"));
                 return InteractionResult.CONSUME;
             }
             if (player.getItemInHand(hand).isEmpty() && player instanceof ServerPlayer serverPlayer) {
@@ -125,27 +125,33 @@ public class ComputerMonitorBlock extends BaseEntityBlock {
 
     private static boolean tryStartControl(Level level, BlockPos monitorPos, ServerPlayer player, ComputerMonitorBlockEntity monitor) {
         if (monitor.linkedComputerPos().isEmpty()) {
-            player.sendSystemMessage(Component.literal("Monitor | Connect HDMI to a computer case first."));
+            player.sendSystemMessage(Component.translatable("message.minevm.connect_hdmi_first"));
             return true;
         }
         if (!monitor.displayPowered()) {
-            player.sendSystemMessage(Component.literal("Monitor | Turn on the monitor display first."));
+            player.sendSystemMessage(Component.translatable("message.minevm.monitor_power_first"));
             return true;
         }
 
-        BlockEntity sourceEntity = level.getBlockEntity(monitor.linkedComputerPos().get());
-        if (!(sourceEntity instanceof ComputerBlockEntity computer)) {
-            player.sendSystemMessage(Component.literal("Monitor | Linked computer case is missing."));
+        BlockEntity sourceEntity = level.hasChunkAt(monitor.linkedComputerPos().get())
+                ? level.getBlockEntity(monitor.linkedComputerPos().get()) : null;
+        if (!(sourceEntity instanceof ComputerBlockEntity computer)
+                || !monitor.linkedComputerId().filter(computer.getComputerId()::equals).isPresent()) {
+            player.sendSystemMessage(Component.translatable("message.minevm.invalid_endpoint"));
+            return true;
+        }
+        if (!computer.canControl(player)) {
+            player.sendSystemMessage(Component.translatable("message.minevm.not_owner"));
             return true;
         }
 
         if (!computer.poweredOn()) {
-            player.sendSystemMessage(Component.literal("Monitor | Press the computer case power button first."));
+            player.sendSystemMessage(Component.translatable("message.minevm.case_power_first"));
             return true;
         }
 
         if (!computer.hasDesktopInputDevices()) {
-            player.sendSystemMessage(Component.literal("Monitor | Connect keyboard and mouse over USB first."));
+            player.sendSystemMessage(Component.translatable("message.minevm.connect_input_first"));
             return true;
         }
 

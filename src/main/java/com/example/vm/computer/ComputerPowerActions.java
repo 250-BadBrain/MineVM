@@ -39,7 +39,7 @@ public final class ComputerPowerActions {
                     }
 
                     if (isRunningOrStarting(state)) {
-                        stop(server, player, pos, computerId, "Power off");
+                        stop(server, player, computer, computerId, "Power off");
                     } else if (state == VirtualMachineState.STOPPING) {
                         send(server, player, "Computer " + computerId + " | Power off already in progress");
                     } else {
@@ -49,27 +49,17 @@ public final class ComputerPowerActions {
                 });
     }
 
-    public static void markPoweredOff(Player player, BlockPos pos) {
-        if (player == null || pos == null) {
-            return;
-        }
-
-        BlockEntity blockEntity = player.level().getBlockEntity(pos);
-        if (blockEntity instanceof ComputerBlockEntity computer) {
-            computer.setPoweredOn(false);
-            computer.setVmDisplayActive(false);
-            computer.setPowerTransitioning(false);
-        }
-    }
-
-    private static void stop(MinecraftServer server, Player player, BlockPos pos, String computerId, String actionLabel) {
+    private static void stop(MinecraftServer server, Player player, ComputerBlockEntity computer, String computerId, String actionLabel) {
         MineVM.VM_MANAGER.stop(computerId)
                 .whenComplete((handle, throwable) -> server.execute(() -> {
                     if (throwable != null) {
+                        computer.setPowerTransitioning(false);
                         player.sendSystemMessage(Component.literal("Computer " + computerId + " | " + actionLabel + " failed: " + rootMessage(throwable)));
                         return;
                     }
-                    markPoweredOff(player, pos);
+                    computer.setPoweredOn(false);
+                    computer.setVmDisplayActive(false);
+                    computer.setPowerTransitioning(false);
                     VirtualMachineHandle stoppedHandle = handle;
                     player.sendSystemMessage(Component.literal("Computer " + stoppedHandle.computerId() + " | " + actionLabel + " | State: " + stoppedHandle.state()));
                 }));

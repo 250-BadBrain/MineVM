@@ -1,5 +1,6 @@
 package com.example.vm.vm.backend;
 
+import com.example.vm.floppy.FloppyMedia;
 import com.example.vm.input.VirtualMachineInput;
 import com.example.vm.vm.VirtualMachineBootRequest;
 import com.example.vm.vm.VirtualMachineDescriptor;
@@ -48,6 +49,21 @@ public final class NoopVirtualMachineBackend implements VirtualMachineBackend {
     @Override
     public VirtualMachineHandle ejectSystemDisc(String computerId) {
         requireCreated(computerId);
+        return new VirtualMachineHandle(computerId, states.get(computerId));
+    }
+
+    @Override
+    public VirtualMachineHandle ejectBootFloppy(String computerId) {
+        requireCreated(computerId);
+        return new VirtualMachineHandle(computerId, states.get(computerId));
+    }
+
+    @Override
+    public VirtualMachineHandle changeBootFloppyMedium(String computerId, FloppyMedia media) {
+        requireCreated(computerId);
+        if (media == null) {
+            throw new IllegalArgumentException("media must not be null");
+        }
         return new VirtualMachineHandle(computerId, states.get(computerId));
     }
 

@@ -6,6 +6,7 @@ import com.example.vm.vm.VirtualMachineManager;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 
 public final class InputService implements AutoCloseable {
     private final VirtualMachineManager virtualMachineManager;
@@ -22,7 +23,11 @@ public final class InputService implements AutoCloseable {
 
     public CompletableFuture<Void> send(VirtualMachineInput input) {
         Objects.requireNonNull(input, "input");
-        return CompletableFuture.runAsync(() -> virtualMachineManager.sendInput(input).join(), executor());
+        try {
+            return CompletableFuture.runAsync(() -> virtualMachineManager.sendInput(input).join(), executor());
+        } catch (RejectedExecutionException exception) {
+            return CompletableFuture.failedFuture(exception);
+        }
     }
 
     @Override

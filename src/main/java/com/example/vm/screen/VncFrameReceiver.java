@@ -23,10 +23,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-public final class VncFrameReceiver {
+public final class VncFrameReceiver implements ScreenTransport {
     private static final int RAW_ENCODING = 0;
     private static final int DESKTOP_SIZE_ENCODING = -223;
     private static final int BYTES_PER_PIXEL = 4;
+    private static final int MAX_FRAMEBUFFER_PIXELS = 16_777_216;
     private static final int FRAMEBUFFER_UPDATE_REQUEST = 3;
     private static final int KEY_EVENT = 4;
     private static final int POINTER_EVENT = 5;
@@ -56,6 +57,21 @@ public final class VncFrameReceiver {
         return connections.containsKey(endpoint);
     }
 
+    public void close(VncEndpoint endpoint) {
+        if (endpoint == null) {
+            return;
+        }
+        ActiveConnection connection = connections.remove(endpoint);
+        if (connection != null) {
+            connection.closeQuietly();
+        }
+    }
+
+    public void close() {
+        connections.values().forEach(ActiveConnection::closeQuietly);
+        connections.clear();
+    }
+
     public void receive(VncEndpoint endpoint, Consumer<ScreenFrame> frameConsumer) throws IOException {
         if (endpoint == null) {
             throw new IllegalArgumentException("endpoint must not be null");
@@ -75,7 +91,13 @@ public final class VncFrameReceiver {
             Framebuffer framebuffer = readServerInit(input);
             MineVM.LOGGER.info("Connected VNC framebuffer {} at {}x{}", endpoint.toDisplayAddress(), framebuffer.width(), framebuffer.height());
             connection = new ActiveConnection(socket, output, framebuffer.width(), framebuffer.height());
-            connections.put(endpoint, connection);
+            ActiveConnection previous = connections.put(endpoint, connection);
+            if (previous != null) {
+                previous.closeQuietly();
+            }
+            if (Thread.currentThread().isInterrupted()) {
+                return;
+            }
             connection.setPixelFormat();
             connection.setEncodings();
             connection.requestFramebufferUpdate(false);
@@ -90,6 +112,18 @@ public final class VncFrameReceiver {
                 }
                 if (messageType == 0) {
                     framebuffer = readFramebufferUpdate(input, connection, framebuffer, endpoint, frameConsumer);
+                } else if (messageType == 1) {
+                    input.skipNBytes(3);
+                    input.skipNBytes(6L * input.readUnsignedShort());
+                } else if (messageType == 3) {
+                    input.skipNBytes(3);
+                    int length = input.readInt();
+                    if (length < 0 || length > 16_777_216) {
+                        throw new IOException("Unsupported VNC clipboard size: " + length);
+                    }
+                    input.skipNBytes(length);
+                } else if (messageType != 2) {
+                    throw new IOException("Unsupported VNC server message: " + messageType);
                 }
             }
         } finally {
@@ -143,6 +177,7 @@ public final class VncFrameReceiver {
     private static Framebuffer readServerInit(DataInputStream input) throws IOException {
         int width = input.readUnsignedShort();
         int height = input.readUnsignedShort();
+        validateFramebufferDimensions(width, height);
         input.skipNBytes(16);
         int nameLength = input.readInt();
         input.skipNBytes(nameLength);
@@ -160,6 +195,7 @@ public final class VncFrameReceiver {
             int height = input.readUnsignedShort();
             int encoding = input.readInt();
             if (encoding == DESKTOP_SIZE_ENCODING) {
+                validateFramebufferDimensions(width, height);
                 currentFramebuffer = new Framebuffer(width, height);
                 connection.setFramebuffer(width, height);
                 MineVM.LOGGER.info("VNC framebuffer resized {} to {}x{}", endpoint.toDisplayAddress(), width, height);
@@ -168,9 +204,13 @@ public final class VncFrameReceiver {
             if (encoding != RAW_ENCODING) {
                 throw new IOException("Unsupported VNC encoding: " + encoding);
             }
+            validateFramebufferDimensions(width, height);
             int[] pixels = readRawPixels(input, width, height);
             if (x + width > currentFramebuffer.width() || y + height > currentFramebuffer.height()) {
-                currentFramebuffer = new Framebuffer(Math.max(currentFramebuffer.width(), x + width), Math.max(currentFramebuffer.height(), y + height));
+                int expandedWidth = Math.max(currentFramebuffer.width(), x + width);
+                int expandedHeight = Math.max(currentFramebuffer.height(), y + height);
+                validateFramebufferDimensions(expandedWidth, expandedHeight);
+                currentFramebuffer = new Framebuffer(expandedWidth, expandedHeight);
                 connection.setFramebuffer(currentFramebuffer.width(), currentFramebuffer.height());
                 MineVM.LOGGER.info("VNC framebuffer expanded {} to {}x{} from raw rectangle", endpoint.toDisplayAddress(), currentFramebuffer.width(), currentFramebuffer.height());
             }
@@ -181,8 +221,9 @@ public final class VncFrameReceiver {
     }
 
     private static int[] readRawPixels(DataInputStream input, int width, int height) throws IOException {
-        byte[] bytes = input.readNBytes(width * height * BYTES_PER_PIXEL);
-        if (bytes.length != width * height * BYTES_PER_PIXEL) {
+        int byteCount = Math.multiplyExact(Math.multiplyExact(width, height), BYTES_PER_PIXEL);
+        byte[] bytes = input.readNBytes(byteCount);
+        if (bytes.length != byteCount) {
             throw new EOFException("VNC framebuffer rectangle ended early");
         }
 
@@ -195,6 +236,12 @@ public final class VncFrameReceiver {
             pixels[index] = 0xFF000000 | (red << 16) | (green << 8) | blue;
         }
         return pixels;
+    }
+
+    private static void validateFramebufferDimensions(int width, int height) throws IOException {
+        if (width < 1 || height < 1 || (long) width * height > MAX_FRAMEBUFFER_PIXELS) {
+            throw new IOException("Unsupported VNC framebuffer dimensions: " + width + "x" + height);
+        }
     }
 
     private record Framebuffer(int width, int height) {
